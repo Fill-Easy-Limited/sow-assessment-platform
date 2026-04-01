@@ -92,8 +92,10 @@ The dashboard expects these endpoints on `NEXT_PUBLIC_API_URL`:
 
 1. Push to GitHub
 2. AWS Amplify Console → New App → connect the repo
-3. Add `NEXT_PUBLIC_API_URL` in Environment Variables
+3. Add the environment variables required by your Next.js server routes
 4. Deploy (auto-detects Next.js)
+
+This app uses Next.js server-side routes to connect to AWS resources. It does not require an Amplify Gen 2 backend definition.
 
 ## Scripts
 
