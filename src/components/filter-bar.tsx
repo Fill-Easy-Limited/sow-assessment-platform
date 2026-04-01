@@ -35,10 +35,11 @@ export default function FilterBar({ filters, onChange }: FilterBarProps) {
     });
 
   return (
-    <div className="flex flex-wrap items-end gap-3">
+    <div className="rounded-xl border border-border/60 bg-white shadow-sm p-5">
+      <div className="flex flex-wrap items-end gap-4">
       {/* Type */}
-      <div className="space-y-1">
-        <label className="text-xs font-medium text-muted-foreground">
+      <div className="space-y-1.5">
+        <label className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
           Type
         </label>
         <Select
@@ -60,8 +61,8 @@ export default function FilterBar({ filters, onChange }: FilterBarProps) {
       </div>
 
       {/* Step */}
-      <div className="space-y-1">
-        <label className="text-xs font-medium text-muted-foreground">
+      <div className="space-y-1.5">
+        <label className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
           Status
         </label>
         <Select
@@ -83,8 +84,8 @@ export default function FilterBar({ filters, onChange }: FilterBarProps) {
       </div>
 
       {/* Country */}
-      <div className="space-y-1">
-        <label className="text-xs font-medium text-muted-foreground">
+      <div className="space-y-1.5">
+        <label className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
           Country
         </label>
         <Select
@@ -108,8 +109,8 @@ export default function FilterBar({ filters, onChange }: FilterBarProps) {
       </div>
 
       {/* Date From */}
-      <div className="space-y-1">
-        <label className="text-xs font-medium text-muted-foreground">
+      <div className="space-y-1.5">
+        <label className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
           From
         </label>
         <Input
@@ -121,8 +122,8 @@ export default function FilterBar({ filters, onChange }: FilterBarProps) {
       </div>
 
       {/* Date To */}
-      <div className="space-y-1">
-        <label className="text-xs font-medium text-muted-foreground">To</label>
+      <div className="space-y-1.5">
+        <label className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">To</label>
         <Input
           type="date"
           className="w-[150px]"
@@ -132,8 +133,8 @@ export default function FilterBar({ filters, onChange }: FilterBarProps) {
       </div>
 
       {/* Organization (free text) */}
-      <div className="space-y-1">
-        <label className="text-xs font-medium text-muted-foreground">
+      <div className="space-y-1.5">
+        <label className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
           Organization
         </label>
         <Input
@@ -146,9 +147,10 @@ export default function FilterBar({ filters, onChange }: FilterBarProps) {
         />
       </div>
 
-      <Button variant="ghost" size="sm" onClick={clear}>
-        Clear
+      <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground hover:bg-accent" onClick={clear}>
+        Clear filters
       </Button>
+      </div>
     </div>
   );
 }

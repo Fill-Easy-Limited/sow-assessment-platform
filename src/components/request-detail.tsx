@@ -38,14 +38,14 @@ export default function RequestDetail({
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto rounded-2xl">
         <DialogHeader>
-          <DialogTitle className="font-mono text-sm">
+          <DialogTitle className="font-mono text-sm tracking-wide text-muted-foreground">
             {item.requestId}
           </DialogTitle>
         </DialogHeader>
 
-        <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm mt-2">
+        <div className="grid grid-cols-2 gap-x-8 gap-y-4 text-sm mt-4">
           <Field label="Type" value={item.type} />
           <Field label="Status">
             <StatusBadge step={item.step} />
@@ -65,17 +65,17 @@ export default function RequestDetail({
         </div>
 
         {/* Status Changer */}
-        <Separator className="my-3" />
+        <Separator className="my-4" />
         <div className="flex items-center gap-3">
-          <span className="text-sm font-medium">Change status:</span>
+          <span className="text-sm font-medium text-muted-foreground">Change status:</span>
           <StatusChanger requestId={item.requestId} currentStep={item.step} />
         </div>
 
         {/* Error section */}
         {item.error && (
           <>
-            <Separator className="my-3" />
-            <div className="space-y-2">
+            <Separator className="my-4" />
+            <div className="space-y-2 rounded-lg bg-red-50 p-4">
               <h4 className="text-sm font-semibold text-red-600">Error</h4>
               <p className="text-sm">
                 <span className="text-muted-foreground">Step:</span>{" "}
@@ -86,7 +86,7 @@ export default function RequestDetail({
                 {item.error.message}
               </p>
               {item.error.stack && (
-                <pre className="text-xs bg-muted p-3 rounded-md overflow-x-auto whitespace-pre-wrap">
+                <pre className="text-xs bg-red-100/50 p-3 rounded-md overflow-x-auto whitespace-pre-wrap">
                   {item.error.stack}
                 </pre>
               )}
@@ -97,14 +97,14 @@ export default function RequestDetail({
         {/* Debug URL */}
         {item.debugUrl && (
           <>
-            <Separator className="my-3" />
+            <Separator className="my-4" />
             <div>
-              <h4 className="text-sm font-semibold mb-1">Debug Screenshot</h4>
+              <h4 className="text-sm font-semibold text-muted-foreground mb-1">Debug Screenshot</h4>
               <a
                 href={item.debugUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm text-blue-600 hover:underline break-all"
+                className="text-sm text-primary hover:underline break-all"
               >
                 {item.debugUrl}
               </a>
@@ -113,9 +113,9 @@ export default function RequestDetail({
         )}
 
         {/* File Upload */}
-        <Separator className="my-3" />
+        <Separator className="my-4" />
         <div>
-          <h4 className="text-sm font-semibold mb-2">Upload File</h4>
+          <h4 className="text-sm font-semibold text-muted-foreground mb-2">Upload File</h4>
           <FileUpload />
         </div>
       </DialogContent>
@@ -134,8 +134,8 @@ function Field({
 }) {
   return (
     <div>
-      <span className="text-muted-foreground">{label}</span>
-      <div className="font-medium">{children ?? value}</div>
+      <span className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</span>
+      <div className="font-medium mt-0.5">{children ?? value}</div>
     </div>
   );
 }

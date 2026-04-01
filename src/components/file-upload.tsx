@@ -49,16 +49,16 @@ export default function FileUpload() {
       }}
       onDragLeave={() => setDragOver(false)}
       onDrop={onDrop}
-      className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+      className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
         dragOver
           ? "border-primary bg-primary/5"
-          : "border-muted-foreground/25"
+          : "border-border/60"
       }`}
     >
-      <p className="text-muted-foreground mb-3">
+      <p className="text-sm text-muted-foreground mb-3">
         Drag & drop a file here, or click to browse
       </p>
-      <label className="cursor-pointer inline-flex items-center justify-center rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium hover:bg-muted transition-colors">
+      <label className="cursor-pointer inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors">
         Choose file
         <input
           type="file"

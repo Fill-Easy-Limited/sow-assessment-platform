@@ -56,20 +56,20 @@ export default function Dashboard() {
       <FilterBar filters={filters} onChange={setFilters} />
 
       {/* Table */}
-      <div className="rounded-md border">
+      <div className="rounded-xl border border-border/60 bg-white shadow-sm overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead>Request ID</TableHead>
-              <TableHead>Country / Organization</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead className="w-[220px]">Progress</TableHead>
+            <TableRow className="bg-muted/40 hover:bg-muted/40">
+              <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Request ID</TableHead>
+              <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Country / Organization</TableHead>
+              <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Date</TableHead>
+              <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground w-[220px]">Progress</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading && !USE_MOCK ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center py-8">
+                <TableCell colSpan={4} className="text-center py-12 text-muted-foreground">
                   Loading...
                 </TableCell>
               </TableRow>
@@ -77,7 +77,7 @@ export default function Dashboard() {
               <TableRow>
                 <TableCell
                   colSpan={4}
-                  className="text-center py-8 text-muted-foreground"
+                  className="text-center py-12 text-muted-foreground"
                 >
                   No requests found
                 </TableCell>
@@ -86,15 +86,17 @@ export default function Dashboard() {
               requests.map((r) => (
                 <TableRow
                   key={r.requestId}
-                  className="cursor-pointer hover:bg-muted/50"
+                  className="cursor-pointer transition-colors hover:bg-accent/50 border-border/40"
                   onClick={() => setSelected(r)}
                 >
-                  <TableCell className="font-mono text-xs">
+                  <TableCell className="font-mono text-xs text-muted-foreground">
                     {r.requestId}
                   </TableCell>
                   <TableCell>
-                    <span className="font-medium">{r.countryCode}</span>
-                    <span className="text-muted-foreground"> / {r.organization}</span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <span className="text-xs font-semibold bg-primary/15 text-primary-foreground/80 px-1.5 py-0.5 rounded">{r.countryCode}</span>
+                      <span className="text-sm text-foreground/70">{r.organization}</span>
+                    </span>
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
                     {format(new Date(r.startedAt), "MMM d, yyyy")}
