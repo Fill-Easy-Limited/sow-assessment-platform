@@ -7,9 +7,9 @@ import { fromSSO } from "@aws-sdk/credential-providers";
  * Locally: uses the `prod-core` SSO profile (account 794038241155).
  * Deployed: uses the Lambda execution role.
  */
-const isLocal =
-	process.env.NODE_ENV === "development" ||
-	!process.env.AWS_LAMBDA_FUNCTION_NAME;
+// In cloud runtimes (Amplify/Lambda), rely on the default credential chain.
+// Only force SSO profile credentials during local development.
+const isLocal = process.env.NODE_ENV === "development";
 
 export const lambdaClient = new LambdaClient({
 	region: "ap-east-1",

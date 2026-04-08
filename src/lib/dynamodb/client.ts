@@ -12,9 +12,9 @@ import { TABLE_REGION } from "./config";
  * The Prod Core account has cross-account read access to all stage
  * tables via resource-based policies, so a single client suffices.
  */
-const isLocal =
-	process.env.NODE_ENV === "development" ||
-	!process.env.AWS_LAMBDA_FUNCTION_NAME;
+// In cloud runtimes (Amplify/Lambda), rely on the default credential chain.
+// Only force SSO profile credentials during local development.
+const isLocal = process.env.NODE_ENV === "development";
 
 const ddbClient = new DynamoDBClient({
 	region: TABLE_REGION,
