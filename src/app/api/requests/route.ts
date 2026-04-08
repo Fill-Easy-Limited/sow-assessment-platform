@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
 	const organization = searchParams.get("organization") || undefined;
 	const dateFrom = searchParams.get("dateFrom") || undefined;
 	const dateTo = searchParams.get("dateTo") || undefined;
-	const stageParam = searchParams.get("stage") || undefined;
+	const stageParam = searchParams.get("stage") || "prod";
 
 	// Validate stage if provided
 	if (stageParam && !ENABLED_STAGES.includes(stageParam as Stage)) {
@@ -28,14 +28,20 @@ export async function GET(request: NextRequest) {
 			organization,
 			dateFrom,
 			dateTo,
-			stage: stageParam as Stage | undefined,
+			stage: stageParam as Stage,
 		});
 
 		return Response.json(items);
 	} catch (error) {
-		console.error("Failed to query DynamoDB:", error);
+		const message = error instanceof Error ? error.message : String(error);
+		const code =
+			error && typeof error === "object" && "name" in error
+				? String((error as { name?: unknown }).name)
+				: undefined;
+
+		console.error("Failed to query DynamoDB:", { code, message, error });
 		return Response.json(
-			{ error: "Failed to query requests" },
+			{ error: "Failed to query requests", code, details: message },
 			{ status: 500 },
 		);
 	}

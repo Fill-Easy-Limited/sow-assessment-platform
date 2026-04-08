@@ -514,10 +514,33 @@ export async function queryWithFiltersAllStages(
 	filters: CombinedFilters,
 	stages: Stage[] = ENABLED_STAGES,
 ): Promise<StageRecord[]> {
-	const results = await Promise.all(
+	const settled = await Promise.allSettled(
 		stages.map((stage) => queryWithFilters(filters, stage)),
 	);
-	return sortByStartedAtDesc(results.flatMap((r) => r.items));
+
+	const items: StageRecord[] = [];
+	const failures: string[] = [];
+
+	settled.forEach((result, index) => {
+		const stage = stages[index];
+		if (result.status === "fulfilled") {
+			items.push(...result.value.items);
+			return;
+		}
+
+		const message =
+			result.reason instanceof Error
+				? result.reason.message
+				: String(result.reason);
+		failures.push(`${stage}: ${message}`);
+		console.error(`Stage query failed for ${stage}:`, message);
+	});
+
+	if (items.length === 0 && failures.length > 0) {
+		throw new Error(`All stage queries failed (${failures.join(" | ")})`);
+	}
+
+	return sortByStartedAtDesc(items);
 }
 
 // ---------------------------------------------------------------------------
