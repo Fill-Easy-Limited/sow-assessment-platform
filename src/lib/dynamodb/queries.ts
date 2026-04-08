@@ -534,6 +534,45 @@ export async function queryRequests(filters: QueryFilters) {
 				}
 			: undefined;
 
+	// Virtual status: failed = search + manual
+	if (filters.step === "failed") {
+		const [searchItems, manualItems] = await Promise.all([
+			queryWithFiltersAllStages(
+				{
+					type: filters.type,
+					step: "search",
+					organization: filters.organization,
+					timeRange,
+					pagination: { limit: filters.limit ?? 100 },
+				},
+				stages,
+			),
+			queryWithFiltersAllStages(
+				{
+					type: filters.type,
+					step: "manual",
+					organization: filters.organization,
+					timeRange,
+					pagination: { limit: filters.limit ?? 100 },
+				},
+				stages,
+			),
+		]);
+
+		const deduped = new Map<string, StageRecord>();
+		for (const item of [...searchItems, ...manualItems]) {
+			const key = `${String(item._stage)}:${String(item.requestId)}`;
+			if (!deduped.has(key)) {
+				deduped.set(key, item);
+			}
+		}
+
+		return sortByStartedAtDesc(Array.from(deduped.values())).slice(
+			0,
+			filters.limit ?? 100,
+		);
+	}
+
 	return queryWithFiltersAllStages(
 		{
 			type: filters.type,

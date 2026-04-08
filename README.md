@@ -29,19 +29,32 @@ src/
 │       └── requests/
 │           ├── route.ts        # GET /api/requests — list with filters
 │           └── [requestId]/
-│               └── route.ts    # GET /api/requests/:id — single record lookup
+│               ├── route.ts    # GET /api/requests/:id — single record lookup
+│               ├── resolve/
+│               │   └── route.ts # POST /api/requests/:id/resolve
+│               ├── cancel/
+│               │   └── route.ts # POST /api/requests/:id/cancel
+│               └── upload/
+│                   └── route.ts # POST /api/requests/:id/upload
 ├── components/
 │   ├── dashboard.tsx           # Main table view — fetches data, renders rows
 │   ├── env-switcher.tsx        # Prod/Staging pill toggle
 │   ├── filter-bar.tsx          # Filter dropdowns (type, step, country, date, org)
 │   ├── progress-bar.tsx        # Colored progress bar for lifecycle steps
 │   ├── status-badge.tsx        # Colored badge for step values
-│   ├── status-changer.tsx      # Step change UI (placeholder — no backend mutation)
+│   ├── search-resolve.tsx      # Search-step resolver form (company/document identifiers)
+│   ├── cancel-request.tsx      # Cancellable-step action with confirmation
 │   ├── request-detail.tsx      # Detail modal when clicking a row
-│   ├── file-upload.tsx         # File upload component (placeholder)
+│   ├── file-upload.tsx         # Manual-step file uploader (choose/drop then upload)
 │   ├── providers.tsx           # TanStack QueryClientProvider
 │   └── ui/                     # shadcn/ui primitives (button, table, dialog, etc.)
 └── lib/
+  ├── aws/
+  │   ├── cra-config.ts       # Cross-account CRA Lambda ARN + payload helpers
+  │   ├── resolve-request.ts  # CraResolve invoke helpers
+  │   ├── cancel-request.ts   # CraCancel invoke helpers
+  │   ├── lambda-client.ts    # Singleton Lambda client
+  │   └── client.ts           # Client-side resolve/cancel helpers
     ├── api.ts                  # Frontend fetch client for API routes
     ├── types.ts                # Shared types (RequestItem, Step, STEP_ORDER, etc.)
     ├── mock-data.ts            # Mock data fallback for local dev without AWS
@@ -106,12 +119,13 @@ When **no filters** are set, the system cannot use Scan (cross-account policy bl
 
 ```typescript
 // src/lib/types.ts
-type Step = "initiated" | "search" | "manual" | "retrieved" | "processing" | "ready" | "delivered";
+type Step = "initiated" | "search" | "manual" | "cancelled" | "retrieved" | "processing" | "ready" | "delivered";
 
 interface RequestItem {
   requestId: string;       // PK — format CR_<random>
   type: string;            // e.g. "hk-retrieval", "cn-novanansha"
   step: Step;              // Current lifecycle step
+  accountId?: string;      // CRA sub-account ID (used for cross-account Lambda ARN)
   organization: string;    // e.g. "canary", "ubs"
   startedAt: string;       // ISO 8601
   automated: boolean;      // false when retrieval failed
@@ -166,25 +180,65 @@ Returns `RequestItem[]`. The `stage` param is required (set by the env switcher 
 
 Looks up the record across all enabled stages (parallel `GetItem`). Returns the first match or 404.
 
+### `POST /api/requests/:requestId/resolve`
+
+Invokes cross-account `CraResolve` in the request sub-account. Target is built from request `accountId` when present (with stage-account fallback for legacy records).
+
+Body fields:
+- `companyId?`
+- `companyName?`
+- `documentId?`
+- `documentType?`
+- `stage?`
+
+Validation: at least one of `companyId`, `companyName`, or `documentId` is required.
+
+### `POST /api/requests/:requestId/cancel`
+
+Invokes cross-account `CraCancel` in the request sub-account (`accountId`-based ARN).
+
+Only cancellable from steps:
+- `initiated`
+- `search`
+- `manual`
+
+Returns `409` for non-cancellable steps.
+
+### `POST /api/requests/:requestId/upload`
+
+Uploads multipart file to request `uploadUrl` server-side (proxying browser upload to avoid presigned-URL CORS issues).
+
+Requirements:
+- Request must be in `manual` step
+- `uploadUrl` must exist on the tracker record
+
 ## Frontend Components
 
 ### EnvSwitcher
 Pill-style toggle at the top of the page. Switches between `prod` and `staging`. State lives in `page.tsx` and is passed to `Dashboard` as a prop.
 
 ### Dashboard
-Main component. Receives `stage` prop, merges it with filter state into `activeFilters`, passes to `useQuery`. Falls back to mock data if the API fails (yellow banner shown).
+Main component. Receives `stage` prop, merges it with filter state into `activeFilters`, passes to `useQuery`. Falls back to mock data if the API fails (yellow banner shown). Includes table-only refresh action.
 
 ### FilterBar
-Dropdowns for type, step, country, date range, and organization text input. Stage is NOT in the filter bar — it's controlled by `EnvSwitcher`.
+Dropdowns for type, status, country, date range, and organization text input. Stage is NOT in the filter bar — it's controlled by `EnvSwitcher`.
+
+Status includes virtual option:
+- `failed` = `search` + `manual`
 
 ### RequestDetail
-Modal that opens when clicking a table row. Shows all fields, error details, debug URL, status changer (placeholder), and file upload (placeholder).
+Large modal that opens when clicking a table row. Includes:
+- Condensed error view with expandable details/stack
+- Debug screenshot show/hide toggle (image preview, no raw URL)
+- Search-step resolver form
+- Manual-step file upload flow (choose/drop then explicit upload)
+- Cancellable-step action with confirmation (`initiated/search/manual`)
 
 ## Important Constraints
 
 1. **No Scan allowed cross-account** — The resource-based policy on non-prod tables only permits `Query` and `GetItem`. Never add Scan operations for cross-account queries.
 
-2. **Records are read-only** — The dashboard has no write permissions. The `StatusChanger` component is a UI placeholder. Records are written by backend Lambdas only.
+2. **No direct DDB writes from dashboard** — The app mutates workflow only by invoking backend Lambdas (`CraResolve`, `CraCancel`) and uploading to presigned S3 URLs.
 
 3. **Records expire** — TTL is ~1 year. Old request IDs may return 404.
 

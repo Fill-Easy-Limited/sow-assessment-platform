@@ -8,6 +8,7 @@ export interface RequestItem {
 	requestId: string;
 	type: string;
 	step: Step;
+	accountId?: string;
 	organization: string;
 	deploymentStage: string;
 	environment: string;
@@ -31,6 +32,7 @@ export type Step =
 	| "initiated"
 	| "search"
 	| "manual"
+	| "cancelled"
 	| "retrieved"
 	| "processing"
 	| "ready"
@@ -40,6 +42,7 @@ export const STEP_ORDER: Step[] = [
 	"initiated",
 	"search",
 	"manual",
+	"cancelled",
 	"retrieved",
 	"processing",
 	"ready",
@@ -48,7 +51,7 @@ export const STEP_ORDER: Step[] = [
 
 export interface RequestFilters {
 	type?: string;
-	step?: string;
+	step?: Step | "failed";
 	organization?: string;
 	countryCode?: string;
 	dateFrom?: string;

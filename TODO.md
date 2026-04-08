@@ -16,10 +16,19 @@
 - [ ] Export filtered data to CSV
 - [ ] Dark mode toggle
 
+### Implemented Recently
+
+- [x] Cross-account resolve action (`CraResolve`) from search step
+- [x] Cross-account cancel action (`CraCancel`) for initiated/search/manual
+- [x] Account-aware Lambda targeting via tracker `accountId`
+- [x] Manual-step upload to `uploadUrl` (server-side proxy route)
+- [x] Search-step form for company/document identifiers
+- [x] `failed` status filter (`search` + `manual`)
+- [x] Table-only refresh button
+
 ## UI / UX
 
 - [ ] Add loading skeletons instead of "Loading..." text
-- [ ] Toast notifications for status change success/failure
 - [ ] Toast notifications for file upload success/failure
 - [ ] Responsive mobile layout
 - [ ] Keyboard shortcuts (e.g. Esc to close modal)

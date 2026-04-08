@@ -9,6 +9,7 @@ const CONFIG: Record<
 	initiated: { width: "14%", color: "bg-primary/60" },
 	search: { width: "20%", color: "bg-amber-400", animate: true },
 	manual: { width: "30%", color: "bg-orange-400" },
+	cancelled: { width: "100%", color: "bg-rose-500" },
 	retrieved: { width: "50%", color: "bg-blue-400" },
 	processing: { width: "65%", color: "bg-primary", animate: true },
 	ready: { width: "85%", color: "bg-emerald-400" },

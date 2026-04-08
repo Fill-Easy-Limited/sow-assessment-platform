@@ -1,6 +1,8 @@
 import type { NextRequest } from "next/server";
 import { findRequestById } from "@/lib/dynamodb";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(
 	_request: NextRequest,
 	{ params }: { params: Promise<{ requestId: string }> },

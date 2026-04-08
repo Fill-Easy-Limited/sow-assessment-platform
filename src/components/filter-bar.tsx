@@ -14,6 +14,7 @@ import { STEP_ORDER } from "@/lib/types";
 
 const TYPES = ["hk-retrieval", "cn-novanansha", "sg-retrieval"];
 const COUNTRIES = ["HK", "SG", "MY", "AU", "CN"];
+const FAILED_STATUS = "failed";
 
 interface FilterBarProps {
 	filters: RequestFilters;
@@ -69,15 +70,18 @@ export default function FilterBar({ filters, onChange }: FilterBarProps) {
 					</label>
 					<Select
 						value={filters.step ?? "all"}
-						onValueChange={(v) =>
-							update({ step: !v || v === "all" ? undefined : v })
-						}
+						onValueChange={(v) => {
+							const nextStep =
+								!v || v === "all" ? undefined : (v as RequestFilters["step"]);
+							update({ step: nextStep });
+						}}
 					>
 						<SelectTrigger className="w-[150px]">
 							<SelectValue placeholder="All statuses" />
 						</SelectTrigger>
 						<SelectContent>
 							<SelectItem value="all">All statuses</SelectItem>
+							<SelectItem value={FAILED_STATUS}>failed (search + manual)</SelectItem>
 							{STEP_ORDER.map((s) => (
 								<SelectItem key={s} value={s}>
 									{s}

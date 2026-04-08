@@ -1,22 +1,26 @@
 "use client";
 
 import { format, formatDistanceToNow } from "date-fns";
+import { useEffect, useState } from "react";
 import {
 	Dialog,
 	DialogContent,
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import type { RequestItem } from "@/lib/types";
+import CancelRequest from "./cancel-request";
 import FileUpload from "./file-upload";
+import SearchResolve from "./search-resolve";
 import StatusBadge from "./status-badge";
-import StatusChanger from "./status-changer";
 
 interface RequestDetailProps {
 	item: RequestItem | null;
 	open: boolean;
 	onClose: () => void;
+	onRequestUpdated?: () => Promise<void> | void;
 }
 
 function formatDuration(ms: number): string {
@@ -31,14 +35,23 @@ export default function RequestDetail({
 	item,
 	open,
 	onClose,
+	onRequestUpdated,
 }: RequestDetailProps) {
+	const [showErrorDetails, setShowErrorDetails] = useState(false);
+	const [showDebugImage, setShowDebugImage] = useState(false);
+
+	useEffect(() => {
+		setShowErrorDetails(false);
+		setShowDebugImage(false);
+	}, [item?.requestId]);
+
 	if (!item) return null;
 
 	const startedDate = new Date(item.startedAt);
 
 	return (
 		<Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-			<DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto rounded-2xl">
+			<DialogContent className="w-[86vw] max-w-[86vw] sm:max-w-[86vw] h-[88vh] max-h-[88vh] overflow-y-auto rounded-2xl">
 				<DialogHeader>
 					<DialogTitle className="font-mono text-sm tracking-wide text-muted-foreground">
 						{item.requestId}
@@ -64,14 +77,22 @@ export default function RequestDetail({
 					/>
 				</div>
 
-				{/* Status Changer */}
-				<Separator className="my-4" />
-				<div className="flex items-center gap-3">
-					<span className="text-sm font-medium text-muted-foreground">
-						Change status:
-					</span>
-					<StatusChanger requestId={item.requestId} currentStep={item.step} />
-				</div>
+				{["initiated", "search", "manual"].includes(item.step) && (
+					<>
+						<Separator className="my-4" />
+						<div>
+							<h4 className="text-sm font-semibold text-muted-foreground mb-2">
+								Actions
+							</h4>
+							<CancelRequest
+								requestId={item.requestId}
+								stage={item._stage ?? item.deploymentStage}
+								step={item.step}
+								onSuccess={onRequestUpdated}
+							/>
+						</div>
+					</>
+				)}
 
 				{/* Error section */}
 				{item.error && (
@@ -80,14 +101,28 @@ export default function RequestDetail({
 						<div className="space-y-2 rounded-lg bg-red-50 p-4">
 							<h4 className="text-sm font-semibold text-red-600">Error</h4>
 							<p className="text-sm">
-								<span className="text-muted-foreground">Step:</span>{" "}
-								{item.error.step}
-							</p>
-							<p className="text-sm">
 								<span className="text-muted-foreground">Message:</span>{" "}
 								{item.error.message}
 							</p>
-							{item.error.stack && (
+							{(item.error.step || item.error.stack) && (
+								<div className="pt-1">
+									<Button
+										type="button"
+										variant="outline"
+										size="sm"
+										onClick={() => setShowErrorDetails((prev) => !prev)}
+									>
+										{showErrorDetails ? "Hide details" : "Show details"}
+									</Button>
+								</div>
+							)}
+							{showErrorDetails && item.error.step && (
+								<p className="text-sm">
+									<span className="text-muted-foreground">Step:</span>{" "}
+									{item.error.step}
+								</p>
+							)}
+							{showErrorDetails && item.error.stack && (
 								<pre className="text-xs bg-red-100/50 p-3 rounded-md overflow-x-auto whitespace-pre-wrap">
 									{item.error.stack}
 								</pre>
@@ -96,34 +131,70 @@ export default function RequestDetail({
 					</>
 				)}
 
-				{/* Debug URL */}
+				{/* Debug Screenshot */}
 				{item.debugUrl && (
 					<>
 						<Separator className="my-4" />
-						<div>
+						<div className="space-y-3">
 							<h4 className="text-sm font-semibold text-muted-foreground mb-1">
 								Debug Screenshot
 							</h4>
-							<a
-								href={item.debugUrl}
-								target="_blank"
-								rel="noopener noreferrer"
-								className="text-sm text-primary hover:underline break-all"
+							<Button
+								type="button"
+								variant="outline"
+								onClick={() => setShowDebugImage((prev) => !prev)}
 							>
-								{item.debugUrl}
-							</a>
+								{showDebugImage ? "Hide" : "Show"}
+							</Button>
+							{showDebugImage && (
+								<img
+									src={item.debugUrl}
+									alt={`Debug screenshot for ${item.requestId}`}
+									className="w-full rounded-lg border border-border/60"
+								/>
+							)}
 						</div>
 					</>
 				)}
 
-				{/* File Upload */}
-				<Separator className="my-4" />
-				<div>
-					<h4 className="text-sm font-semibold text-muted-foreground mb-2">
-						Upload File
-					</h4>
-					<FileUpload />
-				</div>
+				{/* File Upload (manual step only) */}
+				{item.step === "manual" && (
+					<>
+						<Separator className="my-4" />
+						<div>
+							<h4 className="text-sm font-semibold text-muted-foreground mb-2">
+								Upload File
+							</h4>
+							<FileUpload
+								requestId={item.requestId}
+								step={item.step}
+								stage={item._stage ?? item.deploymentStage}
+								uploadUrl={item.uploadUrl}
+								onSuccess={onRequestUpdated}
+							/>
+						</div>
+					</>
+				)}
+
+				{/* Search Resolve (search step only) */}
+				{item.step === "search" && (
+					<>
+						<Separator className="my-4" />
+						<div>
+							<h4 className="text-sm font-semibold text-muted-foreground mb-2">
+								Resolve Search Request
+							</h4>
+							<SearchResolve
+								requestId={item.requestId}
+								stage={item._stage ?? item.deploymentStage}
+								defaultCompanyId={item.companyId}
+								defaultCompanyName={item.companyName}
+								defaultDocumentType={item.documentType}
+								onSuccess={onRequestUpdated}
+							/>
+						</div>
+					</>
+				)}
 			</DialogContent>
 		</Dialog>
 	);

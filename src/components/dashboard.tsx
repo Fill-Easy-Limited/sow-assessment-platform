@@ -11,7 +11,8 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
-import { getRequests } from "@/lib/api";
+import { Button } from "@/components/ui/button";
+import { getRequestById, getRequests } from "@/lib/api";
 import type { Stage } from "@/lib/dynamodb/config";
 import { MOCK_REQUESTS } from "@/lib/mock-data";
 import type { RequestFilters, RequestItem } from "@/lib/types";
@@ -37,11 +38,22 @@ export default function Dashboard({ stage }: DashboardProps) {
 		data: apiData,
 		isLoading,
 		isError,
+		isFetching,
+		refetch,
 	} = useQuery({
 		queryKey: ["requests", activeFilters],
 		queryFn: () => getRequests(activeFilters),
 		retry: 1,
 	});
+
+	const handleRequestUpdated = async () => {
+		await refetch();
+		if (!selected) return;
+		const refreshed = await getRequestById(selected.requestId);
+		if (refreshed) {
+			setSelected(refreshed);
+		}
+	};
 
 	// Fall back to mock data if the API is unavailable (local dev without AWS creds)
 	const useMock = isError || (!isLoading && !apiData);
@@ -52,7 +64,13 @@ export default function Dashboard({ stage }: DashboardProps) {
 		if (!useMock) return source; // server already filtered
 		return source.filter((r) => {
 			if (filters.type && r.type !== filters.type) return false;
-			if (filters.step && r.step !== filters.step) return false;
+			if (filters.step) {
+				if (filters.step === "failed") {
+					if (r.step !== "search" && r.step !== "manual") return false;
+				} else if (r.step !== filters.step) {
+					return false;
+				}
+			}
 			if (
 				filters.organization &&
 				!r.organization
@@ -71,6 +89,18 @@ export default function Dashboard({ stage }: DashboardProps) {
 
 	return (
 		<div className="space-y-6">
+			<div className="flex items-center justify-end">
+				<Button
+					variant="outline"
+					onClick={() => {
+						void refetch();
+					}}
+					disabled={isFetching}
+				>
+					{isFetching ? "Refreshing..." : "Refresh Table"}
+				</Button>
+			</div>
+
 			{/* Filters */}
 			<FilterBar filters={filters} onChange={setFilters} />
 
@@ -88,7 +118,7 @@ export default function Dashboard({ stage }: DashboardProps) {
 								Request ID
 							</TableHead>
 							<TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-								Stage
+								Company Name
 							</TableHead>
 							<TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
 								Country / Organization
@@ -131,8 +161,8 @@ export default function Dashboard({ stage }: DashboardProps) {
 										{r.requestId}
 									</TableCell>
 									<TableCell>
-										<span className="text-xs font-medium bg-violet-100 text-violet-700 px-1.5 py-0.5 rounded">
-											{r._stage ?? r.deploymentStage}
+										<span className="text-sm text-foreground/80">
+											{r.companyName ?? "—"}
 										</span>
 									</TableCell>
 									<TableCell>
@@ -163,6 +193,7 @@ export default function Dashboard({ stage }: DashboardProps) {
 				item={selected}
 				open={!!selected}
 				onClose={() => setSelected(null)}
+				onRequestUpdated={handleRequestUpdated}
 			/>
 		</div>
 	);
