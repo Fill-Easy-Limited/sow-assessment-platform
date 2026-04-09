@@ -158,7 +158,14 @@ export default function Dashboard({ stage }: DashboardProps) {
 									onClick={() => setSelected(r)}
 								>
 									<TableCell className="font-mono text-xs text-muted-foreground">
-										{r.requestId}
+										<span className="inline-flex items-center gap-1.5">
+											{r.requestId}
+											{r.dryRun && (
+												<span className="text-[10px] font-semibold uppercase tracking-wide bg-amber-100 text-amber-700 border border-amber-300 px-1.5 py-0.5 rounded-full leading-none">
+													Dry Run
+												</span>
+											)}
+										</span>
 									</TableCell>
 									<TableCell>
 										<span className="text-sm text-foreground/80">
