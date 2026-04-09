@@ -1,5 +1,4 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { fromSSO } from "@aws-sdk/credential-providers";
 import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 import { TABLE_REGION } from "./config";
 
@@ -18,7 +17,7 @@ const isLocal = process.env.NODE_ENV === "development";
 
 const ddbClient = new DynamoDBClient({
 	region: TABLE_REGION,
-	// ...(isLocal && { profile: "prod-core" }),
+	...(isLocal && { profile: "prod-core" }),
 });
 
 export const docClient = DynamoDBDocumentClient.from(ddbClient, {

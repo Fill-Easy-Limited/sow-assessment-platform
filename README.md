@@ -255,7 +255,6 @@ Large modal that opens when clicking a table row. Includes:
 | @tanstack/react-query | 5.x | Server state management, caching, refetch |
 | @aws-sdk/client-dynamodb | 3.x | DynamoDB operations |
 | @aws-sdk/lib-dynamodb | 3.x | Document client (marshalling) |
-| @aws-sdk/credential-providers | 3.x | SSO auth for local dev |
 | tailwindcss | 4.x | Styling |
 | shadcn/ui | 4.x | UI component primitives |
 | date-fns | 4.x | Date formatting |

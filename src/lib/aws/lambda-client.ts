@@ -1,5 +1,4 @@
 import { LambdaClient } from "@aws-sdk/client-lambda";
-import { fromSSO } from "@aws-sdk/credential-providers";
 
 /**
  * Singleton Lambda Client for ap-east-1.
@@ -13,5 +12,5 @@ const isLocal = process.env.NODE_ENV === "development";
 
 export const lambdaClient = new LambdaClient({
 	region: "ap-east-1",
-	...(isLocal && { credentials: fromSSO({ profile: "prod-core" }) }),
+	...(isLocal && { profile: "prod-core" }),
 });
