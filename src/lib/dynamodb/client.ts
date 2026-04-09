@@ -18,7 +18,7 @@ const isLocal = process.env.NODE_ENV === "development";
 
 const ddbClient = new DynamoDBClient({
 	region: TABLE_REGION,
-	...(isLocal && { credentials: fromSSO({ profile: "prod-core" }) }),
+	// ...(isLocal && { profile: "prod-core" }),
 });
 
 export const docClient = DynamoDBDocumentClient.from(ddbClient, {
