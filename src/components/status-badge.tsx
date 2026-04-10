@@ -4,6 +4,8 @@ import type { Step } from "@/lib/types";
 const STEP_STYLES: Record<Step, string> = {
 	initiated:
 		"bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-800/30 dark:text-gray-400 dark:border-gray-700",
+	rejected:
+		"bg-red-50 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800",
 	search:
 		"bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800",
 	manual:

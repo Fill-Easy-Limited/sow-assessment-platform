@@ -31,6 +31,7 @@ export interface RequestItem {
 
 export type Step =
 	| "initiated"
+	| "rejected"
 	| "search"
 	| "manual"
 	| "cancelled"
@@ -41,6 +42,7 @@ export type Step =
 
 export const STEP_ORDER: Step[] = [
 	"initiated",
+	"rejected",
 	"search",
 	"manual",
 	"cancelled",

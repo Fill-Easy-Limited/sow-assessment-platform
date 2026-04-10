@@ -7,6 +7,7 @@ const CONFIG: Record<
 	{ width: string; color: string; animate?: boolean }
 > = {
 	initiated: { width: "14%", color: "bg-primary/60" },
+	rejected: { width: "100%", color: "bg-red-500" },
 	search: { width: "20%", color: "bg-amber-400", animate: true },
 	manual: { width: "30%", color: "bg-orange-400" },
 	cancelled: { width: "100%", color: "bg-rose-500" },

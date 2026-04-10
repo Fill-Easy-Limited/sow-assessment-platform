@@ -1,5 +1,5 @@
 import type { QueryCommandInput } from "@aws-sdk/lib-dynamodb";
-import { GetCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
+import { GetCommand, QueryCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import { docClient } from "./client";
 import {
 	ALL_STAGES,
@@ -606,4 +606,76 @@ export async function queryRequests(filters: QueryFilters) {
 		},
 		stages,
 	);
+}
+
+// ---------------------------------------------------------------------------
+// Cancel Request (direct DynamoDB update)
+// ---------------------------------------------------------------------------
+
+const CANCELLABLE_STEPS = new Set(["initiated", "search", "manual"]);
+
+export interface CancelResult {
+	success: boolean;
+	previousStep?: string;
+	error?: string;
+}
+
+/**
+ * Cancel a request by updating its step to "cancelled" directly in DynamoDB.
+ * Only allowed from steps: initiated, search, manual.
+ * Sets error.step to the previous step and error.message to indicate cancellation.
+ */
+export async function cancelRequest(
+	requestId: string,
+	stage: Stage,
+): Promise<CancelResult> {
+	const tableArn = getTableArn(stage);
+
+	// First fetch the current record to check and get the current step
+	const record = await getRequestById(requestId, stage);
+	if (!record) {
+		return { success: false, error: `Request ${requestId} not found in ${stage}` };
+	}
+
+	const currentStep = String(record.step);
+	if (!CANCELLABLE_STEPS.has(currentStep)) {
+		return {
+			success: false,
+			error: `Request is in '${currentStep}' step and cannot be cancelled. Only ${[...CANCELLABLE_STEPS].join(", ")} steps are cancellable.`,
+		};
+	}
+
+	try {
+		await docClient.send(
+			new UpdateCommand({
+				TableName: tableArn,
+				Key: { requestId },
+				UpdateExpression: "SET #step = :cancelled, #error = :error",
+				ConditionExpression: "#step = :currentStep",
+				ExpressionAttributeNames: {
+					"#step": "step",
+					"#error": "error",
+				},
+				ExpressionAttributeValues: {
+					":cancelled": "cancelled",
+					":currentStep": currentStep,
+					":error": {
+						step: currentStep,
+						message: `Request cancelled from '${currentStep}' step`,
+					},
+				},
+			}),
+		);
+
+		return { success: true, previousStep: currentStep };
+	} catch (err) {
+		const message = err instanceof Error ? err.message : String(err);
+		if (message.includes("ConditionalCheckFailedException")) {
+			return {
+				success: false,
+				error: "Request step changed since it was loaded. Please refresh and try again.",
+			};
+		}
+		return { success: false, error: message };
+	}
 }

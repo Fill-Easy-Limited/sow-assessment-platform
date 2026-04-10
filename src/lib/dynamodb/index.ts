@@ -39,4 +39,7 @@ export {
 	// All-steps fallback (replaces Scan for cross-account)
 	queryAllSteps,
 	type TimeRange,
+	// Cancel
+	cancelRequest,
+	type CancelResult,
 } from "./queries";
