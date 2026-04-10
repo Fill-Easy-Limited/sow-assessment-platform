@@ -68,6 +68,7 @@ export default function RequestDetail({
 					<Field label="Environment" value={item.environment} />
 					<Field label="Country" value={item.countryCode} />
 					<Field label="Document Type" value={item.documentType} />
+					<Field label="Document ID" value={item.documentId} />
 					<Field label="Company ID" value={item.companyId} />
 					<Field label="Automated" value={item.automated ? "Yes" : "No"} />
 					<Field label="Duration" value={formatDuration(item.duration ?? 0)} />

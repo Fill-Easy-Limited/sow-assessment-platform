@@ -18,6 +18,7 @@ export interface RequestItem {
 	countryCode?: string;
 	companyId?: string;
 	companyName?: string;
+	documentId?: string;
 	documentType?: string;
 	dryRun?: boolean;
 	error?: RequestError;
