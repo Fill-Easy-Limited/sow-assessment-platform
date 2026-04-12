@@ -194,7 +194,7 @@ export default function Dashboard({ stage }: DashboardProps) {
 								<Select
 									value={String(activePage || 1)}
 									onValueChange={(value) =>
-										goToPage(Number.parseInt(value, 10))
+										goToPage(Number.parseInt(value ?? "1", 10))
 									}
 								>
 									<SelectTrigger className="w-[150px]">
