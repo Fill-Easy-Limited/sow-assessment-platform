@@ -27,7 +27,9 @@ export async function getRequests(
 	const params = new URLSearchParams();
 	if (filters) {
 		Object.entries(filters).forEach(([key, value]) => {
-			if (value) params.set(key, value);
+			if (value !== undefined && value !== null && value !== "") {
+				params.set(key, String(value));
+			}
 		});
 	}
 	const query = params.toString();

@@ -6,11 +6,13 @@ export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
 	const { searchParams } = request.nextUrl;
 
-	const type = searchParams.get("type") || undefined;
 	const step = searchParams.get("step") || undefined;
 	const organization = searchParams.get("organization") || undefined;
+	const countryCode = searchParams.get("countryCode") || undefined;
 	const dateFrom = searchParams.get("dateFrom") || undefined;
 	const dateTo = searchParams.get("dateTo") || undefined;
+	const hideDryRunsParam = searchParams.get("hideDryRuns");
+	const hideDryRuns = hideDryRunsParam === "true";
 	const stageParam = searchParams.get("stage") || "prod";
 
 	// Validate stage if provided
@@ -23,11 +25,12 @@ export async function GET(request: NextRequest) {
 
 	try {
 		const items = await queryRequests({
-			type,
 			step,
 			organization,
+			countryCode,
 			dateFrom,
 			dateTo,
+			hideDryRuns,
 			stage: stageParam as Stage,
 		});
 

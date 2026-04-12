@@ -12,7 +12,6 @@ import {
 import type { RequestFilters } from "@/lib/types";
 import { STEP_ORDER } from "@/lib/types";
 
-const TYPES = ["hk-retrieval", "cn-novanansha", "sg-retrieval"];
 const COUNTRIES = ["HK", "SG", "MY", "AU", "CN"];
 const FAILED_STATUS = "failed";
 
@@ -27,47 +26,22 @@ export default function FilterBar({ filters, onChange }: FilterBarProps) {
 
 	const clear = () =>
 		onChange({
-			type: undefined,
 			step: undefined,
 			organization: undefined,
 			countryCode: undefined,
 			dateFrom: undefined,
 			dateTo: undefined,
+			hideDryRuns: false,
 		});
 
 	return (
 		<div className="rounded-xl border border-border/60 bg-white shadow-sm p-5">
 			<div className="flex flex-wrap items-end gap-4">
-				{/* Type */}
-				<div className="space-y-1.5">
-					<label className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-						Type
-					</label>
-					<Select
-						value={filters.type ?? "all"}
-						onValueChange={(v) =>
-							update({ type: !v || v === "all" ? undefined : v })
-						}
-					>
-						<SelectTrigger className="w-[150px]">
-							<SelectValue placeholder="All types" />
-						</SelectTrigger>
-						<SelectContent>
-							<SelectItem value="all">All types</SelectItem>
-							{TYPES.map((t) => (
-								<SelectItem key={t} value={t}>
-									{t}
-								</SelectItem>
-							))}
-						</SelectContent>
-					</Select>
-				</div>
-
 				{/* Step */}
 				<div className="space-y-1.5">
-					<label className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+					<div className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
 						Status
-					</label>
+					</div>
 					<Select
 						value={filters.step ?? "all"}
 						onValueChange={(v) => {
@@ -81,7 +55,9 @@ export default function FilterBar({ filters, onChange }: FilterBarProps) {
 						</SelectTrigger>
 						<SelectContent>
 							<SelectItem value="all">All statuses</SelectItem>
-							<SelectItem value={FAILED_STATUS}>failed (search + manual)</SelectItem>
+							<SelectItem value={FAILED_STATUS}>
+								failed (search + manual)
+							</SelectItem>
 							{STEP_ORDER.map((s) => (
 								<SelectItem key={s} value={s}>
 									{s}
@@ -91,11 +67,30 @@ export default function FilterBar({ filters, onChange }: FilterBarProps) {
 					</Select>
 				</div>
 
+				{/* Dry runs */}
+				<div className="space-y-1.5">
+					<div className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+						Dry runs
+					</div>
+					<Select
+						value={filters.hideDryRuns === false ? "show" : "hide"}
+						onValueChange={(value) => update({ hideDryRuns: value !== "show" })}
+					>
+						<SelectTrigger className="w-[150px]">
+							<SelectValue placeholder="Hide dry runs" />
+						</SelectTrigger>
+						<SelectContent>
+							<SelectItem value="hide">Hide dry runs</SelectItem>
+							<SelectItem value="show">Show dry runs</SelectItem>
+						</SelectContent>
+					</Select>
+				</div>
+
 				{/* Country */}
 				<div className="space-y-1.5">
-					<label className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+					<div className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
 						Country
-					</label>
+					</div>
 					<Select
 						value={filters.countryCode ?? "all"}
 						onValueChange={(v) =>
@@ -118,9 +113,9 @@ export default function FilterBar({ filters, onChange }: FilterBarProps) {
 
 				{/* Date From */}
 				<div className="space-y-1.5">
-					<label className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+					<div className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
 						From
-					</label>
+					</div>
 					<Input
 						type="date"
 						className="w-[150px]"
@@ -131,9 +126,9 @@ export default function FilterBar({ filters, onChange }: FilterBarProps) {
 
 				{/* Date To */}
 				<div className="space-y-1.5">
-					<label className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+					<div className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
 						To
-					</label>
+					</div>
 					<Input
 						type="date"
 						className="w-[150px]"
@@ -144,9 +139,9 @@ export default function FilterBar({ filters, onChange }: FilterBarProps) {
 
 				{/* Organization (free text) */}
 				<div className="space-y-1.5">
-					<label className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+					<div className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
 						Organization
-					</label>
+					</div>
 					<Input
 						placeholder="e.g. canary"
 						className="w-[140px]"

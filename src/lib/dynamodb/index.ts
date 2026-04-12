@@ -12,8 +12,11 @@ export {
 } from "./config";
 
 export {
+	type CancelResult,
 	// Types
 	type CombinedFilters,
+	// Cancel
+	cancelRequest,
 	findRequestById,
 	findRequestByIdAllStages,
 	// By ID
@@ -23,6 +26,8 @@ export {
 	type QueryFilters,
 	// Cross-stage variants
 	queryAllStages,
+	// All-steps fallback (replaces Scan for cross-account)
+	queryAllSteps,
 	queryByOrganization,
 	queryByOrganizationAllStages,
 	queryByStep,
@@ -36,10 +41,5 @@ export {
 	// Combined filters (smart GSI selection)
 	queryWithFilters,
 	queryWithFiltersAllStages,
-	// All-steps fallback (replaces Scan for cross-account)
-	queryAllSteps,
 	type TimeRange,
-	// Cancel
-	cancelRequest,
-	type CancelResult,
 } from "./queries";

@@ -35,10 +35,12 @@ export interface QueryFilters {
 	type?: string;
 	step?: string;
 	organization?: string;
+	countryCode?: string;
 	dateFrom?: string;
 	dateTo?: string;
 	stage?: Stage;
 	limit?: number;
+	hideDryRuns?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -262,6 +264,7 @@ export interface CombinedFilters {
 	countryCode?: string;
 	automated?: boolean;
 	deploymentStage?: string;
+	hideDryRuns?: boolean;
 	pagination?: PaginationOptions;
 }
 
@@ -366,6 +369,11 @@ function addExtraFilters(
 		values[":cc"] = filters.countryCode;
 		parts.push("#cc = :cc");
 	}
+	if (filters.hideDryRuns) {
+		names["#dryRun"] = "dryRun";
+		values[":dryRunFalse"] = false;
+		parts.push("(attribute_not_exists(#dryRun) OR #dryRun = :dryRunFalse)");
+	}
 	if (filters.automated !== undefined) {
 		names["#auto"] = "automated";
 		values[":auto"] = filters.automated;
@@ -386,8 +394,8 @@ import { STEP_ORDER } from "@/lib/types";
 
 /**
  * When no GSI partition key filter is available, query the step-index for
- * every known step value in parallel. This replaces Scan which is not
- * permitted by the cross-account resource-based policy.
+ * every known step value in parallel and keep paginating each step until it
+ * is fully exhausted.
  */
 export async function queryAllSteps(
 	stage: Stage,
@@ -403,43 +411,54 @@ export async function queryAllSteps(
 
 	const results = await Promise.all(
 		STEP_ORDER.map(async (step) => {
-			const names: Record<string, string> = {
-				"#step": "step",
-				...(options?.names ?? {}),
-			};
-			const values: Record<string, unknown> = {
-				":step": step,
-				...(options?.values ?? {}),
-			};
+			const items: DDBRecord[] = [];
+			let startKey = options?.pagination?.startKey;
 
-			let keyCondition = "#step = :step";
-			keyCondition = appendTimeRange(keyCondition, names, values, options?.timeRange);
+			while (true) {
+				const names: Record<string, string> = {
+					"#step": "step",
+					...(options?.names ?? {}),
+				};
+				const values: Record<string, unknown> = {
+					":step": step,
+					...(options?.values ?? {}),
+				};
 
-			const params: QueryCommandInput = {
-				TableName: getTableArn(stage),
-				IndexName: INDEXES.step,
-				KeyConditionExpression: keyCondition,
-				ExpressionAttributeNames: names,
-				ExpressionAttributeValues: values,
-				ScanIndexForward: false,
-				Limit: limit,
-			};
+				let keyCondition = "#step = :step";
+				keyCondition = appendTimeRange(
+					keyCondition,
+					names,
+					values,
+					options?.timeRange,
+				);
 
-			const filterParts = [...(options?.filterExpression ?? [])];
-			if (filterParts.length > 0) {
-				params.FilterExpression = filterParts.join(" AND ");
+				const params: QueryCommandInput = {
+					TableName: getTableArn(stage),
+					IndexName: INDEXES.step,
+					KeyConditionExpression: keyCondition,
+					ExpressionAttributeNames: names,
+					ExpressionAttributeValues: values,
+					ScanIndexForward: false,
+					Limit: limit,
+					...(startKey && { ExclusiveStartKey: startKey }),
+				};
+
+				const filterParts = [...(options?.filterExpression ?? [])];
+				if (filterParts.length > 0) {
+					params.FilterExpression = filterParts.join(" AND ");
+				}
+
+				const result = await execQuery(params);
+				items.push(...result.items);
+				if (!result.lastEvaluatedKey) break;
+				startKey = result.lastEvaluatedKey;
 			}
 
-			const result = await execQuery(params);
-			return result.items;
+			return items;
 		}),
 	);
 
-	const allItems = sortByStartedAtDesc(
-		tagItems(results.flat(), stage),
-	).slice(0, limit);
-
-	return { items: allItems };
+	return { items: sortByStartedAtDesc(tagItems(results.flat(), stage)) };
 }
 
 // ---------------------------------------------------------------------------
@@ -547,8 +566,39 @@ export async function queryWithFiltersAllStages(
 // Dashboard query — used by the /api/requests route handler
 // ---------------------------------------------------------------------------
 
+function hasPrimaryKeyFilter(filters: QueryFilters): boolean {
+	return Boolean(filters.type || filters.organization || filters.step);
+}
+
+async function queryAllPagesForStage(
+	filters: CombinedFilters,
+	stage: Stage,
+	batchSize: number,
+): Promise<StageRecord[]> {
+	const items: StageRecord[] = [];
+	let startKey: Record<string, unknown> | undefined;
+
+	while (true) {
+		const result = await queryWithFilters(
+			{
+				...filters,
+				pagination: {
+					limit: batchSize,
+					startKey,
+				},
+			},
+			stage,
+		);
+		items.push(...result.items);
+		if (!result.lastEvaluatedKey) break;
+		startKey = result.lastEvaluatedKey;
+	}
+
+	return items;
+}
+
 export async function queryRequests(filters: QueryFilters) {
-	const stages = filters.stage ? [filters.stage] : ENABLED_STAGES;
+	const stage = (filters.stage ?? "prod") as Stage;
 	const timeRange: TimeRange | undefined =
 		filters.dateFrom || filters.dateTo
 			? {
@@ -556,29 +606,32 @@ export async function queryRequests(filters: QueryFilters) {
 					to: filters.dateTo ? `${filters.dateTo}T23:59:59.999Z` : undefined,
 				}
 			: undefined;
+	const batchSize = filters.limit ?? 200;
 
 	// Virtual status: failed = search + manual
 	if (filters.step === "failed") {
 		const [searchItems, manualItems] = await Promise.all([
-			queryWithFiltersAllStages(
+			queryAllPagesForStage(
 				{
-					type: filters.type,
 					step: "search",
 					organization: filters.organization,
+					countryCode: filters.countryCode,
 					timeRange,
-					pagination: { limit: filters.limit ?? 100 },
+					hideDryRuns: filters.hideDryRuns,
 				},
-				stages,
+				stage,
+				batchSize,
 			),
-			queryWithFiltersAllStages(
+			queryAllPagesForStage(
 				{
-					type: filters.type,
 					step: "manual",
 					organization: filters.organization,
+					countryCode: filters.countryCode,
 					timeRange,
-					pagination: { limit: filters.limit ?? 100 },
+					hideDryRuns: filters.hideDryRuns,
 				},
-				stages,
+				stage,
+				batchSize,
 			),
 		]);
 
@@ -590,22 +643,35 @@ export async function queryRequests(filters: QueryFilters) {
 			}
 		}
 
-		return sortByStartedAtDesc(Array.from(deduped.values())).slice(
-			0,
-			filters.limit ?? 100,
+		return sortByStartedAtDesc(Array.from(deduped.values()));
+	}
+
+	// If we have a direct GSI key, page through it explicitly. Otherwise the
+	// step fan-out query already walks every page internally.
+	if (hasPrimaryKeyFilter(filters)) {
+		return queryAllPagesForStage(
+			{
+				type: filters.type,
+				step: filters.step,
+				organization: filters.organization,
+				countryCode: filters.countryCode,
+				timeRange,
+				hideDryRuns: filters.hideDryRuns,
+			},
+			stage,
+			batchSize,
 		);
 	}
 
-	return queryWithFiltersAllStages(
+	const result = await queryWithFilters(
 		{
-			type: filters.type,
-			step: filters.step,
-			organization: filters.organization,
+			countryCode: filters.countryCode,
 			timeRange,
-			pagination: { limit: filters.limit ?? 100 },
+			hideDryRuns: filters.hideDryRuns,
 		},
-		stages,
+		stage,
 	);
+	return result.items;
 }
 
 // ---------------------------------------------------------------------------
@@ -634,7 +700,10 @@ export async function cancelRequest(
 	// First fetch the current record to check and get the current step
 	const record = await getRequestById(requestId, stage);
 	if (!record) {
-		return { success: false, error: `Request ${requestId} not found in ${stage}` };
+		return {
+			success: false,
+			error: `Request ${requestId} not found in ${stage}`,
+		};
 	}
 
 	const currentStep = String(record.step);
@@ -673,7 +742,8 @@ export async function cancelRequest(
 		if (message.includes("ConditionalCheckFailedException")) {
 			return {
 				success: false,
-				error: "Request step changed since it was loaded. Please refresh and try again.",
+				error:
+					"Request step changed since it was loaded. Please refresh and try again.",
 			};
 		}
 		return { success: false, error: message };

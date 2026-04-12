@@ -13,6 +13,7 @@ const STAGE_LABELS: Record<Stage, string> = {
 const STAGE_COLORS: Record<string, string> = {
 	prod: "bg-emerald-500",
 	staging: "bg-amber-500",
+	dev: "bg-blue-500",
 };
 
 interface EnvSwitcherProps {

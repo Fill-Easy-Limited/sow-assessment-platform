@@ -1,8 +1,8 @@
 import type { NextRequest } from "next/server";
-import { invokeResolveSync } from "@/lib/aws/resolve-request";
+import { getAccountIdForOrg } from "@/lib/aws/cognito";
 import type { ResolveEventPayload } from "@/lib/aws/cra-config";
-import { ENABLED_STAGES, type Stage } from "@/lib/dynamodb";
-import { getRequestById } from "@/lib/dynamodb";
+import { invokeResolveSync } from "@/lib/aws/resolve-request";
+import { ENABLED_STAGES, getRequestById, type Stage } from "@/lib/dynamodb";
 
 export const dynamic = "force-dynamic";
 
@@ -51,8 +51,8 @@ export async function POST(
 
 		// Extract stage from body or query params, default to prod
 		let stage: Stage = "prod";
-		const stageParam = body.stage ||
-			request.nextUrl.searchParams.get("stage") || "prod";
+		const stageParam =
+			body.stage || request.nextUrl.searchParams.get("stage") || "prod";
 
 		if (!ENABLED_STAGES.includes(stageParam as Stage)) {
 			return Response.json(
@@ -103,10 +103,29 @@ export async function POST(
 			);
 		}
 
-		const accountId =
+		// Try accountId from the record first, then look up via Cognito
+		let accountId =
 			typeof requestItem.accountId === "string" && requestItem.accountId.trim()
 				? requestItem.accountId.trim()
 				: undefined;
+
+		if (!accountId && requestItem.organization) {
+			accountId = await getAccountIdForOrg(
+				String(requestItem.organization),
+				stage,
+			);
+		}
+
+		if (!accountId) {
+			return Response.json(
+				{
+					error: `Could not determine account ID for organization '${String(requestItem.organization)}' in ${stage}. The organization may not be registered in Cognito.`,
+					requestId,
+					stage,
+				},
+				{ status: 400 },
+			);
+		}
 
 		// Invoke the resolve Lambda (accountId-based when available; stage fallback for legacy records)
 		const result = await invokeResolveSync(payload, stage, accountId);
@@ -151,8 +170,7 @@ export async function POST(
 			{ status: 500 },
 		);
 	} catch (error) {
-		const errorMessage =
-			error instanceof Error ? error.message : String(error);
+		const errorMessage = error instanceof Error ? error.message : String(error);
 		console.error(`Resolve request failed for ${requestId}:`, errorMessage);
 
 		return Response.json(

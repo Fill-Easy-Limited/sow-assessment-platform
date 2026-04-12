@@ -53,11 +53,11 @@ export const STEP_ORDER: Step[] = [
 ];
 
 export interface RequestFilters {
-	type?: string;
 	step?: Step | "failed";
 	organization?: string;
 	countryCode?: string;
 	dateFrom?: string;
 	dateTo?: string;
 	stage?: string;
+	hideDryRuns?: boolean;
 }

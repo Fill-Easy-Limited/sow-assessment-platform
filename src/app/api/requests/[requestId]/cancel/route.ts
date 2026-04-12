@@ -9,7 +9,10 @@ export async function POST(
 ) {
 	const { requestId } = await params;
 	if (!requestId || typeof requestId !== "string") {
-		return Response.json({ error: "Missing or invalid requestId" }, { status: 400 });
+		return Response.json(
+			{ error: "Missing or invalid requestId" },
+			{ status: 400 },
+		);
 	}
 
 	try {
@@ -48,9 +51,11 @@ export async function POST(
 			);
 		}
 
-		const status = result.error?.includes("cannot be cancelled") ? 409
-			: result.error?.includes("not found") ? 404
-			: 500;
+		const status = result.error?.includes("cannot be cancelled")
+			? 409
+			: result.error?.includes("not found")
+				? 404
+				: 500;
 
 		return Response.json(
 			{

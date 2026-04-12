@@ -19,7 +19,7 @@ export type Stage = keyof typeof STAGE_ACCOUNTS;
 export const ALL_STAGES = Object.keys(STAGE_ACCOUNTS) as Stage[];
 
 /** For the initial testing phase, only query prod and staging. */
-export const ENABLED_STAGES: Stage[] = ["prod", "staging"];
+export const ENABLED_STAGES: Stage[] = ["prod", "staging", "dev"];
 
 export function getTableArn(stage: Stage): string {
 	const account = STAGE_ACCOUNTS[stage];
