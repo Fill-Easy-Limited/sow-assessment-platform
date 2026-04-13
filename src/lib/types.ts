@@ -20,6 +20,8 @@ export interface RequestItem {
 	companyName?: string;
 	documentId?: string;
 	documentType?: string;
+	address?: string;
+	prn?: string;
 	dryRun?: boolean;
 	error?: RequestError;
 	debugUrl?: string;

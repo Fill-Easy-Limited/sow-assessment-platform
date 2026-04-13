@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 import { getAccountIdForOrg } from "@/lib/aws/cognito";
 import type { ResolveEventPayload } from "@/lib/aws/cra-config";
-import { invokeResolveSync } from "@/lib/aws/resolve-request";
+import { invokeResolveSync, invokeLraResolveSync } from "@/lib/aws/resolve-request";
 import { ENABLED_STAGES, getRequestById, type Stage } from "@/lib/dynamodb";
 
 export const dynamic = "force-dynamic";
@@ -9,19 +9,10 @@ export const dynamic = "force-dynamic";
 /**
  * POST /api/requests/[requestId]/resolve
  *
- * Invokes the CraResolve Lambda to submit a company identifier
- * and resume a request stuck in the `search` step.
+ * Invokes the CraResolve or LraResolve Lambda depending on the request type.
  *
- * Request body:
- * {
- *   "companyId"?: string,     // Company registry number
- *   "companyName"?: string,   // Company name for name-based lookups
- *   "documentType"?: string,  // Override document type (e.g. "Annual Return")
- *   "documentId"?: string,    // For direct document ID lookups
- *   "stage"?: string          // Optional stage override (defaults to prod)
- * }
- *
- * At least one of companyId, companyName, or documentId must be provided.
+ * CRA body: { companyId?, companyName?, documentType?, documentId?, stage? }
+ * LRA body: { prn, stage? }
  */
 export async function POST(
 	request: NextRequest,
@@ -29,7 +20,6 @@ export async function POST(
 ) {
 	const { requestId } = await params;
 
-	// Validate requestId
 	if (!requestId || typeof requestId !== "string") {
 		return Response.json(
 			{ error: "Missing or invalid requestId" },
@@ -37,8 +27,9 @@ export async function POST(
 		);
 	}
 
+	const isLra = requestId.startsWith("LR_");
+
 	try {
-		// Parse request body
 		let body: Record<string, unknown> = {};
 		try {
 			body = await request.json();
@@ -49,52 +40,19 @@ export async function POST(
 			);
 		}
 
-		// Extract stage from body or query params, default to prod
 		let stage: Stage = "prod";
 		const stageParam =
 			body.stage || request.nextUrl.searchParams.get("stage") || "prod";
 
 		if (!ENABLED_STAGES.includes(stageParam as Stage)) {
 			return Response.json(
-				{
-					error: `Invalid stage. Allowed: ${ENABLED_STAGES.join(", ")}`,
-				},
+				{ error: `Invalid stage. Allowed: ${ENABLED_STAGES.join(", ")}` },
 				{ status: 400 },
 			);
 		}
 		stage = stageParam as Stage;
 
-		// Validate that at least one identifier is provided
-		const { companyId, companyName, documentType, documentId } = body;
-		if (!companyId && !companyName && !documentId) {
-			return Response.json(
-				{
-					error:
-						"At least one of companyId, companyName, or documentId must be provided",
-				},
-				{ status: 400 },
-			);
-		}
-
-		// Build the resolve payload
-		const payload: ResolveEventPayload = {
-			requestId,
-		};
-
-		if (companyId) {
-			payload.companyId = String(companyId);
-		}
-		if (companyName) {
-			payload.companyName = String(companyName);
-		}
-		if (documentType) {
-			payload.documentType = String(documentType);
-		}
-		if (documentId) {
-			payload.documentId = String(documentId);
-		}
-
-		// Resolve should target the request's sub-account Lambda when accountId is present.
+		// Look up the request record to get accountId / organization
 		const requestItem = await getRequestById(requestId, stage);
 		if (!requestItem) {
 			return Response.json(
@@ -103,7 +61,6 @@ export async function POST(
 			);
 		}
 
-		// Try accountId from the record first, then look up via Cognito
 		let accountId =
 			typeof requestItem.accountId === "string" && requestItem.accountId.trim()
 				? requestItem.accountId.trim()
@@ -127,46 +84,70 @@ export async function POST(
 			);
 		}
 
-		// Invoke the resolve Lambda (accountId-based when available; stage fallback for legacy records)
+		// --- LRA resolve ---
+		if (isLra) {
+			const { prn } = body;
+			if (!prn || typeof prn !== "string" || !String(prn).trim()) {
+				return Response.json(
+					{ error: "PRN is required for LRA resolve" },
+					{ status: 400 },
+				);
+			}
+
+			const result = await invokeLraResolveSync(
+				{ requestId, prn: String(prn).trim() },
+				accountId,
+			);
+
+			if (result.success) {
+				return Response.json(
+					{ success: true, message: result.message, requestId, stage, targetAccountId: accountId },
+					{ status: 200 },
+				);
+			}
+			if (result.status === 409) {
+				return Response.json(
+					{ success: false, error: result.error, requestId, stage, targetAccountId: accountId },
+					{ status: 409 },
+				);
+			}
+			return Response.json(
+				{ success: false, error: result.error || "Failed to resolve LRA request", requestId, stage, targetAccountId: accountId },
+				{ status: 500 },
+			);
+		}
+
+		// --- CRA resolve ---
+		const { companyId, companyName, documentType, documentId } = body;
+		if (!companyId && !companyName && !documentId) {
+			return Response.json(
+				{ error: "At least one of companyId, companyName, or documentId must be provided" },
+				{ status: 400 },
+			);
+		}
+
+		const payload: ResolveEventPayload = { requestId };
+		if (companyId) payload.companyId = String(companyId);
+		if (companyName) payload.companyName = String(companyName);
+		if (documentType) payload.documentType = String(documentType);
+		if (documentId) payload.documentId = String(documentId);
+
 		const result = await invokeResolveSync(payload, stage, accountId);
 
-		// Return appropriate response based on Lambda result
 		if (result.success) {
 			return Response.json(
-				{
-					success: true,
-					message: result.message,
-					requestId,
-					stage,
-					targetAccountId: accountId,
-				},
+				{ success: true, message: result.message, requestId, stage, targetAccountId: accountId },
 				{ status: 200 },
 			);
 		}
-
-		// 409: Already resolved or claimed
 		if (result.status === 409) {
 			return Response.json(
-				{
-					success: false,
-					error: result.error,
-					requestId,
-					stage,
-					targetAccountId: accountId,
-				},
+				{ success: false, error: result.error, requestId, stage, targetAccountId: accountId },
 				{ status: 409 },
 			);
 		}
-
-		// Other errors
 		return Response.json(
-			{
-				success: false,
-				error: result.error || "Failed to resolve request",
-				requestId,
-				stage,
-				targetAccountId: accountId,
-			},
+			{ success: false, error: result.error || "Failed to resolve request", requestId, stage, targetAccountId: accountId },
 			{ status: 500 },
 		);
 	} catch (error) {

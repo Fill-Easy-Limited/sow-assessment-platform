@@ -6,6 +6,11 @@ import {
 	getCraResolveLambdaArn,
 	validateResolvePayload,
 } from "./cra-config";
+import {
+	type LraResolveEventPayload,
+	getLraResolveLambdaArnByAccount,
+	validateLraResolvePayload,
+} from "./lra-config";
 import type { Stage } from "@/lib/dynamodb/config";
 
 /**
@@ -171,5 +176,81 @@ export async function invokeResolveSync(
 		);
 
 		throw new Error(`Failed to invoke resolve lambda: ${errorMessage}`);
+	}
+}
+
+/**
+ * Invokes the LraResolve Lambda in cross-account to submit a PRN
+ * and resume an LRA request stuck in the `search` step.
+ */
+export async function invokeLraResolveSync(
+	payload: LraResolveEventPayload,
+	accountId: string,
+): Promise<ResolveResponse> {
+	if (!validateLraResolvePayload(payload)) {
+		throw new Error(
+			"Invalid payload: requestId and prn are required",
+		);
+	}
+
+	const functionArn = getLraResolveLambdaArnByAccount(accountId);
+
+	try {
+		const command = new InvokeCommand({
+			FunctionName: functionArn,
+			InvocationType: "RequestResponse",
+			Payload: Buffer.from(JSON.stringify(payload)),
+		});
+
+		const response = await lambdaClient.send(command);
+
+		let lambdaResult: unknown;
+		if (response.Payload) {
+			const payloadString =
+				typeof response.Payload === "string"
+					? response.Payload
+					: new TextDecoder().decode(response.Payload as Uint8Array);
+			lambdaResult = JSON.parse(payloadString);
+		}
+
+		if (response.FunctionError) {
+			console.error(`LraResolve Lambda returned function error:`, lambdaResult);
+			return {
+				success: false,
+				error: `Lambda execution error: ${JSON.stringify(lambdaResult)}`,
+			};
+		}
+
+		if (response.StatusCode === 200) {
+			return {
+				success: true,
+				status: 200,
+				message: "LRA resolve invoked successfully",
+			};
+		}
+
+		if (response.StatusCode === 409) {
+			return {
+				success: false,
+				status: 409,
+				error: "Request is not in search step - already resolved",
+			};
+		}
+
+		return {
+			success: false,
+			status: response.StatusCode,
+			error: lambdaResult ? JSON.stringify(lambdaResult) : `HTTP ${response.StatusCode}`,
+		};
+	} catch (error) {
+		const errorMessage =
+			error instanceof Error ? error.message : String(error);
+
+		console.error(
+			`Failed to invoke LraResolve Lambda (account ${accountId}):`,
+			errorMessage,
+		);
+
+		throw new Error(`Failed to invoke LRA resolve lambda: ${errorMessage}`);
 	}
 }

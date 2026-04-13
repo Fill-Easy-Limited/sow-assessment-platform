@@ -18,6 +18,10 @@ export interface ResolveRequestInput {
 	documentType?: string;
 }
 
+export interface LraResolveRequestInput {
+	prn: string;
+}
+
 export interface ResolveRequestResult {
 	success: boolean;
 	message?: string;
@@ -172,6 +176,74 @@ export async function cancelRequest(
 			return {
 				success: false,
 				error: data.error || "Request cannot be cancelled",
+			};
+		}
+
+		return {
+			success: false,
+			error: data.error || `HTTP ${response.status}: ${response.statusText}`,
+		};
+	} catch (error) {
+		const message = error instanceof Error ? error.message : String(error);
+		return {
+			success: false,
+			error: `Failed to reach API: ${message}`,
+		};
+	}
+}
+
+/**
+ * Client-side function to resolve an LRA request stuck in the `search` step.
+ * Calls POST /api/requests/[requestId]/resolve with { prn }
+ */
+export async function lraResolveRequest(
+	requestId: string,
+	input: LraResolveRequestInput,
+	options?: ResolveRequestOptions,
+): Promise<ResolveRequestResult> {
+	if (!requestId) {
+		return { success: false, error: "requestId is required" };
+	}
+	if (!input.prn?.trim()) {
+		return { success: false, error: "PRN is required" };
+	}
+
+	const url = new URL(
+		`/api/requests/${requestId}/resolve`,
+		typeof window !== "undefined"
+			? window.location.origin
+			: "http://localhost:3000",
+	);
+
+	if (options?.stage) {
+		url.searchParams.set("stage", options.stage);
+	}
+
+	try {
+		const response = await fetch(url.toString(), {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({
+				prn: input.prn.trim(),
+				stage: options?.stage,
+			}),
+		});
+
+		const data = await response.json();
+
+		if (response.ok) {
+			return {
+				success: true,
+				message: data.message,
+				requestId: data.requestId,
+				stage: data.stage,
+			};
+		}
+
+		if (response.status === 409) {
+			return {
+				success: false,
+				error: data.error || "Request is not in search step",
 			};
 		}
 

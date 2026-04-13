@@ -321,7 +321,9 @@ export default function Dashboard({ stage }: DashboardProps) {
 									</TableCell>
 									<TableCell>
 										<span className="text-sm text-foreground/80">
-											{r.companyName ?? "—"}
+											{r.requestId.startsWith("LR_")
+												? (r.address ?? r.prn ?? "—")
+												: (r.companyName ?? "—")}
 										</span>
 									</TableCell>
 									<TableCell>

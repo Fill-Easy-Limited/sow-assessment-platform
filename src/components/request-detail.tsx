@@ -14,6 +14,7 @@ import { Separator } from "@/components/ui/separator";
 import type { RequestItem } from "@/lib/types";
 import CancelRequest from "./cancel-request";
 import FileUpload from "./file-upload";
+import LraSearchResolve from "./lra-search-resolve";
 import SearchResolve from "./search-resolve";
 import StatusBadge from "./status-badge";
 
@@ -48,6 +49,7 @@ export default function RequestDetail({
 
 	if (!item) return null;
 
+	const isLra = item.requestId.startsWith("LR_");
 	const startedDate = new Date(item.startedAt);
 
 	return (
@@ -71,9 +73,19 @@ export default function RequestDetail({
 					<Field label="Environment" value={item.environment} />
 					<Field label="Automated" value={item.automated ? "Yes" : "No"} />
 					<Field label="Duration" value={formatDuration(item.duration ?? 0)} />
-					<Field label="Company ID" value={item.companyId} />
-					<Field label="Document ID" value={item.documentId} />
-					<Field label="Document Type" value={item.documentType} />
+					{isLra ? (
+						<>
+							<Field label="Address" value={item.address} />
+							<Field label="PRN" value={item.prn} />
+						</>
+					) : (
+						<>
+							<Field label="Company Name" value={item.companyName} />
+							<Field label="Company ID" value={item.companyId} />
+							<Field label="Document ID" value={item.documentId} />
+							<Field label="Document Type" value={item.documentType} />
+						</>
+					)}
 					<Field
 						label="Started At"
 						value={`${format(startedDate, "yyyy-MM-dd HH:mm:ss")} (${formatDistanceToNow(startedDate, { addSuffix: true })})`}
@@ -192,12 +204,20 @@ export default function RequestDetail({
 							<h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
 								Resolve Search Request
 							</h4>
-							<SearchResolve
-								requestId={item.requestId}
-								stage={item._stage ?? item.deploymentStage}
-								defaultCompanyId={item.companyId}
-								onSuccess={onRequestUpdated}
-							/>
+							{isLra ? (
+								<LraSearchResolve
+									requestId={item.requestId}
+									stage={item._stage ?? item.deploymentStage}
+									onSuccess={onRequestUpdated}
+								/>
+							) : (
+								<SearchResolve
+									requestId={item.requestId}
+									stage={item._stage ?? item.deploymentStage}
+									defaultCompanyId={item.companyId}
+									onSuccess={onRequestUpdated}
+								/>
+							)}
 						</div>
 					</>
 				)}
