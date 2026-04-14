@@ -263,22 +263,22 @@ export default function Dashboard({ stage }: DashboardProps) {
 						Using mock data — DynamoDB not reachable
 					</div>
 				)}
-				<Table>
+				<Table className="table-fixed">
 					<TableHeader>
 						<TableRow className="bg-muted/40 hover:bg-muted/40">
-							<TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+							<TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground w-[150px]">
 								Request ID
 							</TableHead>
 							<TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
 								Company Name
 							</TableHead>
-							<TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-								Country / Organization
+							<TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground w-[140px]">
+								Country / Org
 							</TableHead>
-							<TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+							<TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground w-[110px]">
 								Date
 							</TableHead>
-							<TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground w-[220px]">
+							<TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground w-[200px]">
 								Progress
 							</TableHead>
 						</TableRow>
@@ -309,18 +309,16 @@ export default function Dashboard({ stage }: DashboardProps) {
 									className="cursor-pointer transition-colors hover:bg-accent/50 border-border/40"
 									onClick={() => setSelected(r)}
 								>
-									<TableCell className="font-mono text-xs text-muted-foreground">
-										<span className="inline-flex items-center gap-1.5">
-											{r.requestId}
-											{r.dryRun && (
-												<span className="text-[10px] font-semibold uppercase tracking-wide bg-amber-100 text-amber-700 border border-amber-300 px-1.5 py-0.5 rounded-full leading-none">
-													Dry Run
-												</span>
-											)}
-										</span>
+									<TableCell className="font-mono text-[11px] text-muted-foreground">
+										{r.requestId}
+										{r.dryRun && (
+											<span className="text-[9px] font-semibold uppercase tracking-wide bg-amber-100 text-amber-700 border border-amber-300 px-1 py-0.5 rounded-full leading-none ml-1">
+												dry
+											</span>
+										)}
 									</TableCell>
 									<TableCell>
-										<span className="text-sm text-foreground/80">
+										<span className="text-sm text-foreground/80 block truncate">
 											{r.requestId.startsWith("LR_")
 												? (r.address ?? r.prn ?? "—")
 												: (r.companyName ?? "—")}
@@ -336,7 +334,7 @@ export default function Dashboard({ stage }: DashboardProps) {
 											</span>
 										</span>
 									</TableCell>
-									<TableCell className="text-sm text-muted-foreground">
+									<TableCell className="text-sm text-muted-foreground whitespace-nowrap">
 										{format(new Date(r.startedAt), "MMM d, yyyy")}
 									</TableCell>
 									<TableCell>
