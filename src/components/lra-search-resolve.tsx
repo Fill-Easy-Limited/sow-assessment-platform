@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { lraResolveRequest } from "@/lib/aws/client";
+import { invokeLraRetrieval } from "@/lib/aws/client";
 
 interface LraSearchResolveProps {
 	requestId: string;
@@ -24,7 +24,7 @@ export default function LraSearchResolve({
 	const mutation = useMutation({
 		mutationFn: async () => {
 			setMessage("");
-			return lraResolveRequest(requestId, { prn: prn.trim() }, { stage });
+			return invokeLraRetrieval(requestId, { prn: prn.trim() }, { stage });
 		},
 		onSuccess: (result) => {
 			if (result.success) {

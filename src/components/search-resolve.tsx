@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { resolveRequest } from "@/lib/aws/client";
+import { invokeRetrieval } from "@/lib/aws/client";
 
 interface SearchResolveProps {
 	requestId: string;
@@ -27,7 +27,7 @@ export default function SearchResolve({
 	const mutation = useMutation({
 		mutationFn: async () => {
 			setMessage("");
-			return resolveRequest(
+			return invokeRetrieval(
 				requestId,
 				{
 					companyId: companyId.trim() || undefined,

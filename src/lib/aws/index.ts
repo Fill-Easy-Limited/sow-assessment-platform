@@ -1,21 +1,21 @@
-export { cancelRequest, resolveRequest, lraResolveRequest } from "./client";
+export { cancelRequest, invokeRetrieval, invokeLraRetrieval, retryRequest } from "./client";
 export { getAccountIdForOrg } from "./cognito";
 export {
-	getCraResolveLambdaArn,
-	getCraResolveLambdaArnByAccount,
+	getCraInvokeRetrievalLambdaArn,
+	getCraInvokeRetrievalLambdaArnByAccount,
 	LAMBDA_REGION,
-	type ResolveEventPayload,
-	validateResolvePayload,
+	type InvokeRetrievalEventPayload,
+	validateInvokeRetrievalPayload,
 } from "./cra-config";
 export {
-	getLraResolveLambdaArnByAccount,
-	type LraResolveEventPayload,
-	validateLraResolvePayload,
+	getLraInvokeRetrievalLambdaArnByAccount,
+	type LraInvokeRetrievalEventPayload,
+	validateLraInvokeRetrievalPayload,
 } from "./lra-config";
 export { lambdaClient } from "./lambda-client";
 export {
-	invokeResolve,
-	invokeResolveSync,
-	invokeLraResolveSync,
-	type ResolveResponse,
-} from "./resolve-request";
+	invokeCraRetrieval,
+	invokeCraRetrievalSync,
+	invokeLraRetrievalSync,
+	type InvokeRetrievalResponse,
+} from "./invoke-retrieval";

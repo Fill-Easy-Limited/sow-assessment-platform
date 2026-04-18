@@ -1,9 +1,9 @@
 /**
- * Client-side API utilities for resolve requests.
+ * Client-side API utilities for invoking retrieval / cancelling requests.
  * These functions call the backend API routes.
  */
 
-export interface ResolveRequestOptions {
+export interface InvokeRetrievalOptions {
 	stage?: string;
 }
 
@@ -11,18 +11,18 @@ export interface CancelRequestOptions {
 	stage?: string;
 }
 
-export interface ResolveRequestInput {
+export interface InvokeRetrievalInput {
 	companyId?: string;
 	companyName?: string;
 	documentId?: string;
 	documentType?: string;
 }
 
-export interface LraResolveRequestInput {
+export interface LraInvokeRetrievalInput {
 	prn: string;
 }
 
-export interface ResolveRequestResult {
+export interface InvokeRetrievalResult {
 	success: boolean;
 	message?: string;
 	error?: string;
@@ -40,36 +40,21 @@ export interface CancelRequestResult {
 }
 
 /**
- * Client-side function to resolve a request stuck in the `search` step.
- * Calls POST /api/requests/[requestId]/resolve
- *
- * @param requestId - The request ID to resolve
- * @param companyId - Optional company ID
- * @param companyName - Optional company name (at least one of companyId or companyName required)
- * @param options - Optional configuration (stage, etc.)
- * @returns Promise<ResolveRequestResult>
+ * Invokes retrieval for a CRA request. Used both to "resolve" a search-stalled
+ * request (with identifiers) and to "retry" a manual-state request (no input).
+ * Calls POST /api/requests/[requestId]/invoke-retrieval
  */
-export async function resolveRequest(
+export async function invokeRetrieval(
 	requestId: string,
-	input: ResolveRequestInput,
-	options?: ResolveRequestOptions,
-): Promise<ResolveRequestResult> {
+	input: InvokeRetrievalInput,
+	options?: InvokeRetrievalOptions,
+): Promise<InvokeRetrievalResult> {
 	if (!requestId) {
-		return {
-			success: false,
-			error: "requestId is required",
-		};
-	}
-
-	if (!input.companyId && !input.companyName && !input.documentId) {
-		return {
-			success: false,
-			error: "At least one of companyId, companyName, or documentId must be provided",
-		};
+		return { success: false, error: "requestId is required" };
 	}
 
 	const url = new URL(
-		`/api/requests/${requestId}/resolve`,
+		`/api/requests/${requestId}/invoke-retrieval`,
 		typeof window !== "undefined"
 			? window.location.origin
 			: "http://localhost:3000",
@@ -82,9 +67,7 @@ export async function resolveRequest(
 	try {
 		const response = await fetch(url.toString(), {
 			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-			},
+			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
 				companyId: input.companyId,
 				companyName: input.companyName,
@@ -105,28 +88,34 @@ export async function resolveRequest(
 			};
 		}
 
-		// Handle error responses from the API
 		if (response.status === 409) {
 			return {
 				success: false,
-				error: data.error || "Request is not in search step",
+				error: data.error || "Request is not in search or manual step",
 			};
 		}
 
 		return {
 			success: false,
-			error:
-				data.error ||
-				`HTTP ${response.status}: ${response.statusText}`,
+			error: data.error || `HTTP ${response.status}: ${response.statusText}`,
 		};
 	} catch (error) {
-		const message =
-			error instanceof Error ? error.message : String(error);
-		return {
-			success: false,
-			error: `Failed to reach API: ${message}`,
-		};
+		const message = error instanceof Error ? error.message : String(error);
+		return { success: false, error: `Failed to reach API: ${message}` };
 	}
+}
+
+/**
+ * Retries a request stuck in the `manual` step by re-invoking its retrieval Lambda
+ * with the token already stored in S3. Hits the same endpoint as `invokeRetrieval`
+ * but with no identifier overrides — the unified Lambda accepts both `search`
+ * (with identifiers) and `manual` (no identifiers) entry points.
+ */
+export async function retryRequest(
+	requestId: string,
+	options?: InvokeRetrievalOptions,
+): Promise<InvokeRetrievalResult> {
+	return invokeRetrieval(requestId, {}, options);
 }
 
 export async function cancelRequest(
@@ -134,10 +123,7 @@ export async function cancelRequest(
 	options?: CancelRequestOptions,
 ): Promise<CancelRequestResult> {
 	if (!requestId) {
-		return {
-			success: false,
-			error: "requestId is required",
-		};
+		return { success: false, error: "requestId is required" };
 	}
 
 	const url = new URL(
@@ -154,9 +140,7 @@ export async function cancelRequest(
 	try {
 		const response = await fetch(url.toString(), {
 			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-			},
+			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({ stage: options?.stage }),
 		});
 
@@ -185,22 +169,20 @@ export async function cancelRequest(
 		};
 	} catch (error) {
 		const message = error instanceof Error ? error.message : String(error);
-		return {
-			success: false,
-			error: `Failed to reach API: ${message}`,
-		};
+		return { success: false, error: `Failed to reach API: ${message}` };
 	}
 }
 
 /**
- * Client-side function to resolve an LRA request stuck in the `search` step.
- * Calls POST /api/requests/[requestId]/resolve with { prn }
+ * Invokes retrieval for an LRA request. Used both to "resolve" a search-stalled
+ * request (with PRN) and to "retry" a manual-state request (no input).
+ * Calls POST /api/requests/[requestId]/invoke-retrieval with { prn? }
  */
-export async function lraResolveRequest(
+export async function invokeLraRetrieval(
 	requestId: string,
-	input: LraResolveRequestInput,
-	options?: ResolveRequestOptions,
-): Promise<ResolveRequestResult> {
+	input: LraInvokeRetrievalInput,
+	options?: InvokeRetrievalOptions,
+): Promise<InvokeRetrievalResult> {
 	if (!requestId) {
 		return { success: false, error: "requestId is required" };
 	}
@@ -209,7 +191,7 @@ export async function lraResolveRequest(
 	}
 
 	const url = new URL(
-		`/api/requests/${requestId}/resolve`,
+		`/api/requests/${requestId}/invoke-retrieval`,
 		typeof window !== "undefined"
 			? window.location.origin
 			: "http://localhost:3000",
@@ -243,7 +225,7 @@ export async function lraResolveRequest(
 		if (response.status === 409) {
 			return {
 				success: false,
-				error: data.error || "Request is not in search step",
+				error: data.error || "Request is not in search or manual step",
 			};
 		}
 
@@ -253,9 +235,6 @@ export async function lraResolveRequest(
 		};
 	} catch (error) {
 		const message = error instanceof Error ? error.message : String(error);
-		return {
-			success: false,
-			error: `Failed to reach API: ${message}`,
-		};
+		return { success: false, error: `Failed to reach API: ${message}` };
 	}
 }

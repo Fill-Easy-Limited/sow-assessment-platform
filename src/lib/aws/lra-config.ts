@@ -4,41 +4,31 @@
 import { LAMBDA_REGION } from "./cra-config";
 
 /**
- * Get the ARN for the LraResolve Lambda from an explicit sub-account ID.
+ * Get the ARN for the LraInvokeRetrieval Lambda from an explicit sub-account ID.
  * Used by tracker records that carry `accountId`.
  */
-export function getLraResolveLambdaArnByAccount(accountId: string): string {
-	return `arn:aws:lambda:${LAMBDA_REGION}:${accountId}:function:LraResolve`;
+export function getLraInvokeRetrievalLambdaArnByAccount(
+	accountId: string,
+): string {
+	return `arn:aws:lambda:${LAMBDA_REGION}:${accountId}:function:LraInvokeRetrieval`;
 }
 
 /**
- * Interface for the LraResolve Lambda payload.
+ * Interface for the LraInvokeRetrieval Lambda payload.
+ * `prn` is optional — omitted on retry-from-manual (token already has it).
  */
-export interface LraResolveEventPayload {
+export interface LraInvokeRetrievalEventPayload {
 	requestId: string;
-	prn: string;
+	prn?: string;
 }
 
 /**
- * Validation for LRA resolve event payload.
- * Both requestId and prn are required.
+ * Validates that requestId is present. `prn` is optional.
  */
-export function validateLraResolvePayload(
+export function validateLraInvokeRetrievalPayload(
 	payload: unknown,
-): payload is LraResolveEventPayload {
-	if (typeof payload !== "object" || payload === null) {
-		return false;
-	}
-
+): payload is LraInvokeRetrievalEventPayload {
+	if (typeof payload !== "object" || payload === null) return false;
 	const p = payload as Record<string, unknown>;
-
-	if (typeof p.requestId !== "string" || !p.requestId.trim()) {
-		return false;
-	}
-
-	if (typeof p.prn !== "string" || !p.prn.trim()) {
-		return false;
-	}
-
-	return true;
+	return typeof p.requestId === "string" && !!p.requestId.trim();
 }

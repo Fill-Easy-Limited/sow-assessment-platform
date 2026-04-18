@@ -15,6 +15,7 @@ import type { RequestItem } from "@/lib/types";
 import CancelRequest from "./cancel-request";
 import FileUpload from "./file-upload";
 import LraSearchResolve from "./lra-search-resolve";
+import RetryRequest from "./retry-request";
 import SearchResolve from "./search-resolve";
 import StatusBadge from "./status-badge";
 
@@ -95,8 +96,8 @@ export default function RequestDetail({
 				{["initiated", "search", "manual"].includes(item.step) && (
 					<>
 						<Separator className="my-3" />
-						<div className="rounded-lg border border-border/60 bg-muted/20 p-3">
-							<h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+						<div className="rounded-lg border border-border/60 bg-muted/20 p-3 space-y-3">
+							<h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
 								Actions
 							</h4>
 							<CancelRequest
@@ -105,6 +106,13 @@ export default function RequestDetail({
 								step={item.step}
 								onSuccess={onRequestUpdated}
 							/>
+							{item.step === "manual" && item.error && (
+								<RetryRequest
+									requestId={item.requestId}
+									stage={item._stage ?? item.deploymentStage}
+									onSuccess={onRequestUpdated}
+								/>
+							)}
 						</div>
 					</>
 				)}

@@ -1,18 +1,23 @@
 import type { NextRequest } from "next/server";
 import { getAccountIdForOrg } from "@/lib/aws/cognito";
-import type { ResolveEventPayload } from "@/lib/aws/cra-config";
-import { invokeResolveSync, invokeLraResolveSync } from "@/lib/aws/resolve-request";
+import type { InvokeRetrievalEventPayload } from "@/lib/aws/cra-config";
+import {
+	invokeCraRetrievalSync,
+	invokeLraRetrievalSync,
+} from "@/lib/aws/invoke-retrieval";
 import { ENABLED_STAGES, getRequestById, type Stage } from "@/lib/dynamodb";
 
 export const dynamic = "force-dynamic";
 
 /**
- * POST /api/requests/[requestId]/resolve
+ * POST /api/requests/[requestId]/invoke-retrieval
  *
- * Invokes the CraResolve or LraResolve Lambda depending on the request type.
+ * Invokes the CraInvokeRetrieval or LraInvokeRetrieval Lambda depending on the
+ * request type. Used both to "resolve" a search-stalled request (with identifiers)
+ * and to "retry" a manual-state request (with no identifiers).
  *
  * CRA body: { companyId?, companyName?, documentType?, documentId?, stage? }
- * LRA body: { prn, stage? }
+ * LRA body: { prn?, stage? }
  */
 export async function POST(
 	request: NextRequest,
@@ -52,7 +57,6 @@ export async function POST(
 		}
 		stage = stageParam as Stage;
 
-		// Look up the request record to get accountId / organization
 		const requestItem = await getRequestById(requestId, stage);
 		if (!requestItem) {
 			return Response.json(
@@ -84,78 +88,103 @@ export async function POST(
 			);
 		}
 
-		// --- LRA resolve ---
+		// --- LRA ---
 		if (isLra) {
 			const { prn } = body;
-			if (!prn || typeof prn !== "string" || !String(prn).trim()) {
-				return Response.json(
-					{ error: "PRN is required for LRA resolve" },
-					{ status: 400 },
-				);
-			}
+			const prnTrimmed =
+				typeof prn === "string" && prn.trim() ? prn.trim() : undefined;
 
-			const result = await invokeLraResolveSync(
-				{ requestId, prn: String(prn).trim() },
+			const result = await invokeLraRetrievalSync(
+				{ requestId, ...(prnTrimmed ? { prn: prnTrimmed } : {}) },
 				accountId,
 			);
 
 			if (result.success) {
 				return Response.json(
-					{ success: true, message: result.message, requestId, stage, targetAccountId: accountId },
+					{
+						success: true,
+						message: result.message,
+						requestId,
+						stage,
+						targetAccountId: accountId,
+					},
 					{ status: 200 },
 				);
 			}
 			if (result.status === 409) {
 				return Response.json(
-					{ success: false, error: result.error, requestId, stage, targetAccountId: accountId },
+					{
+						success: false,
+						error: result.error,
+						requestId,
+						stage,
+						targetAccountId: accountId,
+					},
 					{ status: 409 },
 				);
 			}
 			return Response.json(
-				{ success: false, error: result.error || "Failed to resolve LRA request", requestId, stage, targetAccountId: accountId },
+				{
+					success: false,
+					error: result.error || "Failed to invoke LRA retrieval",
+					requestId,
+					stage,
+					targetAccountId: accountId,
+				},
 				{ status: 500 },
 			);
 		}
 
-		// --- CRA resolve ---
+		// --- CRA ---
 		const { companyId, companyName, documentType, documentId } = body;
-		if (!companyId && !companyName && !documentId) {
-			return Response.json(
-				{ error: "At least one of companyId, companyName, or documentId must be provided" },
-				{ status: 400 },
-			);
-		}
-
-		const payload: ResolveEventPayload = { requestId };
+		const payload: InvokeRetrievalEventPayload = { requestId };
 		if (companyId) payload.companyId = String(companyId);
 		if (companyName) payload.companyName = String(companyName);
 		if (documentType) payload.documentType = String(documentType);
 		if (documentId) payload.documentId = String(documentId);
 
-		const result = await invokeResolveSync(payload, stage, accountId);
+		const result = await invokeCraRetrievalSync(payload, stage, accountId);
 
 		if (result.success) {
 			return Response.json(
-				{ success: true, message: result.message, requestId, stage, targetAccountId: accountId },
+				{
+					success: true,
+					message: result.message,
+					requestId,
+					stage,
+					targetAccountId: accountId,
+				},
 				{ status: 200 },
 			);
 		}
 		if (result.status === 409) {
 			return Response.json(
-				{ success: false, error: result.error, requestId, stage, targetAccountId: accountId },
+				{
+					success: false,
+					error: result.error,
+					requestId,
+					stage,
+					targetAccountId: accountId,
+				},
 				{ status: 409 },
 			);
 		}
 		return Response.json(
-			{ success: false, error: result.error || "Failed to resolve request", requestId, stage, targetAccountId: accountId },
+			{
+				success: false,
+				error: result.error || "Failed to invoke retrieval",
+				requestId,
+				stage,
+				targetAccountId: accountId,
+			},
 			{ status: 500 },
 		);
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : String(error);
-		console.error(`Resolve request failed for ${requestId}:`, errorMessage);
+		console.error(`InvokeRetrieval failed for ${requestId}:`, errorMessage);
 
 		return Response.json(
-			{ error: errorMessage || "Failed to resolve request" },
+			{ error: errorMessage || "Failed to invoke retrieval" },
 			{ status: 500 },
 		);
 	}
