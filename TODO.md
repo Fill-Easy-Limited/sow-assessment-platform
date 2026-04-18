@@ -18,8 +18,8 @@
 
 ### Implemented Recently
 
-- [x] Cross-account resolve action (`CraResolve`) from search step
-- [x] Cross-account cancel action (`CraCancel`) for initiated/search/manual
+- [x] Cross-account retrieve/retry via Lambda invocation
+- [x] Direct DynamoDB cancel (initiated/search/manual steps)
 - [x] Account-aware Lambda targeting via tracker `accountId`
 - [x] Manual-step upload to `uploadUrl` (server-side proxy route)
 - [x] Search-step form for company/document identifiers

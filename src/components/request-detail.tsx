@@ -46,7 +46,7 @@ export default function RequestDetail({
 	useEffect(() => {
 		setShowErrorDetails(false);
 		setShowDebugImage(false);
-	}, []);
+	}, [item?.requestId]);
 
 	if (!item) return null;
 

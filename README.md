@@ -89,7 +89,7 @@ Browser → page.tsx (stage state) → Dashboard (filters + stage)
 | infradev     | 470957634129   |
 | infrastaging | 979237820619   |
 
-Currently only **prod** and **staging** are enabled (`ENABLED_STAGES` in `config.ts`). Add more by appending to that array.
+Currently **prod**, **staging**, and **dev** are enabled (`ENABLED_STAGES` in `config.ts`).
 
 **Cross-account access**: The Prod Core account (`794038241155`) has read access to all stage tables via resource-based policies. The policies grant `Query` and `GetItem` — **not Scan**. This is why the codebase does not use Scan.
 
@@ -143,30 +143,6 @@ interface RequestItem {
   _stage?: string;         // Injected by query layer — which stage the record came from
 }
 ```
-
-## Query Functions Reference
-
-All exported from `src/lib/dynamodb/index.ts`:
-
-| Function | Description |
-|----------|-------------|
-| `getRequestById(id, stage)` | Get single record by primary key from one stage |
-| `findRequestById(id, stages?)` | Search across stages in parallel, return first hit |
-| `findRequestByIdAllStages(id)` | Search all 5 stages |
-| `queryByType(type, stage, opts?)` | Query `type-index` |
-| `queryByOrganization(org, stage, opts?)` | Query `organization-index` |
-| `queryByStep(step, stage, opts?)` | Query `step-index` |
-| `queryByTypeWithTimeRange(type, from, to, stage)` | Type + date range |
-| `queryWithFilters(filters, stage)` | Smart GSI selection with combined filters |
-| `queryAllSteps(stage, opts?)` | Fan-out query across all step values (replaces Scan) |
-| `queryAllStages(params, stages?)` | Run raw QueryCommand across stages |
-| `queryByTypeAllStages(type, opts?)` | By type across stages |
-| `queryByOrganizationAllStages(org, opts?)` | By org across stages |
-| `queryByStepAllStages(step, opts?)` | By step across stages |
-| `queryWithFiltersAllStages(filters, stages?)` | Combined filters across stages |
-| `queryRequests(filters)` | Dashboard helper — used by API route handler |
-
-All query functions support pagination (`limit`, `startKey`) and time range filtering.
 
 ## API Routes
 

@@ -54,52 +54,7 @@ export interface UploadToUrlResult {
 }
 
 /**
- * Upload a file directly to a presigned S3 URL.
- *
- * Most CRA manual-step uploads provide an `uploadUrl` in the tracker record.
- * This helper performs the actual PUT to that URL.
- */
-export async function uploadFileToPresignedUrl(
-	uploadUrl: string,
-	file: File,
-): Promise<UploadToUrlResult> {
-	if (!uploadUrl) {
-		throw new Error("uploadUrl is required");
-	}
-
-	const headers: Record<string, string> = {};
-	if (file.type) {
-		headers["Content-Type"] = file.type;
-	}
-
-	const res = await fetch(uploadUrl, {
-		method: "PUT",
-		headers,
-		body: file,
-	});
-
-	if (!res.ok) {
-		const body = await res.text().catch(() => "");
-		throw new Error(
-			`Upload to S3 failed: ${res.status} ${res.statusText}${body ? ` - ${body}` : ""}`,
-		);
-	}
-
-	return {
-		success: true,
-		status: res.status,
-		etag: res.headers.get("etag") ?? undefined,
-		url: uploadUrl,
-	};
-}
-
-/**
  * Fetch request details, validate upload preconditions, then upload to request.uploadUrl.
- *
- * This is the high-level helper intended for CRA manual flow:
- * 1) find the request record
- * 2) ensure it's in `manual` step
- * 3) upload to the presigned URL
  */
 export async function uploadFileForRequest(
 	requestId: string,
@@ -137,16 +92,3 @@ export async function uploadFileForRequest(
 	return res.json() as Promise<UploadToUrlResult>;
 }
 
-export async function uploadFile(file: File): Promise<{ url: string }> {
-	const formData = new FormData();
-	formData.append("file", file);
-
-	const res = await fetch(`${API_URL}/api/upload`, {
-		method: "POST",
-		body: formData,
-	});
-	if (!res.ok) {
-		throw new Error(`Upload failed: ${res.status} ${res.statusText}`);
-	}
-	return res.json();
-}

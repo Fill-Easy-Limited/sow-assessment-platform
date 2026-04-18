@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -113,11 +113,8 @@ export default function Dashboard({ stage }: DashboardProps) {
 		() => JSON.stringify({ stage, pageSize, filters }),
 		[filters, stage, pageSize],
 	);
-	const lastPaginationResetKey = useRef(paginationResetKey);
 
 	useEffect(() => {
-		if (lastPaginationResetKey.current === paginationResetKey) return;
-		lastPaginationResetKey.current = paginationResetKey;
 		setPage(1);
 		setPageInput("1");
 	}, [paginationResetKey]);

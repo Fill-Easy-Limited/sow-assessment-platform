@@ -65,7 +65,7 @@ export default function CancelRequest({
 				{mutation.isPending ? "Cancelling..." : "Cancel Request"}
 			</Button>
 			{message && (
-				<p className={`text-sm ${message.toLowerCase().includes("cancelled") ? "text-green-600" : "text-red-600"}`}>
+				<p className={`text-sm ${mutation.isSuccess ? "text-green-600" : "text-red-600"}`}>
 					{message}
 				</p>
 			)}
