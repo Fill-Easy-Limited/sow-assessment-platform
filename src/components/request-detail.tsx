@@ -2,6 +2,7 @@
 
 import { format, formatDistanceToNow } from "date-fns";
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -112,6 +113,19 @@ export default function RequestDetail({
 						/>
 					)}
 				</div>
+
+				{item.emailChainId && (
+					<div className="mt-3">
+						<Link
+							href={`/chains/${encodeURIComponent(item.emailChainId)}?stage=${item._stage ?? item.deploymentStage}`}
+							className="inline-flex items-center gap-1.5 rounded-md border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100"
+						>
+							<span>✉</span>
+							<span>View email chain</span>
+							<span aria-hidden>→</span>
+						</Link>
+					</div>
+				)}
 
 				{["initiated", "search", "manual"].includes(item.step) && (
 					<>

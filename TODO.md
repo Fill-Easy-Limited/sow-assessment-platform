@@ -18,6 +18,9 @@
 
 ### Implemented Recently
 
+- [x] Email chains dashboard (`/chains`) — cross-account read of `globalSES-emailchains` in `us-east-1`, per-stage and all-stages views, status + date filters
+- [x] Email chain detail page (`/chains/[chainId]`) — metadata, linked completed/processing/needClarification requests, raw rows table
+- [x] Bidirectional linking — request detail → email chain when `chainId` is present; chain page → request rows
 - [x] Cross-account retrieve/retry via Lambda invocation
 - [x] Direct DynamoDB cancel (initiated/search/manual steps)
 - [x] Account-aware Lambda targeting via tracker `accountId`

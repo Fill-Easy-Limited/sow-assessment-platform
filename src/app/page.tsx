@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { useState } from "react";
 import EnvSwitcher from "@/components/env-switcher";
+import NavTabs from "@/components/nav-tabs";
 import type { Stage } from "@/lib/dynamodb/config";
 
 const Dashboard = dynamic(() => import("@/components/dashboard"), {
@@ -14,6 +15,7 @@ export default function Home() {
 
 	return (
 		<main className="flex-1 max-w-7xl mx-auto w-full px-6 py-10 sm:px-10">
+			<NavTabs active="requests" />
 			<div className="mb-8 flex items-start justify-between">
 				<div>
 					<div className="flex items-center gap-3 mb-1">

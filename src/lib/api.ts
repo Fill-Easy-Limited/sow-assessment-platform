@@ -1,4 +1,9 @@
-import type { RequestFilters, RequestItem } from "./types";
+import type {
+	EmailChain,
+	EmailChainFilters,
+	RequestFilters,
+	RequestItem,
+} from "./types";
 
 /**
  * API client for the dashboard.
@@ -14,7 +19,14 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 		...options,
 	});
 	if (!res.ok) {
-		throw new Error(`API error: ${res.status} ${res.statusText}`);
+		let detail = "";
+		try {
+			const body = (await res.clone().json()) as { error?: string };
+			if (body?.error) detail = ` - ${body.error}`;
+		} catch {
+			// ignore body parse failures
+		}
+		throw new Error(`API error: ${res.status} ${res.statusText}${detail}`);
 	}
 	return res.json() as Promise<T>;
 }
@@ -92,3 +104,38 @@ export async function uploadFileForRequest(
 	return res.json() as Promise<UploadToUrlResult>;
 }
 
+// ---------- Email Chains ----------
+
+export interface EmailChainListResponse {
+	items: EmailChain[];
+	lastEvaluatedKey: string | null;
+}
+
+export async function getEmailChains(
+	filters?: EmailChainFilters & { startKey?: string },
+): Promise<EmailChainListResponse> {
+	const params = new URLSearchParams();
+	if (filters) {
+		Object.entries(filters).forEach(([key, value]) => {
+			if (value !== undefined && value !== null && value !== "") {
+				params.set(key, String(value));
+			}
+		});
+	}
+	const query = params.toString();
+	return request<EmailChainListResponse>(
+		`/api/emailchains${query ? `?${query}` : ""}`,
+	);
+}
+
+export async function getEmailChainById(
+	chainId: string,
+	stage?: string,
+): Promise<EmailChain | null> {
+	const params = new URLSearchParams();
+	if (stage) params.set("stage", stage);
+	const query = params.toString();
+	return request<EmailChain | null>(
+		`/api/emailchains/${encodeURIComponent(chainId)}${query ? `?${query}` : ""}`,
+	);
+}

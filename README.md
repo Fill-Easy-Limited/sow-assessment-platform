@@ -60,10 +60,15 @@ src/
     ├── mock-data.ts            # Mock data fallback for local dev without AWS
     ├── utils.ts                # cn() utility
     └── dynamodb/
-        ├── config.ts           # Stage accounts, table ARNs, GSI names
-        ├── client.ts           # Singleton DynamoDB Document Client
-        ├── queries.ts          # All query functions
-        └── index.ts            # Barrel export
+        ├── config.ts           # Stage accounts, table ARNs, GSI names (RequestTracking, ap-east-1)
+        ├── client.ts           # Singleton DynamoDB Document Client (ap-east-1)
+        ├── queries.ts          # RequestTracking query functions
+        ├── index.ts            # Barrel export
+        └── emailchains/        # globalSES-emailchains (us-east-1, separate client)
+            ├── config.ts       # Table name, region, enabled stages, GSI
+            ├── client.ts       # Singleton DocumentClient for us-east-1
+            ├── queries.ts      # Get/List/Scan helpers (Scan ALLOWED here)
+            └── index.ts
 ```
 
 ## Architecture
@@ -99,7 +104,18 @@ Currently **prod**, **staging**, and **dev** are enabled (`ENABLED_STAGES` in `c
 
 **Table ARN as TableName**: Cross-account queries pass the full ARN (`arn:aws:dynamodb:ap-east-1:<account>:table/RequestTracking`) as `TableName`. The SDK handles routing.
 
-### GSIs
+### Email Chains table (`globalSES-emailchains`)
+
+A second cross-account table used by the `/chains` dashboard.
+
+- **Region**: `us-east-1` (different from RequestTracking — requires a separate DynamoDB client at `src/lib/dynamodb/emailchains/client.ts`).
+- **Name**: `globalSES-emailchains` — identical across every stage, no stage suffix.
+- **Accounts**: Same `STAGE_ACCOUNTS` map as RequestTracking.
+- **Partition key**: `chainId` (S) — email Message-ID.
+- **GSI**: `status-updatedAt-index` (pk `status`, sk `updatedAt`, projection ALL).
+- **Scan**: **ALLOWED** on this table. The resource-based policy (maintained in the `globalses` CDK repo) grants `dynamodb:Scan`/`Query`/`GetItem` to the prod-core account. Scan powers the "all chains" listing — RequestTracking still forbids Scan.
+- **Enabled stages**: `prod`, `staging` (see `EMAILCHAINS_ENABLED_STAGES`). Dev not yet verified — confirm the table exists in account `654654513614` before adding.
+- **Link to requests**: chain items carry `completedRequests`, `processingRequests`, and `needClarificationRequests` arrays, each entry referencing a `requestId` in RequestTracking. RequestTracking items carry a `chainId` field when created from an inbound email.
 
 | Index Name           | Partition Key  | Sort Key    |
 |---------------------|---------------|-------------|
