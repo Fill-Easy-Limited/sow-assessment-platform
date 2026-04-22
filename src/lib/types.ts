@@ -14,12 +14,22 @@ export interface RequestItem {
 	environment: string;
 	automated: boolean;
 	startedAt: string;
+	/**
+	 * ISO 8601 timestamp updated on every state change. Prefer this over
+	 * `startedAt` for "last updated" displays. Optional for backwards
+	 * compatibility with records created before the field was added.
+	 */
+	lastModified?: string;
 	duration?: number;
 	countryCode?: string;
 	companyId?: string;
 	companyName?: string;
 	documentId?: string;
 	documentType?: string;
+	/** Year of the requested document (CRA only). Always a string. */
+	documentYear?: string;
+	/** Auto-generated one-line human summary; primary display label when present. */
+	requestDetails?: string;
 	address?: string;
 	prn?: string;
 	dryRun?: boolean;

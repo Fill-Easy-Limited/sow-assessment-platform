@@ -267,7 +267,7 @@ export default function Dashboard({ stage }: DashboardProps) {
 								Request ID
 							</TableHead>
 							<TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-								Company Name
+								Details
 							</TableHead>
 							<TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground w-[140px]">
 								Country / Org
@@ -316,9 +316,10 @@ export default function Dashboard({ stage }: DashboardProps) {
 									</TableCell>
 									<TableCell>
 										<span className="text-sm text-foreground/80 block truncate">
-											{r.requestId.startsWith("LR_")
-												? (r.address ?? r.prn ?? "—")
-												: (r.companyName ?? "—")}
+											{r.requestDetails ??
+												(r.requestId.startsWith("LR_")
+													? (r.address ?? r.prn ?? "—")
+													: (r.companyName ?? "—"))}
 										</span>
 									</TableCell>
 									<TableCell>

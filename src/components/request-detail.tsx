@@ -52,6 +52,15 @@ export default function RequestDetail({
 
 	const isLra = item.requestId.startsWith("LR_");
 	const startedDate = new Date(item.startedAt);
+	const lastModifiedDate = item.lastModified
+		? new Date(item.lastModified)
+		: null;
+	const showLastModified =
+		!!lastModifiedDate && item.lastModified !== item.startedAt;
+	const documentTypeValue =
+		item.documentType && item.documentYear
+			? `${item.documentType} (${item.documentYear})`
+			: item.documentType;
 
 	return (
 		<Dialog open={open} onOpenChange={(v) => !v && onClose()}>
@@ -60,6 +69,11 @@ export default function RequestDetail({
 					<DialogTitle className="font-mono text-xs tracking-[0.16em] text-muted-foreground">
 						{item.requestId}
 					</DialogTitle>
+					{item.requestDetails && (
+						<div className="text-base font-semibold text-foreground leading-snug break-words">
+							{item.requestDetails}
+						</div>
+					)}
 					<div className="flex flex-wrap items-center gap-1.5">
 						<StatusBadge step={item.step} />
 						<span className="text-[11px] text-muted-foreground">
@@ -84,13 +98,19 @@ export default function RequestDetail({
 							<Field label="Company Name" value={item.companyName} />
 							<Field label="Company ID" value={item.companyId} />
 							<Field label="Document ID" value={item.documentId} />
-							<Field label="Document Type" value={item.documentType} />
+							<Field label="Document Type" value={documentTypeValue} />
 						</>
 					)}
 					<Field
 						label="Started At"
 						value={`${format(startedDate, "yyyy-MM-dd HH:mm:ss")} (${formatDistanceToNow(startedDate, { addSuffix: true })})`}
 					/>
+					{showLastModified && lastModifiedDate && (
+						<Field
+							label="Last Updated"
+							value={`${format(lastModifiedDate, "yyyy-MM-dd HH:mm:ss")} (${formatDistanceToNow(lastModifiedDate, { addSuffix: true })})`}
+						/>
+					)}
 				</div>
 
 				{["initiated", "search", "manual"].includes(item.step) && (
