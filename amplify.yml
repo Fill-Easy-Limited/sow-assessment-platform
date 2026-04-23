@@ -1,0 +1,29 @@
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - npm ci --cache .npm --prefer-offline
+    build:
+      commands:
+        # Propagate server-side env vars into the Next.js runtime bundle.
+        # Amplify exposes build-time env vars in the shell; Next.js reads
+        # .env.production at build time and embeds server-only values into
+        # the serverless runtime. Without this, process.env.X is undefined
+        # inside API routes running on Lambda.
+        - |
+          for v in KYC_CN_BASE_URL KYC_CN_CLIENT_ID KYC_CN_CLIENT_SECRET; do
+            if [ -n "${!v}" ]; then
+              echo "$v=${!v}" >> .env.production
+            fi
+          done
+        - npm run build
+  artifacts:
+    baseDirectory: .next
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - node_modules/**/*
+      - .next/cache/**/*
+      - .npm/**/*
