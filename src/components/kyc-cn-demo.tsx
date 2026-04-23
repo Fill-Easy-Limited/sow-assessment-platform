@@ -204,7 +204,7 @@ export default function KycCnDemo() {
 	const [loading, setLoading] = useState(false);
 	const [result, setResult] = useState<CallResult | null>(null);
 	const [error, setError] = useState<string | null>(null);
-	const [showRaw, setShowRaw] = useState(false);
+	const [showRaw, setShowRaw] = useState(true);
 
 	const currentEndpoint = useMemo(
 		() => ENDPOINTS.find((e) => e.value === endpoint) ?? ENDPOINTS[0],
@@ -405,18 +405,18 @@ export default function KycCnDemo() {
 						<div className="flex items-center gap-3">
 							<Badge variant="destructive">
 								{result.status === 502
-									? "UPSTREAM ERROR"
+									? "UNDER MAINTENANCE"
 									: result.status === 400
 										? "BAD REQUEST"
 										: `HTTP ${result.status}`}
 							</Badge>
 							<div className="text-sm text-destructive">
-								{upstreamMessage ??
-									(result.status === 502
-										? "The verification provider did not respond successfully. This is an upstream issue, not a problem with the request."
-										: result.status === 400
+								{result.status === 502
+									? "The verification service is currently under maintenance. Please try again shortly."
+									: (upstreamMessage ??
+										(result.status === 400
 											? "The request parameters were rejected by the API."
-											: "The API returned an error.")}
+											: "The API returned an error."))}
 							</div>
 						</div>
 						<div className="text-[11px] text-destructive/70 font-mono">
