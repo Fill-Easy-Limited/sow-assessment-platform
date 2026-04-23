@@ -226,7 +226,8 @@ export default function KycCnDemo() {
 		setError(null);
 	}
 
-	function switchSubtype(next: string) {
+	function switchSubtype(next: string | null) {
+		if (next == null) return;
 		const sub =
 			currentEndpoint.subtypes.find((s) => s.value === next) ??
 			currentEndpoint.subtypes[0];
