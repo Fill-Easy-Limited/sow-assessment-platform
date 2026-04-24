@@ -2,6 +2,15 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
+import {
+	ChevronLeft,
+	ChevronRight,
+	Inbox,
+	Loader2,
+	RefreshCw,
+	Search,
+	X,
+} from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +32,7 @@ import {
 import { getRequestById, getRequests } from "@/lib/api";
 import type { Stage } from "@/lib/dynamodb/config";
 import { MOCK_REQUESTS } from "@/lib/mock-data";
+import { DEV_ORGANIZATIONS } from "@/lib/types";
 import type { RequestFilters, RequestItem } from "@/lib/types";
 import FilterBar from "./filter-bar";
 import ProgressBar from "./progress-bar";
@@ -34,12 +44,35 @@ interface DashboardProps {
 
 export default function Dashboard({ stage }: DashboardProps) {
 	const [filters, setFilters] = useState<RequestFilters>({
-		hideDryRuns: false,
+		hideDryRuns: true,
+		hideDevRuns: true,
 	});
 	const [selected, setSelected] = useState<RequestItem | null>(null);
 	const [pageSize, setPageSize] = useState<25 | 50>(25);
 	const [page, setPage] = useState(1);
 	const [pageInput, setPageInput] = useState("1");
+	const [searchDraft, setSearchDraft] = useState(filters.requestId ?? "");
+
+	const trimmedRequestId = filters.requestId?.trim() ?? "";
+	const isLookupMode = trimmedRequestId.length > 0;
+
+	// Keep draft in sync when filters are cleared externally.
+	useEffect(() => {
+		setSearchDraft(filters.requestId ?? "");
+	}, [filters.requestId]);
+
+	const submitSearch = () => {
+		const next = searchDraft.trim() || undefined;
+		if (next === filters.requestId) return;
+		setFilters({ ...filters, requestId: next });
+	};
+
+	const clearSearch = () => {
+		setSearchDraft("");
+		if (filters.requestId) {
+			setFilters({ ...filters, requestId: undefined });
+		}
+	};
 
 	// Merge the top-level stage into filters for the query
 	const activeFilters = useMemo(
@@ -47,17 +80,36 @@ export default function Dashboard({ stage }: DashboardProps) {
 		[filters, stage],
 	);
 
+	const listQuery = useQuery({
+		queryKey: ["requests", activeFilters],
+		queryFn: () => getRequests(activeFilters),
+		retry: 1,
+		enabled: !isLookupMode,
+	});
+
+	const lookupQuery = useQuery({
+		queryKey: ["request-lookup", trimmedRequestId],
+		queryFn: async () => {
+			try {
+				const item = await getRequestById(trimmedRequestId);
+				return item ? [item] : [];
+			} catch (err) {
+				// 404 => treat as empty result, not an error
+				if (err instanceof Error && /\b404\b/.test(err.message)) return [];
+				throw err;
+			}
+		},
+		retry: 1,
+		enabled: isLookupMode,
+	});
+
 	const {
 		data: apiData,
 		isLoading,
 		isError,
 		isFetching,
 		refetch,
-	} = useQuery({
-		queryKey: ["requests", activeFilters],
-		queryFn: () => getRequests(activeFilters),
-		retry: 1,
-	});
+	} = isLookupMode ? lookupQuery : listQuery;
 
 	const handleRequestUpdated = async () => {
 		await refetch();
@@ -74,8 +126,18 @@ export default function Dashboard({ stage }: DashboardProps) {
 	// Apply filters client-side for mock data and page the full result set in the UI.
 	const requests = useMemo(() => {
 		const source = useMock ? MOCK_REQUESTS : (apiData ?? []);
-		if (!useMock) return source; // server already filtered
+		const devOrgs = new Set(DEV_ORGANIZATIONS.map((o) => o.toLowerCase()));
+		const hideDev = filters.hideDevRuns !== false;
+
 		return source.filter((r) => {
+			// Always applied: hide dev-run orgs (canary/dev) unless explicitly shown.
+			// In lookup mode, never hide — the user asked for this specific record.
+			if (!isLookupMode && hideDev) {
+				if (devOrgs.has(r.organization?.toLowerCase?.() ?? "")) return false;
+			}
+
+			if (!useMock) return true; // server already applied the rest
+
 			if (filters.step) {
 				if (filters.step === "failed") {
 					if (r.step !== "search" && r.step !== "manual") return false;
@@ -98,7 +160,7 @@ export default function Dashboard({ stage }: DashboardProps) {
 			if (filters.hideDryRuns !== false && r.dryRun) return false;
 			return true;
 		});
-	}, [apiData, useMock, filters]);
+	}, [apiData, useMock, filters, isLookupMode]);
 
 	const totalPages =
 		requests.length === 0 ? 0 : Math.ceil(requests.length / pageSize);
@@ -155,10 +217,64 @@ export default function Dashboard({ stage }: DashboardProps) {
 			{/* Table */}
 			<div className="rounded-xl border border-border/60 bg-white shadow-sm overflow-hidden">
 				<div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 bg-muted/20 px-4 py-3">
-					<div className="text-sm text-muted-foreground">
-						{requests.length > 0
-							? `Showing ${pageStart + 1}-${pageEnd} of ${requests.length} requests`
-							: "No requests loaded"}
+					<div className="flex items-center gap-3 flex-1 min-w-0">
+						<div className="flex items-center gap-2 text-sm text-muted-foreground whitespace-nowrap">
+							{isFetching && (
+								<Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+							)}
+							<span>
+								{requests.length > 0 ? (
+									<>
+										Showing{" "}
+										<span className="font-medium text-foreground">
+											{pageStart + 1}–{pageEnd}
+										</span>{" "}
+										of{" "}
+										<span className="font-medium text-foreground">
+											{requests.length}
+										</span>{" "}
+										requests
+									</>
+								) : isLoading ? (
+									"Loading…"
+								) : (
+									"No requests loaded"
+								)}
+							</span>
+						</div>
+						<div className="relative w-[240px] max-w-full">
+							<Search className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+							<Input
+								className={`h-8 pl-7 pr-8 font-mono text-xs ${
+									isLookupMode
+										? "border-primary/40 bg-primary/5"
+										: ""
+								}`}
+								placeholder="Find by request ID…"
+								value={searchDraft}
+								onChange={(e) => setSearchDraft(e.target.value)}
+								onKeyDown={(e) => {
+									if (e.key === "Enter") {
+										e.preventDefault();
+										submitSearch();
+									} else if (e.key === "Escape") {
+										e.preventDefault();
+										clearSearch();
+									}
+								}}
+								onBlur={submitSearch}
+							/>
+							{(searchDraft || isLookupMode) && (
+								<button
+									type="button"
+									onClick={clearSearch}
+									className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+									aria-label="Clear search"
+								>
+									<X className="h-3.5 w-3.5" />
+								</button>
+							)}
+						</div>
 					</div>
 					<div className="flex flex-wrap items-center gap-2">
 						<div className="flex items-center gap-2 rounded-lg border border-border/60 bg-white px-2 py-1 shadow-sm">
@@ -178,14 +294,16 @@ export default function Dashboard({ stage }: DashboardProps) {
 								</SelectContent>
 							</Select>
 						</div>
-						<div className="flex items-center gap-2 rounded-lg border border-border/60 bg-white px-2 py-1 shadow-sm">
+						<div className="flex items-center gap-1 rounded-lg border border-border/60 bg-white px-1.5 py-1 shadow-sm">
 							<Button
 								variant="ghost"
 								size="sm"
+								className="h-7 px-2"
 								onClick={() => goToPage(activePage - 1)}
 								disabled={activePage <= 1}
+								aria-label="Previous page"
 							>
-								Prev
+								<ChevronLeft className="h-4 w-4" />
 							</Button>
 							{totalPages <= 12 ? (
 								<Select
@@ -237,20 +355,27 @@ export default function Dashboard({ stage }: DashboardProps) {
 							<Button
 								variant="ghost"
 								size="sm"
+								className="h-7 px-2"
 								onClick={() => goToPage(activePage + 1)}
 								disabled={totalPages === 0 || activePage >= totalPages}
+								aria-label="Next page"
 							>
-								Next
+								<ChevronRight className="h-4 w-4" />
 							</Button>
 						</div>
 						<Button
 							variant="outline"
+							size="sm"
+							className="h-9 gap-2"
 							onClick={() => {
 								void refetch();
 							}}
 							disabled={isFetching}
 						>
-							{isFetching ? "Refreshing..." : "Refresh Table"}
+							<RefreshCw
+								className={`h-3.5 w-3.5 ${isFetching ? "animate-spin" : ""}`}
+							/>
+							{isFetching ? "Refreshing" : "Refresh"}
 						</Button>
 					</div>
 				</div>
@@ -285,18 +410,28 @@ export default function Dashboard({ stage }: DashboardProps) {
 							<TableRow>
 								<TableCell
 									colSpan={5}
-									className="text-center py-12 text-muted-foreground"
+									className="text-center py-16 text-muted-foreground"
 								>
-									Loading...
+									<div className="flex flex-col items-center gap-2">
+										<Loader2 className="h-5 w-5 animate-spin text-primary" />
+										<span className="text-sm">Loading requests…</span>
+									</div>
 								</TableCell>
 							</TableRow>
 						) : visibleRequests.length === 0 ? (
 							<TableRow>
 								<TableCell
 									colSpan={5}
-									className="text-center py-12 text-muted-foreground"
+									className="text-center py-16 text-muted-foreground"
 								>
-									No requests found
+									<div className="flex flex-col items-center gap-2">
+										<Inbox className="h-6 w-6 text-muted-foreground/60" />
+										<span className="text-sm">
+											{isLookupMode
+												? "No request matches that ID"
+												: "No requests match your filters"}
+										</span>
+									</div>
 								</TableCell>
 							</TableRow>
 						) : (

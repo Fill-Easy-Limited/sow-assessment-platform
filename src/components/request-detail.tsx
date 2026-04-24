@@ -140,7 +140,7 @@ export default function RequestDetail({
 								step={item.step}
 								onSuccess={onRequestUpdated}
 							/>
-							{item.step === "manual" && item.error && (
+							{item.step === "manual" && (
 								<RetryRequest
 									requestId={item.requestId}
 									stage={item._stage ?? item.deploymentStage}

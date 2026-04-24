@@ -80,7 +80,17 @@ export interface RequestFilters {
 	dateTo?: string;
 	stage?: string;
 	hideDryRuns?: boolean;
+	/**
+	 * When true (default), hides requests whose organization is used by
+	 * developers (`canary`, `dev`). Applied client-side only.
+	 */
+	hideDevRuns?: boolean;
+	/** Lookup a single request by its requestId. Bypasses other filters. */
+	requestId?: string;
 }
+
+/** Organizations considered "dev runs" — hidden by default from the dashboard. */
+export const DEV_ORGANIZATIONS: readonly string[] = ["canary", "dev"];
 
 // ---------------------------------------------------------------------------
 // Email chains (globalSES-emailchains table, us-east-1)

@@ -108,14 +108,82 @@ export async function invokeRetrieval(
 /**
  * Retries a request stuck in the `manual` step by re-invoking its retrieval Lambda
  * with the token already stored in S3. Hits the same endpoint as `invokeRetrieval`
- * but with no identifier overrides — the unified Lambda accepts both `search`
- * (with identifiers) and `manual` (no identifiers) entry points.
+ * but accepts optional identifier overrides (CRA: companyId/documentId/etc., LRA: prn).
+ * The server endpoint accepts both CRA and LRA field shapes and picks the right one
+ * based on the `requestId` prefix.
  */
+export interface RetryRequestInput {
+	// CRA fields
+	companyId?: string;
+	companyName?: string;
+	documentId?: string;
+	documentType?: string;
+	// LRA fields
+	prn?: string;
+}
+
 export async function retryRequest(
 	requestId: string,
+	input?: RetryRequestInput,
 	options?: InvokeRetrievalOptions,
 ): Promise<InvokeRetrievalResult> {
-	return invokeRetrieval(requestId, {}, options);
+	if (!requestId) {
+		return { success: false, error: "requestId is required" };
+	}
+
+	const url = new URL(
+		`/api/requests/${requestId}/invoke-retrieval`,
+		typeof window !== "undefined"
+			? window.location.origin
+			: "http://localhost:3000",
+	);
+
+	if (options?.stage) {
+		url.searchParams.set("stage", options.stage);
+	}
+
+	const body: Record<string, string | undefined> = {
+		stage: options?.stage,
+	};
+	if (input?.companyId?.trim()) body.companyId = input.companyId.trim();
+	if (input?.companyName?.trim()) body.companyName = input.companyName.trim();
+	if (input?.documentId?.trim()) body.documentId = input.documentId.trim();
+	if (input?.documentType?.trim()) body.documentType = input.documentType.trim();
+	if (input?.prn?.trim()) body.prn = input.prn.trim();
+
+	try {
+		const response = await fetch(url.toString(), {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify(body),
+		});
+
+		const data = await response.json();
+
+		if (response.ok) {
+			return {
+				success: true,
+				message: data.message,
+				requestId: data.requestId,
+				stage: data.stage,
+			};
+		}
+
+		if (response.status === 409) {
+			return {
+				success: false,
+				error: data.error || "Request is not in search or manual step",
+			};
+		}
+
+		return {
+			success: false,
+			error: data.error || `HTTP ${response.status}: ${response.statusText}`,
+		};
+	} catch (error) {
+		const message = error instanceof Error ? error.message : String(error);
+		return { success: false, error: `Failed to reach API: ${message}` };
+	}
 }
 
 export async function cancelRequest(
