@@ -212,6 +212,18 @@ export default function ApiDemo() {
 		setError(null);
 	};
 
+	const fillSample = () => {
+		const next: Record<string, string> = {};
+		for (const field of endpoint.fields) {
+			if (field.type === "select") {
+				next[field.key] = field.options?.[0] ?? "";
+			} else if (field.type !== "boolean" && field.placeholder) {
+				next[field.key] = field.placeholder;
+			}
+		}
+		setValues((prev) => ({ ...prev, ...next }));
+	};
+
 	const run = useCallback(async () => {
 		setLoading(true);
 		setResult(null);
@@ -270,26 +282,24 @@ export default function ApiDemo() {
 				))}
 			</div>
 
-			{/* Endpoint selector */}
-			<div className="space-y-1.5">
-				<p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-					Endpoint
-				</p>
-				<Select value={endpointId} onValueChange={(v) => v && switchEndpoint(v)}>
-					<SelectTrigger className="w-full">
-						<SelectValue />
-					</SelectTrigger>
-					<SelectContent>
-						{service.endpoints.map((ep) => (
-							<SelectItem key={ep.id} value={ep.id}>
-								<span className="font-mono text-[11px] text-muted-foreground mr-2">
-									{ep.method}
-								</span>
-								{ep.label}
-							</SelectItem>
-						))}
-					</SelectContent>
-				</Select>
+			{/* Endpoint tabs */}
+			<div className="space-y-2.5 mt-4">
+				<div className="flex flex-wrap gap-1.5">
+					{service.endpoints.map((ep) => (
+						<button
+							key={ep.id}
+							onClick={() => switchEndpoint(ep.id)}
+							className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors whitespace-nowrap ${
+								ep.id === endpointId
+									? "bg-primary text-primary-foreground"
+									: "bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/70"
+							}`}
+						>
+							<span className="font-mono opacity-75">{ep.method}</span>
+							{ep.label}
+						</button>
+					))}
+				</div>
 				{endpoint.description && (
 					<p className="text-sm text-muted-foreground">{endpoint.description}</p>
 				)}
@@ -341,10 +351,15 @@ export default function ApiDemo() {
 				</div>
 			)}
 
-			{/* Run button */}
-			<Button onClick={run} disabled={loading}>
-				{loading ? "Running…" : `Run — ${endpoint.method} /${endpoint.path}`}
-			</Button>
+			{/* Actions */}
+			<div className="flex gap-2 flex-wrap">
+				<Button onClick={run} disabled={loading}>
+					{loading ? "Running…" : `Run — ${endpoint.method} /${endpoint.path}`}
+				</Button>
+				<Button variant="outline" onClick={fillSample} disabled={loading}>
+					Fill Sample Values
+				</Button>
+			</div>
 
 			{/* Error */}
 			{error && (
