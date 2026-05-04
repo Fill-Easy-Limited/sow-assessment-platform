@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import KycCnDemo from "@/components/kyc-cn-demo";
+import ApiDemo from "@/components/api-demo";
 
 export const metadata: Metadata = {
-	title: "KYC China · Demo",
+	title: "Fill Easy Services / API · Demo",
 	robots: { index: false, follow: false },
 };
 
@@ -13,16 +13,16 @@ export default function DemoPage() {
 				<div className="flex items-center gap-3 mb-1">
 					<div className="h-8 w-1 rounded-full bg-primary" />
 					<h1 className="text-2xl font-semibold tracking-tight">
-						KYC China — Live Demo
+						Fill Easy Services / API — Live Demo
 					</h1>
 				</div>
 				<p className="text-sm text-muted-foreground ml-[1.75rem]">
-					Identity verification, mobile lookup, and risk assessment for Chinese
-					citizens — powered by FillEasy.
+					Interactive sandbox for all Fill Easy services — requests are proxied
+					server-side; credentials never touch the browser.
 				</p>
 			</div>
 
-			<KycCnDemo />
+			<ApiDemo />
 
 			<p className="mt-10 text-[11px] text-muted-foreground">
 				Demo environment · canary.api.fill-easy.com · requests are proxied
