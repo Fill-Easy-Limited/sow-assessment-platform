@@ -19,6 +19,12 @@ interface DemoResult {
 	data: unknown;
 }
 
+interface BulkRowResult {
+	row: number;
+	result?: DemoResult;
+	error?: string;
+}
+
 function coerceField(field: FieldDef, raw: string): unknown {
 	if (raw.trim() === "" && field.type !== "boolean") return undefined;
 	switch (field.type) {
@@ -66,7 +72,6 @@ function buildBody(
 		const raw = values[field.key] ?? "";
 		const coerced = coerceField(field, raw);
 		if (coerced !== undefined) {
-			// special-case house_prefix: single number → [n], two numbers → [a, b]
 			if (field.key === "house_prefix" && typeof coerced === "string") {
 				const parts = (coerced as string)
 					.split(",")
@@ -83,6 +88,53 @@ function buildBody(
 
 function resolvePath(path: string, pathParams: Record<string, string>): string {
 	return path.replace(/\{(\w+)\}/g, (_, key) => pathParams[key] ?? `{${key}}`);
+}
+
+function parseCsvRow(line: string): string[] {
+	const fields: string[] = [];
+	let current = "";
+	let inQuotes = false;
+	for (const ch of line) {
+		if (ch === '"') {
+			inQuotes = !inQuotes;
+		} else if (ch === "," && !inQuotes) {
+			fields.push(current.trim());
+			current = "";
+		} else {
+			current += ch;
+		}
+	}
+	fields.push(current.trim());
+	return fields;
+}
+
+async function fetchEndpoint(
+	endpoint: EndpointDef,
+	vals: Record<string, string>,
+	pathVals: Record<string, string>,
+): Promise<DemoResult> {
+	const resolvedPath = resolvePath(endpoint.path, pathVals);
+	let url = `/api/demo/${resolvedPath}`;
+	let fetchOptions: RequestInit;
+	if (endpoint.method === "GET") {
+		const body = buildBody(endpoint, vals);
+		const params = new URLSearchParams();
+		for (const [k, v] of Object.entries(body)) {
+			if (v !== undefined && v !== null) params.set(k, String(v));
+		}
+		const qs = params.toString();
+		if (qs) url += `?${qs}`;
+		fetchOptions = { method: "GET" };
+	} else {
+		const body = buildBody(endpoint, vals);
+		fetchOptions = {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify(body),
+		};
+	}
+	const res = await fetch(url, fetchOptions);
+	return (await res.json()) as DemoResult;
 }
 
 function FieldInput({
@@ -116,7 +168,7 @@ function FieldInput({
 				</Select>
 			) : field.type === "textarea" ? (
 				<textarea
-					className="w-full min-h-[80px] rounded-lg border border-input bg-transparent px-2.5 py-1.5 text-sm resize-y outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 placeholder:text-muted-foreground"
+					className="w-full min-h-[80px] rounded-lg border border-input bg-transparent px-2.5 py-1.5 text-sm resize-y outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 placeholder:text-muted-foreground placeholder:opacity-50"
 					value={value}
 					onChange={(e) => onChange(e.target.value)}
 					placeholder={field.placeholder}
@@ -145,6 +197,7 @@ function FieldInput({
 					value={value}
 					onChange={(e) => onChange(e.target.value)}
 					placeholder={field.placeholder}
+					className="placeholder:opacity-50"
 				/>
 			)}
 			{field.description && field.type !== "boolean" && (
@@ -179,6 +232,71 @@ function ResultPanel({ result }: { result: DemoResult }) {
 	);
 }
 
+function BulkResultPanel({ items }: { items: BulkRowResult[] }) {
+	const [expanded, setExpanded] = useState<Set<number>>(new Set());
+
+	const toggle = (row: number) =>
+		setExpanded((prev) => {
+			const next = new Set(prev);
+			next.has(row) ? next.delete(row) : next.add(row);
+			return next;
+		});
+
+	return (
+		<div className="space-y-2">
+			<p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+				Results ({items.length} row{items.length !== 1 ? "s" : ""})
+			</p>
+			<div className="rounded-xl border border-border overflow-hidden divide-y divide-border">
+				{items.map((item) => {
+					const r = item.result;
+					const isOpen = expanded.has(item.row);
+					const statusColor = item.error
+						? "bg-red-500/15 text-red-700 dark:text-red-400"
+						: r?.ok
+							? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
+							: r && r.status >= 500
+								? "bg-red-500/15 text-red-700 dark:text-red-400"
+								: r && r.status >= 400
+									? "bg-amber-500/15 text-amber-700 dark:text-amber-400"
+									: "bg-sky-500/15 text-sky-700 dark:text-sky-400";
+
+					return (
+						<div key={item.row}>
+							<button
+								onClick={() => toggle(item.row)}
+								className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-muted/40 transition-colors"
+							>
+								<span className="text-xs text-muted-foreground w-12 shrink-0">
+									Row {item.row}
+								</span>
+								{item.error ? (
+									<span className={`text-xs font-semibold rounded px-1.5 py-0.5 ${statusColor}`}>
+										Error
+									</span>
+								) : r ? (
+									<>
+										<span className={`text-xs font-semibold rounded px-1.5 py-0.5 ${statusColor}`}>
+											{r.status}
+										</span>
+										<span className="text-xs text-muted-foreground">{r.latencyMs}ms</span>
+									</>
+								) : null}
+								<span className="ml-auto text-xs text-muted-foreground">{isOpen ? "▲" : "▼"}</span>
+							</button>
+							{isOpen && (
+								<pre className="px-4 pb-3 text-xs overflow-auto max-h-[300px] leading-relaxed whitespace-pre-wrap break-words bg-muted/20">
+									{item.error ? item.error : JSON.stringify(r?.data, null, 2)}
+								</pre>
+							)}
+						</div>
+					);
+				})}
+			</div>
+		</div>
+	);
+}
+
 export default function ApiDemo() {
 	const [activeService, setActiveService] = useState(SERVICES[0].id);
 	const [activeEndpoints, setActiveEndpoints] = useState<Record<string, string>>(
@@ -189,6 +307,10 @@ export default function ApiDemo() {
 	const [loading, setLoading] = useState(false);
 	const [result, setResult] = useState<DemoResult | null>(null);
 	const [error, setError] = useState<string | null>(null);
+	const [bulkCsv, setBulkCsv] = useState("");
+	const [bulkResults, setBulkResults] = useState<BulkRowResult[]>([]);
+	const [bulkLoading, setBulkLoading] = useState(false);
+	const [bulkError, setBulkError] = useState<string | null>(null);
 
 	const service = SERVICES.find((s) => s.id === activeService)!;
 	const endpointId = activeEndpoints[activeService];
@@ -202,26 +324,55 @@ export default function ApiDemo() {
 
 	const switchService = (id: string) => {
 		setActiveService(id);
+		setBulkCsv("");
+		setBulkResults([]);
 		setResult(null);
 		setError(null);
+		setBulkError(null);
 	};
 
 	const switchEndpoint = (id: string) => {
 		setActiveEndpoints((prev) => ({ ...prev, [activeService]: id }));
+		setBulkCsv("");
+		setBulkResults([]);
 		setResult(null);
 		setError(null);
+		setBulkError(null);
+	};
+
+	const fillPathParams = () => {
+		if (endpoint.pathParams?.length) {
+			const next: Record<string, string> = {};
+			for (const p of endpoint.pathParams) next[p] = pathParamValues[p] || "hk";
+			setPathParamValues((prev) => ({ ...prev, ...next }));
+		}
 	};
 
 	const fillSample = () => {
+		fillPathParams();
 		const next: Record<string, string> = {};
 		for (const field of endpoint.fields) {
-			if (field.type === "select") {
-				next[field.key] = field.options?.[0] ?? "";
-			} else if (field.type !== "boolean" && field.placeholder) {
-				next[field.key] = field.placeholder;
-			}
+			if (field.noSample) continue;
+			if (field.type === "select") next[field.key] = field.options?.[0] ?? "";
+			else if (field.type !== "boolean" && field.placeholder) next[field.key] = field.placeholder;
 		}
 		setValues((prev) => ({ ...prev, ...next }));
+	};
+
+	const fillBulkSample = () => {
+		fillPathParams();
+		if (!endpoint.bulkSamples?.length) return;
+		const rows = endpoint.bulkSamples.map((sample) =>
+			endpoint.fields
+				.map((f) => {
+					const v = sample[f.key] ?? "";
+					return v.includes(",") || v.includes('"') || v.includes("\n")
+						? `"${v.replace(/"/g, '""')}"`
+						: v;
+				})
+				.join(","),
+		);
+		setBulkCsv(rows.join("\n"));
 	};
 
 	const run = useCallback(async () => {
@@ -229,39 +380,39 @@ export default function ApiDemo() {
 		setResult(null);
 		setError(null);
 		try {
-			const resolvedPath = resolvePath(endpoint.path, pathParamValues);
-			let url = `/api/demo/${resolvedPath}`;
-			let fetchOptions: RequestInit;
-
-			if (endpoint.method === "GET") {
-				const body = buildBody(endpoint, values);
-				const params = new URLSearchParams();
-				for (const [k, v] of Object.entries(body)) {
-					if (v !== undefined && v !== null) {
-						params.set(k, String(v));
-					}
-				}
-				const qs = params.toString();
-				if (qs) url += `?${qs}`;
-				fetchOptions = { method: "GET" };
-			} else {
-				const body = buildBody(endpoint, values);
-				fetchOptions = {
-					method: "POST",
-					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify(body),
-				};
-			}
-
-			const res = await fetch(url, fetchOptions);
-			const json = (await res.json()) as DemoResult;
-			setResult(json);
+			const r = await fetchEndpoint(endpoint, values, pathParamValues);
+			setResult(r);
 		} catch (e) {
 			setError(e instanceof Error ? e.message : String(e));
 		} finally {
 			setLoading(false);
 		}
 	}, [endpoint, values, pathParamValues]);
+
+	const runBulk = useCallback(async () => {
+		setBulkLoading(true);
+		setBulkResults([]);
+		setBulkError(null);
+		const lines = bulkCsv.split("\n").map((l) => l.trim()).filter(Boolean);
+		if (lines.length < 1) {
+			setBulkError("Add at least one row.");
+			setBulkLoading(false);
+			return;
+		}
+		const headers = endpoint.fields.map((f) => f.key);
+		await Promise.allSettled(
+			lines.map((line, i) => {
+				const cells = parseCsvRow(line);
+				const rowVals: Record<string, string> = {};
+				headers.forEach((h, idx) => { rowVals[h] = cells[idx] ?? ""; });
+				return fetchEndpoint(endpoint, rowVals, pathParamValues).then(
+					(r) => setBulkResults((prev) => [...prev, { row: i + 1, result: r }]),
+					(e) => setBulkResults((prev) => [...prev, { row: i + 1, error: e instanceof Error ? e.message : String(e) }]),
+				);
+			}),
+		);
+		setBulkLoading(false);
+	}, [endpoint, bulkCsv, pathParamValues]);
 
 	return (
 		<div className="space-y-6">
@@ -319,6 +470,7 @@ export default function ApiDemo() {
 									value={pathParamValues[param] ?? ""}
 									onChange={(e) => setPathParam(param, e.target.value)}
 									placeholder={`Enter ${param} (e.g. hk)`}
+									className="placeholder:opacity-50"
 								/>
 							</div>
 						))}
@@ -326,7 +478,7 @@ export default function ApiDemo() {
 				</div>
 			)}
 
-			{/* Fields */}
+			{/* Single request */}
 			{endpoint.fields.length > 0 && (
 				<div className="space-y-3">
 					<p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
@@ -351,7 +503,6 @@ export default function ApiDemo() {
 				</div>
 			)}
 
-			{/* Actions */}
 			<div className="flex gap-2 flex-wrap">
 				<Button onClick={run} disabled={loading}>
 					{loading ? "Running…" : `Run — ${endpoint.method} /${endpoint.path}`}
@@ -361,15 +512,53 @@ export default function ApiDemo() {
 				</Button>
 			</div>
 
-			{/* Error */}
 			{error && (
 				<div className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
 					{error}
 				</div>
 			)}
 
-			{/* Result */}
 			{result && <ResultPanel result={result} />}
+
+			{/* Bulk CSV */}
+			{endpoint.supportsBulk && (
+				<>
+					<div className="border-t border-border/60 pt-6 space-y-3">
+						<div className="flex items-start justify-between gap-4">
+							<p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+								Bulk CSV
+							</p>
+							<p className="font-mono text-xs text-muted-foreground text-right leading-relaxed">
+								{endpoint.fields.map((f) => f.key).join(", ")}
+							</p>
+						</div>
+						<textarea
+							className="w-full min-h-[140px] rounded-lg border border-input bg-transparent px-2.5 py-1.5 text-sm font-mono resize-y outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 placeholder:text-muted-foreground placeholder:opacity-50"
+							value={bulkCsv}
+							onChange={(e) => setBulkCsv(e.target.value)}
+							placeholder={`value1,value2,...\nvalue1,value2,...`}
+							spellCheck={false}
+						/>
+					</div>
+
+					<div className="flex gap-2 flex-wrap">
+						<Button onClick={runBulk} disabled={bulkLoading}>
+							{bulkLoading ? "Running…" : `Run Bulk — ${endpoint.method} /${endpoint.path}`}
+						</Button>
+						<Button variant="outline" onClick={fillBulkSample} disabled={bulkLoading || !endpoint.bulkSamples?.length}>
+							Fill Sample Values
+						</Button>
+					</div>
+
+					{bulkError && (
+						<div className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
+							{bulkError}
+						</div>
+					)}
+
+					{bulkResults.length > 0 && <BulkResultPanel items={bulkResults} />}
+				</>
+			)}
 		</div>
 	);
 }

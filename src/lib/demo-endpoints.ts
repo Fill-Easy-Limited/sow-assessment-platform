@@ -10,6 +10,8 @@ export interface FieldDef {
 	placeholder?: string;
 	description?: string;
 	format?: FieldFormat;
+	/** Skip this field when "Fill Sample Values" is clicked */
+	noSample?: boolean;
 	/** Show this field only when another field has one of the given values */
 	visibleWhen?: { field: string; values: string[] };
 }
@@ -22,6 +24,8 @@ export interface EndpointDef {
 	path: string;
 	pathParams?: string[];
 	fields: FieldDef[];
+	supportsBulk?: boolean;
+	bulkSamples?: Record<string, string>[];
 }
 
 export interface ServiceDef {
@@ -48,6 +52,7 @@ export const SERVICES: ServiceDef[] = [
 			{
 				id: "identity",
 				label: "Verify Identity",
+				supportsBulk: true,
 				description:
 					"Verify a person's identity using government records and/or telecom registration data.",
 				method: "POST",
@@ -113,10 +118,18 @@ export const SERVICES: ServiceDef[] = [
 						visibleWhen: { field: "type", values: ["image"] },
 					},
 				],
+				bulkSamples: [
+					{ type: "two-factor",   name: "李明", idNo: "110101199003076515", mobile: "",            frDate: "",         toDate: "",         img: "" },
+					{ type: "name-mobile",  name: "张伟", idNo: "",                   mobile: "13912345678", frDate: "",         toDate: "",         img: "" },
+					{ type: "id-mobile",    name: "",     idNo: "110101199003076515", mobile: "13912345678", frDate: "",         toDate: "",         img: "" },
+					{ type: "three-factor", name: "李明", idNo: "110101199003076515", mobile: "13912345678", frDate: "",         toDate: "",         img: "" },
+					{ type: "four-factor",  name: "李明", idNo: "110101199003076515", mobile: "",            frDate: "20200315", toDate: "20400315", img: "" },
+				],
 			},
 			{
 				id: "mobile",
 				label: "Mobile Lookup",
+				supportsBulk: true,
 				description:
 					"Non-identity lookups on a mobile number — carrier info and geolocation.",
 				method: "POST",
@@ -159,10 +172,16 @@ export const SERVICES: ServiceDef[] = [
 						visibleWhen: { field: "type", values: ["location-verify"] },
 					},
 				],
+				bulkSamples: [
+					{ type: "attribution",     mobile: "13912345678", locationType: "",  city: "",   address: "" },
+					{ type: "location-verify", mobile: "13912345678", locationType: "1", city: "北京", address: "朝阳区建国路88号" },
+					{ type: "location-query",  mobile: "13912345678", locationType: "2", city: "",   address: "" },
+				],
 			},
 			{
 				id: "risk",
 				label: "Risk Assessment",
+				supportsBulk: true,
 				description: "Fraud risk scoring and criminal record checks.",
 				method: "POST",
 				path: "kyc/cn/risk",
@@ -197,10 +216,15 @@ export const SERVICES: ServiceDef[] = [
 						visibleWhen: { field: "type", values: ["criminal-record"] },
 					},
 				],
+				bulkSamples: [
+					{ type: "fraud-risk",      mobile: "13912345678", idNo: "110101199003076515", name: "" },
+					{ type: "criminal-record", mobile: "",            idNo: "110101199003076515", name: "李明" },
+				],
 			},
 			{
 				id: "bank-verification",
 				label: "Bank Card Verification",
+				supportsBulk: true,
 				description:
 					"Verify a bank card belongs to a specific person using three or four-factor verification.",
 				method: "POST",
@@ -242,6 +266,10 @@ export const SERVICES: ServiceDef[] = [
 						visibleWhen: { field: "type", values: ["four-factor"] },
 					},
 				],
+				bulkSamples: [
+					{ type: "three-factor", name: "李明", idNo: "110101199003076515", bankCard: "6217001180041276133", mobile: "" },
+					{ type: "four-factor",  name: "李明", idNo: "110101199003076515", bankCard: "6217001180041276133", mobile: "13912345678" },
+				],
 			},
 		],
 	},
@@ -267,83 +295,9 @@ export const SERVICES: ServiceDef[] = [
 				],
 			},
 			{
-				id: "cra-request",
-				label: "Request Report",
-				description:
-					"Initiate a company registry report request. Returns a token to poll with.",
-				method: "POST",
-				path: "cra/request",
-				fields: [
-					{
-						key: "countryCode",
-						label: "Country Code",
-						type: "text",
-						required: true,
-						placeholder: "HK",
-					},
-					{
-						key: "companyId",
-						label: "Company ID",
-						type: "text",
-						placeholder: "0157548",
-						description: "BRN, ACN, etc. Preferred over company name.",
-					},
-					{
-						key: "companyName",
-						label: "Company Name",
-						type: "text",
-						placeholder: "HSBC",
-						description: "Fallback if companyId unavailable",
-					},
-					{
-						key: "documentType",
-						label: "Document Type",
-						type: "text",
-						placeholder: "Company Particulars",
-						description: "Defaults to the country's defaultDocumentType",
-					},
-					{ key: "documentYear", label: "Document Year", type: "text", placeholder: "2023" },
-					{
-						key: "documentId",
-						label: "Document ID",
-						type: "text",
-						description: "From /cra/{countryCode}/search/documents",
-					},
-					{
-						key: "dryRun",
-						label: "Dry Run",
-						type: "boolean",
-						description: "Test without incurring costs — returns a sample PDF",
-					},
-					{
-						key: "callbackUrl",
-						label: "Webhook URL",
-						type: "text",
-						placeholder: "https://yourapp.com/webhook",
-					},
-				],
-			},
-			{
-				id: "cra-poll",
-				label: "Poll Report",
-				description:
-					"Check status of a company registry report. Poll until 200 is returned.",
-				method: "POST",
-				path: "cra/poll",
-				fields: [
-					{
-						key: "token",
-						label: "Token",
-						type: "text",
-						required: true,
-						placeholder: "eyJhbGci…",
-						description: "JWT from /cra/request",
-					},
-				],
-			},
-			{
 				id: "cra-search-companies",
 				label: "Search Companies",
+				supportsBulk: true,
 				description: "Search for companies by name in a country's registry.",
 				method: "POST",
 				path: "cra/{countryCode}/search/companies",
@@ -358,10 +312,18 @@ export const SERVICES: ServiceDef[] = [
 					},
 					{ key: "page", label: "Page", type: "number", placeholder: "1" },
 				],
+				bulkSamples: [
+					{ companyName: "Fill Easy Limited",             page: "1" },
+					{ companyName: "Standard Chartered", page: "1" },
+					{ companyName: "Hang Seng Bank",    page: "1" },
+					{ companyName: "Fake Company", page: "1" },
+					{ companyName: "Apple", page: "1" }
+				],
 			},
 			{
 				id: "cra-search-company",
 				label: "Get Company Info",
+				supportsBulk: true,
 				description: "Retrieve base information for a specific company by its ID.",
 				method: "POST",
 				path: "cra/{countryCode}/search/company",
@@ -375,10 +337,18 @@ export const SERVICES: ServiceDef[] = [
 						placeholder: "12104666",
 					},
 				],
+				bulkSamples: [
+					{ companyId: "12104666" },
+					{ companyId: "76561250" },
+					{ companyId: "C0069204" },
+					{ companyId: "38598837" },
+					{ companyId: "05218351" }
+				],
 			},
 			{
 				id: "cra-search-documents",
 				label: "Search Documents",
+				supportsBulk: true,
 				description: "Search for documents filed by a company in a country's registry.",
 				method: "POST",
 				path: "cra/{countryCode}/search/documents",
@@ -400,7 +370,87 @@ export const SERVICES: ServiceDef[] = [
 					{ key: "documentYear", label: "Document Year", type: "text", placeholder: "2023" },
 					{ key: "page", label: "Page", type: "number", placeholder: "1" },
 				],
+				bulkSamples: [
+					{ companyId: "09748794", documentYear: "2023"},
+					{ companyId: "12104666", documentType: "annualReturn", documentYear: "2024" },
+					{ companyId: "C0069204"}
+				],
 			},
+			{
+				id: "cra-request",
+				label: "Request Report",
+				description:
+					"Initiate a company registry report request. Returns a token to poll with.",
+				method: "POST",
+				path: "cra/request",
+				fields: [
+					{
+						key: "countryCode",
+						label: "Country Code",
+						type: "text",
+						required: true,
+						placeholder: "HK",
+					},
+					{
+						key: "companyId",
+						label: "Company ID",
+						type: "text",
+						placeholder: "72599839",
+						description: "BRN, ACN, etc. Preferred over company name.",
+					},
+					{
+						key: "companyName",
+						label: "Company Name",
+						type: "text",
+						placeholder: "Fill Easy Limited",
+						description: "Fallback if companyId unavailable",
+					},
+					{
+						key: "documentType",
+						label: "Document Type",
+						type: "text",
+						placeholder: "Company Particulars",
+						description: "Defaults to the country's defaultDocumentType",
+					},
+					{ key: "documentYear", label: "Document Year", type: "text", placeholder: "2023", noSample: true },
+					{
+						key: "documentId",
+						label: "Document ID",
+						type: "text",
+						description: "From /cra/{countryCode}/search/documents",
+					},
+					{
+						key: "dryRun",
+						label: "Dry Run",
+						type: "boolean",
+						description: "Test without incurring costs — returns a sample PDF",
+					},
+					{
+						key: "callbackUrl",
+						label: "Webhook URL",
+						type: "text",
+						placeholder: "https://yourapp.com/webhook",
+						noSample: true,
+					},
+				],
+			},
+			{
+				id: "cra-poll",
+				label: "Poll Report",
+				description:
+					"Check status of a company registry report. Poll until 200 is returned.",
+				method: "POST",
+				path: "cra/poll",
+				fields: [
+					{
+						key: "token",
+						label: "Token",
+						type: "text",
+						required: true,
+						description: "JWT from /cra/request",
+					},
+				],
+			}
 		],
 	},
 	{
@@ -410,6 +460,7 @@ export const SERVICES: ServiceDef[] = [
 			{
 				id: "lra-search",
 				label: "Search Address",
+				supportsBulk: true,
 				description:
 					"Search Hong Kong Land Registry address records. Returns up to 300 matching records.",
 				method: "POST",
@@ -447,6 +498,10 @@ export const SERVICES: ServiceDef[] = [
 					},
 					{ key: "house_suffix", label: "House Suffix", type: "text", placeholder: "A" },
 				],
+				bulkSamples: [
+					{ eng_street_name: "DES VOEUX ROAD CENTRAL", ch_street_name: "德輔道中", block: "", flat: "", floor: "", free_entry: "", house_prefix: "86",  house_suffix: "" },
+					{ eng_street_name: "NATHAN ROAD",            ch_street_name: "",         block: "", flat: "", floor: "", free_entry: "", house_prefix: "800", house_suffix: "" },
+				],
 			},
 			{
 				id: "lra-request",
@@ -482,6 +537,7 @@ export const SERVICES: ServiceDef[] = [
 						label: "Webhook URL",
 						type: "text",
 						placeholder: "https://yourapp.com/webhook",
+						noSample: true,
 					},
 				],
 			},
