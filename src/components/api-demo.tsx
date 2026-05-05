@@ -134,7 +134,12 @@ async function fetchEndpoint(
 		};
 	}
 	const res = await fetch(url, fetchOptions);
-	return (await res.json()) as DemoResult;
+	const text = await res.text();
+	try {
+		return JSON.parse(text) as DemoResult;
+	} catch {
+		throw new Error(`Server returned non-JSON (${res.status}): ${text.slice(0, 300) || "(empty body)"}`);
+	}
 }
 
 function FieldInput({

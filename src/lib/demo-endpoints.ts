@@ -462,7 +462,7 @@ export const SERVICES: ServiceDef[] = [
 				label: "Search Address",
 				supportsBulk: true,
 				description:
-					"Search Hong Kong Land Registry records by free-text address. Returns matching PRNs and formatted addresses.",
+					"Search Hong Kong Land Registry records by free-text address. Returns matching PRNs and formatted addresses. Note: this endpoint may take up to 25 seconds — if no match is found within that window, an empty candidate list is returned. This is expected as the feature is not currently designed to be used for real-time web applications - it is an internal tool within our pipeline.",
 				method: "POST",
 				path: "lra/search",
 				fields: [
@@ -471,12 +471,13 @@ export const SERVICES: ServiceDef[] = [
 						label: "Address",
 						type: "text",
 						required: true,
-						placeholder: "86 Des Voeux Road Central, Hong Kong",
+						placeholder: "UNIT A ON 1/F CHEUNG LING MANSION NOS.162/164 CONNAUGHT ROAD WEST HONG KONG",
 					},
 				],
 				bulkSamples: [
-					{ address: "86 Des Voeux Road Central, Hong Kong" },
-					{ address: "800 Nathan Road, Kowloon" },
+					{ address: "UNIT A ON 1/F CHEUNG LING MANSION NOS.162/164 CONNAUGHT ROAD WEST HONG KONG" },
+					{ address: "HOUSE C4 HILLGROVE NO.18 CAPE DRIVE HONG KONG" },
+					{ address: "FLAT G ON 69TH FLOOR OF TOWER 2 SORRENTO NO.1 AUSTIN ROAD WEST KOWLOON"}
 				],
 			},
 			{

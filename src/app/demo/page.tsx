@@ -17,7 +17,7 @@ export default function DemoPage() {
 					</h1>
 				</div>
 				<p className="text-sm text-muted-foreground ml-[1.75rem]">
-					Interactive sandbox for all Fill Easy services — requests are proxied
+					Interactive sandbox for Fill Easy services and functionality — requests are proxied
 					server-side; credentials never touch the browser.
 				</p>
 			</div>
