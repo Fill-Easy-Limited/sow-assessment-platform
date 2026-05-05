@@ -205,7 +205,7 @@ export const SERVICES: ServiceDef[] = [
 						label: "ID Number",
 						type: "text",
 						placeholder: "110101199003076515",
-						description: "Optional for fraud-risk",
+						description: "Optional for fraud-risk, required for criminal-record",
 						visibleWhen: { field: "type", values: ["fraud-risk", "criminal-record"] },
 					},
 					{
@@ -281,7 +281,7 @@ export const SERVICES: ServiceDef[] = [
 				id: "cra-info",
 				label: "Info",
 				description:
-					"Returns all supported countries with their capabilities and available document types.",
+					"Browse all supported jurisdictions with their automation status, search capabilities, available document types, and sample reports. Use this to confirm coverage and identify the right document type before making a request.",
 				method: "GET",
 				path: "cra/info",
 				fields: [
@@ -298,7 +298,7 @@ export const SERVICES: ServiceDef[] = [
 				id: "cra-search-companies",
 				label: "Search Companies",
 				supportsBulk: true,
-				description: "Search for companies by name in a country's registry.",
+				description: "Search a country's official company registry by name to find matching businesses and their company IDs. Returns company name, status, and registration details. Search behavior (partial, substring, or tokenized) varies by country.",
 				method: "POST",
 				path: "cra/{countryCode}/search/companies",
 				pathParams: ["countryCode"],
@@ -324,7 +324,7 @@ export const SERVICES: ServiceDef[] = [
 				id: "cra-search-company",
 				label: "Get Company Info",
 				supportsBulk: true,
-				description: "Retrieve base information for a specific company by its ID.",
+				description: "Look up a company's current registration details directly by its company ID — including name, status, incorporation date, and company type. Useful for confirming a company exists before requesting a full report.",
 				method: "POST",
 				path: "cra/{countryCode}/search/company",
 				pathParams: ["countryCode"],
@@ -349,7 +349,7 @@ export const SERVICES: ServiceDef[] = [
 				id: "cra-search-documents",
 				label: "Search Documents",
 				supportsBulk: true,
-				description: "Search for documents filed by a company in a country's registry.",
+				description: "Browse documents on file for a company in the registry, grouped by category (Annual Returns, Director Changes, Charges, etc.). Returns filing dates and document IDs that can be passed directly to the report request endpoint.",
 				method: "POST",
 				path: "cra/{countryCode}/search/documents",
 				pathParams: ["countryCode"],
@@ -380,7 +380,7 @@ export const SERVICES: ServiceDef[] = [
 				id: "cra-request",
 				label: "Request Report",
 				description:
-					"Initiate a company registry report request. Returns a token to poll with.",
+					"Request an official company registry report. Providing a company ID enables automated retrieval — reports for supported countries typically complete within minutes. Company name can be used as a fallback and will be processed manually. Supports webhooks for async delivery.",
 				method: "POST",
 				path: "cra/request",
 				fields: [
@@ -438,7 +438,7 @@ export const SERVICES: ServiceDef[] = [
 				id: "cra-poll",
 				label: "Poll Report",
 				description:
-					"Check status of a company registry report. Poll until 200 is returned.",
+					"Retrieve the completed company registry report. Returns structured data — registration details, directors, shareholders, share capital, and compliance records — along with presigned download links for original and translated documents. Poll until a 200 is returned.",
 				method: "POST",
 				path: "cra/poll",
 				fields: [
@@ -484,7 +484,7 @@ export const SERVICES: ServiceDef[] = [
 				id: "lra-request",
 				label: "Request Report",
 				description:
-					"Initiate a Land Registry report. Providing a PRN enables automated retrieval within ~5 minutes.",
+					"Request an official Hong Kong Land Registry document for a property. Providing a Property Reference Number (PRN) enables automated retrieval, typically within 5 minutes. Address-only requests are resolved manually within 1–2 business days. Supports webhooks for async delivery.",
 				method: "POST",
 				path: "lra/request",
 				fields: [
@@ -522,7 +522,7 @@ export const SERVICES: ServiceDef[] = [
 				id: "lra-poll",
 				label: "Poll Report",
 				description:
-					"Check status of a Land Registry report. Poll until 200 is returned.",
+					"Retrieve the completed Land Registry report. Returns a presigned download link to the official document. Poll until a 200 is returned.",
 				method: "POST",
 				path: "lra/poll",
 				fields: [
