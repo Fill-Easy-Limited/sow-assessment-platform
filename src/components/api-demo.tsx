@@ -361,11 +361,11 @@ export default function ApiDemo() {
 			if (field.type === "select") next[field.key] = field.options?.[0] ?? "";
 			else if (field.type !== "boolean" && field.placeholder) next[field.key] = field.placeholder;
 		}
-		setValues((prev) => ({ ...prev, ...next }));
+		setValues(next);
 	};
 
 	const fillBulkSample = () => {
-		fillPathParams();
+		fillPathParams()
 		if (!endpoint.bulkSamples?.length) return;
 		const rows = endpoint.bulkSamples.map((sample) =>
 			endpoint.fields

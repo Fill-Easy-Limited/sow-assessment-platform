@@ -412,7 +412,7 @@ export const SERVICES: ServiceDef[] = [
 						placeholder: "Company Particulars",
 						description: "Defaults to the country's defaultDocumentType",
 					},
-					{ key: "documentYear", label: "Document Year", type: "text", placeholder: "2023", noSample: true },
+					{ key: "documentYear", label: "Document Year", type: "text", placeholder: "2023", noSample: true,  },
 					{
 						key: "documentId",
 						label: "Document ID",
@@ -447,7 +447,7 @@ export const SERVICES: ServiceDef[] = [
 						label: "Token",
 						type: "text",
 						required: true,
-						description: "JWT from /cra/request",
+						description: "JWT from Request Report",
 					},
 				],
 			}
@@ -532,7 +532,7 @@ export const SERVICES: ServiceDef[] = [
 						type: "text",
 						required: true,
 						placeholder: "eyJhbGci…",
-						description: "JWT from /lra/request",
+						description: "JWT from Request Report",
 					},
 				],
 			},
