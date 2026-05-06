@@ -358,7 +358,7 @@ export default function ApiDemo() {
 		const next: Record<string, string> = {};
 		for (const field of endpoint.fields) {
 			if (field.noSample) continue;
-			if (field.type === "select") next[field.key] = field.options?.[0] ?? "";
+			if (field.type === "select") next[field.key] = values[field.key] || field.placeholder || "";
 			else if (field.type !== "boolean" && field.placeholder) next[field.key] = field.placeholder;
 		}
 		setValues(next);

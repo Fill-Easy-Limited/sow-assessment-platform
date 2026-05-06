@@ -154,6 +154,7 @@ export const SERVICES: ServiceDef[] = [
 						label: "Location Type",
 						type: "select",
 						options: ["1", "2", "3"],
+						placeholder: "2",
 						description: "1=Common, 2=Work (7–19 weekdays), 3=Residential (21–7)",
 						visibleWhen: { field: "type", values: ["location-verify", "location-query"] },
 					},
