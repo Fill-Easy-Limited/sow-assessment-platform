@@ -12,7 +12,7 @@ frontend:
         # the serverless runtime. Without this, process.env.X is undefined
         # inside API routes running on Lambda.
         - |
-          for v in KYC_CN_BASE_URL KYC_CN_CLIENT_ID KYC_CN_CLIENT_SECRET; do
+          for v in DEMO_BASE_URL DEMO_CLIENT_ID DEMO_CLIENT_SECRET; do
             if [ -n "${!v}" ]; then
               echo "$v=${!v}" >> .env.production
             fi
