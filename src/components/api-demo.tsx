@@ -10,6 +10,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
+import KycChinaFlow from "@/components/kyc-china-flow";
 import { SERVICES, type EndpointDef, type FieldDef } from "@/lib/demo-endpoints";
 
 interface DemoResult {
@@ -305,7 +306,12 @@ function BulkResultPanel({ items }: { items: BulkRowResult[] }) {
 export default function ApiDemo() {
 	const [activeService, setActiveService] = useState(SERVICES[0].id);
 	const [activeEndpoints, setActiveEndpoints] = useState<Record<string, string>>(
-		Object.fromEntries(SERVICES.map((s) => [s.id, s.endpoints[0].id])),
+		Object.fromEntries(
+			SERVICES.filter((s) => s.endpoints.length > 0).map((s) => [
+				s.id,
+				s.endpoints[0].id,
+			]),
+		),
 	);
 	const [values, setValues] = useState<Record<string, string>>({});
 	const [pathParamValues, setPathParamValues] = useState<Record<string, string>>({});
@@ -319,7 +325,7 @@ export default function ApiDemo() {
 
 	const service = SERVICES.find((s) => s.id === activeService)!;
 	const endpointId = activeEndpoints[activeService];
-	const endpoint = service.endpoints.find((e) => e.id === endpointId)!;
+	const endpoint = service.endpoints.find((e) => e.id === endpointId);
 
 	const setValue = (key: string, val: string) =>
 		setValues((prev) => ({ ...prev, [key]: val }));
@@ -346,6 +352,7 @@ export default function ApiDemo() {
 	};
 
 	const fillPathParams = () => {
+		if (!endpoint) return;
 		if (endpoint.pathParams?.length) {
 			const next: Record<string, string> = {};
 			for (const p of endpoint.pathParams) next[p] = pathParamValues[p] || "hk";
@@ -354,6 +361,7 @@ export default function ApiDemo() {
 	};
 
 	const fillSample = () => {
+		if (!endpoint) return;
 		fillPathParams();
 		const next: Record<string, string> = {};
 		for (const field of endpoint.fields) {
@@ -365,6 +373,7 @@ export default function ApiDemo() {
 	};
 
 	const fillBulkSample = () => {
+		if (!endpoint) return;
 		fillPathParams()
 		if (!endpoint.bulkSamples?.length) return;
 		const rows = endpoint.bulkSamples.map((sample) =>
@@ -381,6 +390,7 @@ export default function ApiDemo() {
 	};
 
 	const run = useCallback(async () => {
+		if (!endpoint) return;
 		setLoading(true);
 		setResult(null);
 		setError(null);
@@ -395,6 +405,7 @@ export default function ApiDemo() {
 	}, [endpoint, values, pathParamValues]);
 
 	const runBulk = useCallback(async () => {
+		if (!endpoint) return;
 		setBulkLoading(true);
 		setBulkResults([]);
 		setBulkError(null);
@@ -438,6 +449,10 @@ export default function ApiDemo() {
 				))}
 			</div>
 
+			{activeService === "kyc-china" ? (
+				<KycChinaFlow />
+			) : endpoint ? (
+				<>
 			{/* Endpoint tabs */}
 			<div className="space-y-2.5 mt-4">
 				<div className="flex flex-wrap gap-1.5">
@@ -564,6 +579,8 @@ export default function ApiDemo() {
 					{bulkResults.length > 0 && <BulkResultPanel items={bulkResults} />}
 				</>
 			)}
+				</>
+			) : null}
 		</div>
 	);
 }
