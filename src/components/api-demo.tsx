@@ -11,6 +11,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import KycChinaFlow from "@/components/kyc-china-flow";
+import CraHealthCheck from "@/components/cra-health-check";
 import { SERVICES, type EndpointDef, type FieldDef } from "@/lib/demo-endpoints";
 
 interface DemoResult {
@@ -453,6 +454,11 @@ export default function ApiDemo() {
 				<KycChinaFlow />
 			) : endpoint ? (
 				<>
+			{activeService === "corpverify" && (
+				<div className="mt-4">
+					<CraHealthCheck />
+				</div>
+			)}
 			{/* Endpoint tabs */}
 			<div className="space-y-2.5 mt-4">
 				<div className="flex flex-wrap gap-1.5">
