@@ -7,13 +7,23 @@ import {
 	XCircleIcon,
 	LoaderIcon,
 	UserIcon,
-	BuildingIcon,
 	ShieldAlertIcon,
 	ArrowRightIcon,
 	ChevronDownIcon,
+	DownloadIcon,
+	BellRingIcon,
+	CalendarIcon,
+	ActivityIcon,
+	GaugeIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { SOW_CASES, type SowReport, type SowDataSource, type SowWealthItem } from "@/lib/sow-mock-data";
+import {
+	SOW_CASES,
+	type SowReport,
+	type SowDataSource,
+	type SowWealthItem,
+	type ScreeningAlert,
+} from "@/lib/sow-mock-data";
 
 type Phase = "select" | "generating" | "done";
 
@@ -133,7 +143,7 @@ function CaseCard({
 	return (
 		<button
 			onClick={() => onSelect(report)}
-			className="text-left rounded-xl border border-border bg-muted/20 p-5 hover:bg-muted/40 hover:border-border/80 transition-all group"
+			className="text-left rounded-xl border border-border bg-card p-5 hover:bg-accent/50 hover:border-primary/30 transition-all group shadow-sm"
 		>
 			<div className="flex items-start justify-between mb-3">
 				<div className="flex items-center gap-3">
@@ -215,7 +225,7 @@ function GeneratingView({
 				/>
 			</div>
 
-			<div className="rounded-xl border border-border overflow-hidden">
+			<div className="rounded-xl border border-border overflow-hidden shadow-sm">
 				{sources.map((source, i) => {
 					const completed = completedSources.find((s) => s.id === source.id);
 					const isCurrent = i === currentSourceIndex && !completed;
@@ -267,8 +277,11 @@ function ReportView({
 	onReset: () => void;
 }) {
 	const p = report.profile;
+	const isHigh = p.riskRating === "High";
+
 	return (
-		<div className="space-y-6">
+		<div className="space-y-8">
+			{/* Header */}
 			<div className="flex items-center justify-between">
 				<div>
 					<p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
@@ -278,28 +291,47 @@ function ReportView({
 						{p.name} ({p.nameEn})
 					</h3>
 				</div>
-				<Button variant="outline" onClick={onReset}>
-					New Assessment
-				</Button>
+				<div className="flex items-center gap-2">
+					<DownloadReportButton report={report} />
+					<Button variant="outline" onClick={onReset}>
+						New Assessment
+					</Button>
+				</div>
 			</div>
 
 			<ProfileCard profile={p} />
+
+			{/* Key Parameters */}
+			<KeyParameters
+				params={report.keyParameters}
+				riskRating={p.riskRating}
+			/>
+
 			<RiskAssessment profile={p} />
+
 			<WealthBreakdown
 				items={report.wealthBreakdown}
 				totalWealth={report.totalEstimatedWealthRMB}
 				totalIncome={report.totalEstimatedAnnualIncomeRMB}
 			/>
+
 			<DataSourceFindings sources={report.dataSources} />
+
 			<NarrativeSection narrative={report.narrative} />
-			<MockPdfViewer name={p.name} nameEn={p.nameEn} riskRating={p.riskRating} />
+
+			{/* Perpetual Screening */}
+			<PerpetualScreening
+				alerts={report.screeningAlerts}
+				nextReviewDate={report.nextReviewDate}
+				riskRating={p.riskRating}
+			/>
 		</div>
 	);
 }
 
 function ProfileCard({ profile: p }: { profile: SowReport["profile"] }) {
 	return (
-		<div className="rounded-xl border border-border bg-muted/20 p-5">
+		<div className="rounded-xl border border-border bg-card p-5 shadow-sm">
 			<div className="flex items-start justify-between mb-4">
 				<div className="flex items-center gap-3">
 					<div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
@@ -334,11 +366,59 @@ function InfoField({ label, value, mono }: { label: string; value: string; mono?
 	);
 }
 
+function KeyParameters({
+	params,
+	riskRating,
+}: {
+	params: SowReport["keyParameters"];
+	riskRating: "Low" | "High";
+}) {
+	const statusStyle = {
+		normal: "border-emerald-500/20 bg-emerald-500/5",
+		warning: "border-amber-500/20 bg-amber-500/5",
+		critical: "border-red-500/20 bg-red-500/5",
+	};
+	const dotStyle = {
+		normal: "bg-emerald-500",
+		warning: "bg-amber-500",
+		critical: "bg-red-500",
+	};
+
+	return (
+		<div className="space-y-3">
+			<div className="flex items-center gap-2">
+				<GaugeIcon className="size-4 text-muted-foreground" />
+				<p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+					Key Risk Parameters
+				</p>
+			</div>
+			<div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+				{params.map((param, i) => (
+					<div
+						key={i}
+						className={`rounded-lg border p-3 ${statusStyle[param.status]}`}
+					>
+						<div className="flex items-center gap-1.5 mb-1">
+							<div className={`h-1.5 w-1.5 rounded-full ${dotStyle[param.status]}`} />
+							<span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide truncate">
+								{param.label}
+							</span>
+						</div>
+						<div className="text-sm font-semibold truncate" title={param.value}>
+							{param.value}
+						</div>
+					</div>
+				))}
+			</div>
+		</div>
+	);
+}
+
 function RiskAssessment({ profile: p }: { profile: SowReport["profile"] }) {
 	const isHigh = p.riskRating === "High";
 	return (
 		<div
-			className={`rounded-xl border p-5 ${
+			className={`rounded-xl border p-5 shadow-sm ${
 				isHigh
 					? "border-red-500/30 bg-red-500/5"
 					: "border-emerald-500/30 bg-emerald-500/5"
@@ -385,31 +465,31 @@ function WealthBreakdown({
 				Wealth Breakdown
 			</p>
 			<div className="grid grid-cols-2 gap-3">
-				<div className="rounded-lg border border-border bg-muted/20 p-3">
+				<div className="rounded-lg border border-border bg-card p-4 shadow-sm">
 					<div className="text-[10px] uppercase tracking-wider text-muted-foreground">
 						Total Estimated Wealth
 					</div>
-					<div className="text-xl font-semibold mt-0.5 tabular-nums">
+					<div className="text-2xl font-bold mt-1 tabular-nums tracking-tight">
 						¥{formatRMB(totalWealth)}
 					</div>
 				</div>
-				<div className="rounded-lg border border-border bg-muted/20 p-3">
+				<div className="rounded-lg border border-border bg-card p-4 shadow-sm">
 					<div className="text-[10px] uppercase tracking-wider text-muted-foreground">
 						Est. Annual Income
 					</div>
-					<div className="text-xl font-semibold mt-0.5 tabular-nums">
+					<div className="text-2xl font-bold mt-1 tabular-nums tracking-tight">
 						¥{formatRMB(totalIncome)}
 					</div>
 				</div>
 			</div>
-			<div className="rounded-xl border border-border overflow-hidden">
+			<div className="rounded-xl border border-border overflow-hidden shadow-sm">
 				<table className="w-full text-sm">
 					<thead className="bg-muted/40 text-muted-foreground">
 						<tr>
-							<th className="text-left px-4 py-2 font-medium">Category</th>
-							<th className="text-right px-4 py-2 font-medium w-32">Annual (¥)</th>
-							<th className="text-right px-4 py-2 font-medium w-32">Total Value (¥)</th>
-							<th className="text-center px-4 py-2 font-medium w-24">Confidence</th>
+							<th className="text-left px-4 py-2.5 font-medium">Category</th>
+							<th className="text-right px-4 py-2.5 font-medium w-32">Annual (¥)</th>
+							<th className="text-right px-4 py-2.5 font-medium w-32">Total Value (¥)</th>
+							<th className="text-center px-4 py-2.5 font-medium w-24">Confidence</th>
 						</tr>
 					</thead>
 					<tbody className="divide-y divide-border">
@@ -494,7 +574,7 @@ function DataSourceFindings({ sources }: { sources: SowDataSource[] }) {
 			</p>
 			<div className="space-y-3">
 				{grouped.map((group) => (
-					<div key={group.category} className="rounded-xl border border-border overflow-hidden">
+					<div key={group.category} className="rounded-xl border border-border overflow-hidden shadow-sm">
 						<div className="px-4 py-2 bg-muted/30 border-b border-border">
 							<span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
 								{group.category}
@@ -545,7 +625,7 @@ function NarrativeSection({ narrative }: { narrative: string }) {
 			<p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
 				SOW Narrative — AI-Generated Summary
 			</p>
-			<div className="rounded-xl border border-border bg-muted/20 p-5">
+			<div className="rounded-xl border border-border bg-card p-5 shadow-sm">
 				{narrative.split("\n\n").map((para, i) => (
 					<p key={i} className="text-sm leading-relaxed mb-3 last:mb-0">
 						{para}
@@ -556,106 +636,304 @@ function NarrativeSection({ narrative }: { narrative: string }) {
 	);
 }
 
-function MockPdfViewer({
-	name,
-	nameEn,
+function PerpetualScreening({
+	alerts,
+	nextReviewDate,
 	riskRating,
 }: {
-	name: string;
-	nameEn: string;
+	alerts: ScreeningAlert[];
+	nextReviewDate: string;
 	riskRating: "Low" | "High";
 }) {
+	const isHigh = riskRating === "High";
+
+	const severityStyle = {
+		Critical: "bg-red-500/15 text-red-700 dark:text-red-400 border-red-500/30",
+		Warning: "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30",
+		Info: "bg-sky-500/15 text-sky-700 dark:text-sky-400 border-sky-500/30",
+	};
+
+	const severityDot = {
+		Critical: "bg-red-500",
+		Warning: "bg-amber-500",
+		Info: "bg-sky-500",
+	};
+
+	const typeIcon = {
+		Litigation: "scale",
+		"Adverse Media": "newspaper",
+		Sanctions: "ban",
+		"Corporate Change": "building",
+		Tax: "receipt",
+		Regulatory: "shield",
+	};
+
 	return (
-		<div className="space-y-3">
-			<p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-				Generated PDF Report
-			</p>
-			<div className="rounded-xl border border-border overflow-hidden">
-				<div className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-muted/30">
-					<span className="text-sm font-medium">
-						SOW_Report_{nameEn.replace(/\s+/g, "_")}_2026.pdf
-					</span>
-					<span className="text-xs text-muted-foreground">
-						Sample · not a live document
-					</span>
+		<div className="space-y-4">
+			<div className="flex items-center justify-between">
+				<div className="flex items-center gap-2">
+					<BellRingIcon className="size-4 text-muted-foreground" />
+					<p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+						Perpetual Screening & Ongoing Monitoring
+					</p>
 				</div>
-				<div className="relative bg-white p-8 min-h-[600px]">
-					<div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
-						<span className="text-[80px] font-bold text-gray-100 -rotate-45 tracking-[0.3em]">
-							SAMPLE
-						</span>
-					</div>
-					<div className="relative space-y-6 text-gray-800">
-						<div className="border-b-2 border-gray-800 pb-4">
-							<div className="text-[10px] uppercase tracking-[0.2em] text-gray-500 mb-1">
-								Confidential
-							</div>
-							<h2 className="text-xl font-bold">Source of Wealth Assessment Report</h2>
-							<div className="text-sm text-gray-600 mt-1">
-								Subject: {name} ({nameEn})
-							</div>
-							<div className="text-sm text-gray-600">
-								Generated: {new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" })}
-							</div>
-						</div>
-
-						<div className="grid grid-cols-2 gap-4 text-xs">
-							<div>
-								<div className="font-semibold text-gray-500 uppercase tracking-wide mb-1">
-									Risk Rating
-								</div>
-								<div
-									className={`inline-block px-2 py-0.5 rounded text-xs font-bold ${
-										riskRating === "High"
-											? "bg-red-100 text-red-800"
-											: "bg-green-100 text-green-800"
-									}`}
-								>
-									{riskRating.toUpperCase()}
-								</div>
-							</div>
-							<div>
-								<div className="font-semibold text-gray-500 uppercase tracking-wide mb-1">
-									Assessment Type
-								</div>
-								<div>Enhanced Due Diligence — Source of Wealth</div>
-							</div>
-						</div>
-
-						<div className="text-xs space-y-3 text-gray-600">
-							<div>
-								<div className="font-semibold text-gray-800 mb-1">1. Executive Summary</div>
-								<div className="h-3 bg-gray-100 rounded w-full mb-1" />
-								<div className="h-3 bg-gray-100 rounded w-11/12 mb-1" />
-								<div className="h-3 bg-gray-100 rounded w-4/5" />
-							</div>
-							<div>
-								<div className="font-semibold text-gray-800 mb-1">2. Data Sources Consulted</div>
-								<div className="h-3 bg-gray-100 rounded w-full mb-1" />
-								<div className="h-3 bg-gray-100 rounded w-10/12" />
-							</div>
-							<div>
-								<div className="font-semibold text-gray-800 mb-1">3. Wealth Breakdown</div>
-								<div className="h-3 bg-gray-100 rounded w-full mb-1" />
-								<div className="h-3 bg-gray-100 rounded w-9/12 mb-1" />
-								<div className="h-3 bg-gray-100 rounded w-11/12" />
-							</div>
-							<div>
-								<div className="font-semibold text-gray-800 mb-1">4. Risk Assessment & Recommendations</div>
-								<div className="h-3 bg-gray-100 rounded w-full mb-1" />
-								<div className="h-3 bg-gray-100 rounded w-7/12" />
-							</div>
-						</div>
-
-						<div className="border-t border-gray-200 pt-3 text-[10px] text-gray-400">
-							This report was generated using verified data from government registries and
-							regulated financial databases. All data sources are cited in Section 2. This
-							document is for internal compliance use only.
-						</div>
-					</div>
+				<div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+					<CalendarIcon className="size-3.5" />
+					Next review: {nextReviewDate}
 				</div>
 			</div>
+
+			{/* Monitoring status bar */}
+			<div className={`rounded-lg border p-3 flex items-center justify-between ${
+				isHigh ? "border-amber-500/30 bg-amber-500/5" : "border-emerald-500/30 bg-emerald-500/5"
+			}`}>
+				<div className="flex items-center gap-2">
+					<ActivityIcon className={`size-4 ${isHigh ? "text-amber-600" : "text-emerald-600"}`} />
+					<span className="text-sm font-medium">
+						{isHigh ? "Active Monitoring — Elevated Alerts" : "Active Monitoring — Routine"}
+					</span>
+				</div>
+				<span className={`text-xs font-semibold rounded px-2 py-0.5 ${
+					isHigh ? "bg-amber-500/15 text-amber-700 dark:text-amber-400" : "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
+				}`}>
+					{alerts.length} alert{alerts.length !== 1 ? "s" : ""}
+				</span>
+			</div>
+
+			{/* Alert timeline */}
+			<div className="rounded-xl border border-border overflow-hidden shadow-sm">
+				{alerts.map((alert, i) => (
+					<AlertRow key={i} alert={alert} isLast={i === alerts.length - 1} />
+				))}
+			</div>
 		</div>
+	);
+}
+
+function AlertRow({ alert, isLast }: { alert: ScreeningAlert; isLast: boolean }) {
+	const [open, setOpen] = useState(false);
+
+	const severityBadge = {
+		Critical: "bg-red-500/15 text-red-700 dark:text-red-400",
+		Warning: "bg-amber-500/15 text-amber-700 dark:text-amber-400",
+		Info: "bg-sky-500/15 text-sky-700 dark:text-sky-400",
+	}[alert.severity];
+
+	const severityDot = {
+		Critical: "bg-red-500",
+		Warning: "bg-amber-500",
+		Info: "bg-sky-500",
+	}[alert.severity];
+
+	const typeBadge = "bg-muted text-muted-foreground";
+
+	return (
+		<div className={!isLast ? "border-b border-border" : ""}>
+			<button
+				onClick={() => setOpen((v) => !v)}
+				className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-muted/20 transition-colors"
+			>
+				<div className="flex flex-col items-center gap-1 shrink-0 w-16">
+					<span className="text-[10px] text-muted-foreground font-mono">
+						{alert.date}
+					</span>
+					<div className={`h-2 w-2 rounded-full ${severityDot}`} />
+				</div>
+				<div className="flex-1 min-w-0">
+					<div className="text-sm font-medium truncate">{alert.title}</div>
+				</div>
+				<div className="flex items-center gap-2 shrink-0">
+					<span className={`text-[10px] font-semibold rounded px-1.5 py-0.5 ${typeBadge}`}>
+						{alert.type}
+					</span>
+					<span className={`text-[10px] font-semibold rounded px-1.5 py-0.5 ${severityBadge}`}>
+						{alert.severity}
+					</span>
+					<ChevronDownIcon
+						className={`size-3.5 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`}
+					/>
+				</div>
+			</button>
+			{open && (
+				<div className="px-4 pb-3 pl-[5.5rem]">
+					<p className="text-xs text-muted-foreground leading-relaxed">
+						{alert.detail}
+					</p>
+				</div>
+			)}
+		</div>
+	);
+}
+
+function DownloadReportButton({ report }: { report: SowReport }) {
+	const download = () => {
+		const p = report.profile;
+		const isHigh = p.riskRating === "High";
+		const riskColor = isHigh ? "#dc2626" : "#16a34a";
+		const riskBg = isHigh ? "#fef2f2" : "#f0fdf4";
+		const now = new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" });
+
+		const paramRows = report.keyParameters
+			.map((param) => {
+				const color = param.status === "critical" ? "#dc2626" : param.status === "warning" ? "#d97706" : "#16a34a";
+				return `<tr><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;">${param.label}</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;font-weight:600;color:${color}">${param.value}</td></tr>`;
+			})
+			.join("");
+
+		const wealthRows = report.wealthBreakdown
+			.map((item) => {
+				const confColor = item.confidence === "High" ? "#16a34a" : item.confidence === "Medium" ? "#d97706" : "#dc2626";
+				return `<tr>
+					<td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;">${item.category}</td>
+					<td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;text-align:right;font-family:monospace;">${item.estimatedAnnualRMB ? "¥" + formatRMB(item.estimatedAnnualRMB) : "—"}</td>
+					<td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;text-align:right;font-family:monospace;">${item.estimatedTotalRMB !== null ? "¥" + formatRMB(item.estimatedTotalRMB) : "—"}</td>
+					<td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;text-align:center;color:${confColor};font-weight:600;">${item.confidence}</td>
+				</tr>`;
+			})
+			.join("");
+
+		const sourceRows = report.dataSources
+			.map((s) => {
+				const statusColor = s.status === "confirmed" || s.status === "clear" ? "#16a34a" : s.status === "found" ? "#0284c7" : s.status === "flagged" ? "#d97706" : "#dc2626";
+				return `<tr>
+					<td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;font-size:12px;">${s.name}</td>
+					<td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;font-size:12px;">${s.provider}</td>
+					<td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;font-size:12px;color:${statusColor};font-weight:600;">${s.statusLabel}</td>
+					<td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;font-size:11px;color:#6b7280;">${s.findings}</td>
+				</tr>`;
+			})
+			.join("");
+
+		const screeningRows = report.screeningAlerts
+			.map((a) => {
+				const sevColor = a.severity === "Critical" ? "#dc2626" : a.severity === "Warning" ? "#d97706" : "#0284c7";
+				return `<tr>
+					<td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;font-size:12px;font-family:monospace;">${a.date}</td>
+					<td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;font-size:12px;">${a.type}</td>
+					<td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;font-size:12px;color:${sevColor};font-weight:600;">${a.severity}</td>
+					<td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;font-size:12px;">${a.title}</td>
+				</tr>`;
+			})
+			.join("");
+
+		const narrativeHtml = report.narrative
+			.split("\n\n")
+			.map((para) => `<p style="margin:0 0 12px 0;font-size:13px;line-height:1.7;color:#374151;">${para}</p>`)
+			.join("");
+
+		const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SOW Report — ${p.nameEn}</title>
+<style>
+	@media print { body { margin: 0; } .page-break { page-break-before: always; } }
+	body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #1f2937; max-width: 800px; margin: 0 auto; padding: 40px 32px; }
+	table { width: 100%; border-collapse: collapse; }
+	th { text-align: left; padding: 8px 12px; background: #f3f4f6; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #6b7280; border-bottom: 2px solid #d1d5db; }
+	h1 { font-size: 22px; margin: 0; }
+	h2 { font-size: 16px; margin: 32px 0 12px 0; padding-bottom: 6px; border-bottom: 2px solid #e5e7eb; color: #111827; text-transform: uppercase; letter-spacing: 0.04em; }
+</style>
+</head>
+<body>
+<div style="border-bottom:3px solid #1e3a5f;padding-bottom:16px;margin-bottom:24px;">
+	<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.15em;color:#6b7280;margin-bottom:4px;">Confidential — Enhanced Due Diligence</div>
+	<h1>Source of Wealth Assessment Report</h1>
+	<div style="font-size:13px;color:#6b7280;margin-top:6px;">Subject: ${p.name} (${p.nameEn}) &nbsp;|&nbsp; Generated: ${now}</div>
+</div>
+
+<div style="display:flex;gap:16px;margin-bottom:24px;">
+	<div style="flex:1;padding:12px 16px;border-radius:8px;background:${riskBg};border:1px solid ${riskColor}33;">
+		<div style="font-size:10px;text-transform:uppercase;color:#6b7280;">Risk Rating</div>
+		<div style="font-size:18px;font-weight:700;color:${riskColor};margin-top:2px;">${p.riskRating.toUpperCase()}</div>
+	</div>
+	<div style="flex:1;padding:12px 16px;border-radius:8px;background:#f3f4f6;">
+		<div style="font-size:10px;text-transform:uppercase;color:#6b7280;">Total Estimated Wealth</div>
+		<div style="font-size:18px;font-weight:700;margin-top:2px;">¥${formatRMB(report.totalEstimatedWealthRMB)}</div>
+	</div>
+	<div style="flex:1;padding:12px 16px;border-radius:8px;background:#f3f4f6;">
+		<div style="font-size:10px;text-transform:uppercase;color:#6b7280;">Est. Annual Income</div>
+		<div style="font-size:18px;font-weight:700;margin-top:2px;">¥${formatRMB(report.totalEstimatedAnnualIncomeRMB)}</div>
+	</div>
+</div>
+
+<h2>1. Subject Profile</h2>
+<table>
+	<tr><td style="padding:4px 0;font-size:13px;color:#6b7280;width:140px;">Full Name</td><td style="padding:4px 0;font-size:13px;">${p.name} (${p.nameEn})</td></tr>
+	<tr><td style="padding:4px 0;font-size:13px;color:#6b7280;">Date of Birth</td><td style="padding:4px 0;font-size:13px;">${p.dateOfBirth} (Age ${p.age})</td></tr>
+	<tr><td style="padding:4px 0;font-size:13px;color:#6b7280;">Gender</td><td style="padding:4px 0;font-size:13px;">${p.gender}</td></tr>
+	<tr><td style="padding:4px 0;font-size:13px;color:#6b7280;">ID Number</td><td style="padding:4px 0;font-size:13px;font-family:monospace;">${p.idNumber}</td></tr>
+	<tr><td style="padding:4px 0;font-size:13px;color:#6b7280;">Nationality</td><td style="padding:4px 0;font-size:13px;">${p.nationality}</td></tr>
+	<tr><td style="padding:4px 0;font-size:13px;color:#6b7280;">Occupation</td><td style="padding:4px 0;font-size:13px;">${p.occupation}</td></tr>
+	<tr><td style="padding:4px 0;font-size:13px;color:#6b7280;">Employer</td><td style="padding:4px 0;font-size:13px;">${p.employer}</td></tr>
+	<tr><td style="padding:4px 0;font-size:13px;color:#6b7280;">Location</td><td style="padding:4px 0;font-size:13px;">${p.city}</td></tr>
+</table>
+
+<h2>2. Key Risk Parameters</h2>
+<table>
+	<tr><th>Parameter</th><th>Assessment</th></tr>
+	${paramRows}
+</table>
+
+<h2>3. Risk Assessment</h2>
+<div style="padding:12px 16px;border-radius:8px;background:${riskBg};border:1px solid ${riskColor}33;margin-bottom:8px;">
+	<div style="font-weight:700;color:${riskColor};margin-bottom:8px;">Overall Risk: ${p.riskRating}</div>
+	<ul style="margin:0;padding-left:20px;">
+		${p.riskReasoningPoints.map((pt) => `<li style="font-size:13px;margin-bottom:4px;">${pt}</li>`).join("")}
+	</ul>
+</div>
+
+<div class="page-break"></div>
+
+<h2>4. Wealth Breakdown</h2>
+<table>
+	<tr><th>Category</th><th style="text-align:right;">Annual (¥)</th><th style="text-align:right;">Total Value (¥)</th><th style="text-align:center;">Confidence</th></tr>
+	${wealthRows}
+</table>
+
+<h2>5. Data Sources Consulted (${report.dataSources.length})</h2>
+<table>
+	<tr><th>Source</th><th>Provider</th><th>Status</th><th>Findings</th></tr>
+	${sourceRows}
+</table>
+
+<div class="page-break"></div>
+
+<h2>6. SOW Narrative</h2>
+${narrativeHtml}
+
+<h2>7. Perpetual Screening (${report.screeningAlerts.length} Alerts)</h2>
+<div style="font-size:12px;color:#6b7280;margin-bottom:8px;">Next scheduled review: ${report.nextReviewDate}</div>
+<table>
+	<tr><th>Date</th><th>Type</th><th>Severity</th><th>Alert</th></tr>
+	${screeningRows}
+</table>
+
+<div style="border-top:2px solid #e5e7eb;margin-top:32px;padding-top:16px;font-size:11px;color:#9ca3af;">
+	This report was generated using verified data from government registries and regulated financial databases.
+	All data sources are cited in Section 5. This document is for internal compliance use only.
+	<br/><br/>
+	Generated: ${now} &nbsp;|&nbsp; Next Review: ${report.nextReviewDate}
+</div>
+</body>
+</html>`;
+
+		const blob = new Blob([html], { type: "text/html" });
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement("a");
+		a.href = url;
+		a.download = `SOW_Report_${p.nameEn.replace(/\s+/g, "_")}_${new Date().toISOString().slice(0, 10)}.html`;
+		document.body.appendChild(a);
+		a.click();
+		document.body.removeChild(a);
+		URL.revokeObjectURL(url);
+	};
+
+	return (
+		<Button variant="outline" onClick={download} className="gap-1.5">
+			<DownloadIcon className="size-3.5" />
+			Download Report
+		</Button>
 	);
 }
 
@@ -693,7 +971,7 @@ function RiskBadge({ rating, size = "sm" }: { rating: "Low" | "High"; size?: "sm
 		rating === "High"
 			? "bg-red-500/15 text-red-700 dark:text-red-400"
 			: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400";
-	const sizeClass = size === "lg" ? "text-xs px-2 py-1" : "text-[10px] px-1.5 py-0.5";
+	const sizeClass = size === "lg" ? "text-xs px-2.5 py-1" : "text-[10px] px-1.5 py-0.5";
 	return (
 		<span className={`font-semibold rounded ${color} ${sizeClass}`}>
 			{rating} Risk

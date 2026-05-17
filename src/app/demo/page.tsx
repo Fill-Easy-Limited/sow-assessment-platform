@@ -2,32 +2,30 @@ import type { Metadata } from "next";
 import ApiDemo from "@/components/api-demo";
 
 export const metadata: Metadata = {
-	title: "Fill Easy Services / API · Demo",
+	title: "SOW Assessment Platform · Demo",
 	robots: { index: false, follow: false },
 };
 
 export default function DemoPage() {
 	return (
-		<main className="flex-1 max-w-5xl mx-auto w-full px-6 py-10 sm:px-10">
+		<main className="flex-1 max-w-6xl mx-auto w-full px-6 py-8 sm:px-10">
 			<div className="mb-8">
-				<div className="flex items-center gap-3 mb-1">
-					<div className="h-8 w-1 rounded-full bg-primary" />
-					<h1 className="text-2xl font-semibold tracking-tight">
-						Fill Easy Services / API — Live Demo
-					</h1>
+				<div className="flex items-center gap-4 mb-2">
+					<div className="h-10 w-10 rounded-lg bg-[#0f2b3c] flex items-center justify-center">
+						<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+					</div>
+					<div>
+						<h1 className="text-2xl font-semibold tracking-tight">
+							Source of Wealth Assessment
+						</h1>
+						<p className="text-sm text-muted-foreground">
+							AI-powered due diligence with verified government and financial data sources.
+						</p>
+					</div>
 				</div>
-				<p className="text-sm text-muted-foreground ml-[1.75rem]">
-					Interactive sandbox for Fill Easy services and functionality — requests are proxied
-					server-side; credentials never touch the browser.
-				</p>
 			</div>
 
 			<ApiDemo />
-
-			<p className="mt-10 text-[11px] text-muted-foreground">
-				Demo environment · canary.api.fill-easy.com · requests are proxied
-				server-side; credentials never touch the browser.
-			</p>
 		</main>
 	);
 }

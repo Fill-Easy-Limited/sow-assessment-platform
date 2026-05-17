@@ -34,6 +34,14 @@ export interface SowWealthItem {
 	confidence: "High" | "Medium" | "Low";
 }
 
+export interface ScreeningAlert {
+	date: string;
+	type: "Litigation" | "Adverse Media" | "Sanctions" | "Corporate Change" | "Tax" | "Regulatory";
+	severity: "Info" | "Warning" | "Critical";
+	title: string;
+	detail: string;
+}
+
 export interface SowReport {
 	profile: SowCaseProfile;
 	dataSources: SowDataSource[];
@@ -41,6 +49,9 @@ export interface SowReport {
 	totalEstimatedWealthRMB: number;
 	totalEstimatedAnnualIncomeRMB: number;
 	narrative: string;
+	screeningAlerts: ScreeningAlert[];
+	nextReviewDate: string;
+	keyParameters: { label: string; value: string; status: "normal" | "warning" | "critical" }[];
 }
 
 const LOW_RISK_PROFILE: SowCaseProfile = {
@@ -486,6 +497,83 @@ Litigation records show two civil cases: one resolved service fee dispute (¥450
 
 In summary, the subject's verified income does not support her declared wealth. The property-to-income ratio is unexplained, one associated company is under investigation, another has been dissolved with enforcement records, and there are tax filing discrepancies across two years. This case requires enhanced due diligence with direct client engagement to clarify the source of funds for property acquisitions and the nature of trading activities through Meihe Trading.`;
 
+const LOW_RISK_SCREENING: ScreeningAlert[] = [
+	{
+		date: "2026-04-12",
+		type: "Corporate Change",
+		severity: "Info",
+		title: "Annual return filed — Shenzhen Yunchuang Technology",
+		detail: "2025 annual return filed with Shenzhen Market Supervision Bureau. No changes to shareholders, directors, or registered capital.",
+	},
+	{
+		date: "2026-03-08",
+		type: "Corporate Change",
+		severity: "Info",
+		title: "New patent registered — Guangdong Xinhe Software",
+		detail: "Utility patent #ZL202510234567.8 registered. Business scope remains consistent with prior filings.",
+	},
+];
+
+const HIGH_RISK_SCREENING: ScreeningAlert[] = [
+	{
+		date: "2026-05-10",
+		type: "Regulatory",
+		severity: "Critical",
+		title: "Investigation update — Shanghai Meihe Trading",
+		detail: "Shanghai Market Supervision Bureau issued preliminary findings. Company ordered to produce financial records for 2023–2025. Administrative hearing scheduled for June 2026.",
+	},
+	{
+		date: "2026-04-28",
+		type: "Litigation",
+		severity: "Warning",
+		title: "New court filing — contract dispute escalation",
+		detail: "Zhejiang Huaxin Trading Co. filed supplementary claim increasing disputed amount from ¥2,100,000 to ¥3,450,000. Additional allegations of breach of fiduciary duty.",
+	},
+	{
+		date: "2026-04-15",
+		type: "Adverse Media",
+		severity: "Warning",
+		title: "Media mention — Shanghai real estate investigations",
+		detail: "Subject's name appeared in a Caixin investigative report on former Hangzhou Qianhe Real Estate shareholders. Article alleges undisclosed related-party transactions during 2022–2023.",
+	},
+	{
+		date: "2026-03-22",
+		type: "Tax",
+		severity: "Warning",
+		title: "Tax audit notice issued — Shanghai Yuwei Consulting",
+		detail: "State Taxation Administration issued audit notice for FY2024. Scope: individual income tax and corporate income tax cross-verification.",
+	},
+	{
+		date: "2026-02-14",
+		type: "Corporate Change",
+		severity: "Info",
+		title: "Director resignation — Shanghai Meihe Trading",
+		detail: "Zhang Wei (40% shareholder) resigned as co-director. Liu Yuwei now sole director. No corresponding share transfer recorded.",
+	},
+];
+
+const LOW_RISK_PARAMS: SowReport["keyParameters"] = [
+	{ label: "Income-to-Wealth Ratio", value: "1 : 7.8", status: "normal" },
+	{ label: "Wealth Accumulation Period", value: "20+ years", status: "normal" },
+	{ label: "Income Verification", value: "Corroborated", status: "normal" },
+	{ label: "Corporate Standing", value: "All Active / A-rated", status: "normal" },
+	{ label: "Litigation Exposure", value: "None", status: "normal" },
+	{ label: "Tax Compliance", value: "Consistent filings", status: "normal" },
+	{ label: "PEP / Sanctions", value: "Not listed", status: "normal" },
+	{ label: "Source of Funds", value: "Employment + Equity", status: "normal" },
+];
+
+const HIGH_RISK_PARAMS: SowReport["keyParameters"] = [
+	{ label: "Income-to-Wealth Ratio", value: "1 : 18.1", status: "critical" },
+	{ label: "Wealth Accumulation Period", value: "~10 years", status: "warning" },
+	{ label: "Income Verification", value: "Self-reported only", status: "warning" },
+	{ label: "Corporate Standing", value: "1 Under Investigation", status: "critical" },
+	{ label: "Litigation Exposure", value: "2 cases (1 ongoing)", status: "warning" },
+	{ label: "Tax Compliance", value: "Discrepancies 2023–24", status: "critical" },
+	{ label: "PEP / Sanctions", value: "Not listed", status: "normal" },
+	{ label: "Source of Funds", value: "Unexplained gap ¥800K+/yr", status: "critical" },
+];
+
 export const SOW_CASES: SowReport[] = [
 	{
 		profile: LOW_RISK_PROFILE,
@@ -494,6 +582,9 @@ export const SOW_CASES: SowReport[] = [
 		totalEstimatedWealthRMB: 12_650_000,
 		totalEstimatedAnnualIncomeRMB: 1_620_000,
 		narrative: LOW_RISK_NARRATIVE,
+		screeningAlerts: LOW_RISK_SCREENING,
+		nextReviewDate: "2027-05-17",
+		keyParameters: LOW_RISK_PARAMS,
 	},
 	{
 		profile: HIGH_RISK_PROFILE,
@@ -502,5 +593,8 @@ export const SOW_CASES: SowReport[] = [
 		totalEstimatedWealthRMB: 20_800_000,
 		totalEstimatedAnnualIncomeRMB: 1_150_000,
 		narrative: HIGH_RISK_NARRATIVE,
+		screeningAlerts: HIGH_RISK_SCREENING,
+		nextReviewDate: "2026-11-17",
+		keyParameters: HIGH_RISK_PARAMS,
 	},
 ];

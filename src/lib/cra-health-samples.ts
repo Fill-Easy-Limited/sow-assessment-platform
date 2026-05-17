@@ -8,7 +8,7 @@ export const CRA_HEALTH_SAMPLES: Record<string, CraHealthSample> = {
 	DE: { companyName: "Volkswagen AG" },
 	FR: { companyName: "APPLE FRANCE" },
 	GB: { companyName: "Standard Chartered" },
-	HK: { companyName: "Fill Easy Limited" },
+	HK: { companyName: "Acme Holdings Limited" },
 	ID: { companyName: "PT Astra International Tbk" },
 	IN: { companyName: "INFOSYS LIMITED" },
 	JP: { companyName: "Toyota Motor" },
