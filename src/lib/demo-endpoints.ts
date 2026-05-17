@@ -51,6 +51,11 @@ export const SERVICES: ServiceDef[] = [
 		endpoints: [],
 	},
 	{
+		id: "sow",
+		label: "SOW",
+		endpoints: [],
+	},
+	{
 		id: "corpverify",
 		label: "CorpVerify",
 		endpoints: [

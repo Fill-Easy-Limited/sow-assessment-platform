@@ -11,6 +11,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import KycChinaFlow from "@/components/kyc-china-flow";
+import SowDemo from "@/components/sow-demo";
 import CraHealthCheck from "@/components/cra-health-check";
 import { SERVICES, type EndpointDef, type FieldDef } from "@/lib/demo-endpoints";
 
@@ -452,6 +453,8 @@ export default function ApiDemo() {
 
 			{activeService === "kyc-china" ? (
 				<KycChinaFlow />
+			) : activeService === "sow" ? (
+				<SowDemo />
 			) : endpoint ? (
 				<>
 			{activeService === "corpverify" && (
