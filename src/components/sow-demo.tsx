@@ -30,6 +30,15 @@ import {
 	CalendarClockIcon,
 	CircleCheckBigIcon,
 	SearchIcon,
+	PlusIcon,
+	FolderOpenIcon,
+	UploadIcon,
+	InfoIcon,
+	EyeIcon,
+	FileCheckIcon,
+	ExternalLinkIcon,
+	RefreshCwIcon,
+	SquareCheckIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,10 +57,11 @@ import {
 	type ScreeningAlert,
 } from "@/lib/sow-mock-data";
 
-type Phase = "intake" | "sources" | "generating" | "report";
+type Phase = "dashboard" | "intake" | "consent" | "sources" | "generating" | "report";
 
 const STEPS = [
 	{ key: "intake", label: "New Case" },
+	{ key: "consent", label: "Consent" },
 	{ key: "sources", label: "Data Sources" },
 	{ key: "generating", label: "Assessment" },
 	{ key: "report", label: "Report" },
@@ -73,32 +83,86 @@ const SOURCE_PURPOSES: Record<string, string> = {
 	tax: "Verify individual income tax filings for consistency",
 };
 
-const CATEGORY_META: Record<string, { description: string; Icon: typeof UserIcon }> = {
+const CATEGORY_META: Record<string, { description: string; Icon: typeof UserIcon; authority: string; legalBasis: string; dataType: string }> = {
 	Identity: {
 		description: "Cross-reference subject identity against the Ministry of Public Security population registry and telecom operator records.",
 		Icon: ShieldCheckIcon,
+		authority: "Ministry of Public Security (MPS)",
+		legalBasis: "PRC Resident Identity Card Law, Article 3 — MPS maintains the national population information database. Identity verification is conducted through the National Citizen Identity Information Center (NCIIC).",
+		dataType: "Full name, gender, date of birth, ID card number, issue/expiry dates. Mobile number attribution via telecom carrier registration records.",
 	},
 	Banking: {
 		description: "Verify bank account ownership through the UnionPay interbank settlement network.",
 		Icon: LandmarkIcon,
+		authority: "China UnionPay / People's Bank of China (PBOC)",
+		legalBasis: "PBOC Anti-Money Laundering Law (2006) and Measures for the Administration of Financial Institutions' Customer Identification. Bank account verification via the UnionPay interbank network cross-checks cardholder name, ID number, and bank card number.",
+		dataType: "Bank card number, cardholder name, associated ID number. Returns match/mismatch status and bank issuer details.",
 	},
 	Risk: {
 		description: "Screen for criminal records, civil litigation, financial fraud indicators, and adverse media mentions.",
 		Icon: ShieldAlertIcon,
+		authority: "People's Bank of China (PBOC) Credit Reference Center / Supreme People's Court",
+		legalBasis: "PBOC credit reporting regulations and the Supreme People's Court judicial transparency platform (China Judgements Online). Adverse history checks reference the PBOC personal credit information database. Litigation records are sourced from the national court case database.",
+		dataType: "Criminal records, civil judgments, enforcement records, financial default history, multi-platform borrowing patterns, and blacklist/sanctions screening results.",
 	},
 	Corporate: {
 		description: "Search SAMR business registries for commercial interests and run full KYB verification reports on associated entities.",
 		Icon: BuildingIcon,
+		authority: "State Administration for Market Regulation (SAMR)",
+		legalBasis: "PRC Company Law and SAMR National Enterprise Credit Information Publicity System. Commercial interest searches identify all companies where the subject serves as a legal representative, shareholder, or director. KYB reports include registration details, capital structure, and filing history.",
+		dataType: "Company name, registration number, legal representative, shareholders, registered capital, establishment date, business scope, annual filing status, and regulatory penalties.",
 	},
 	Income: {
 		description: "Estimate annual income bracket from MOHRSS social insurance contribution records.",
 		Icon: BanknoteIcon,
+		authority: "Ministry of Human Resources and Social Security (MOHRSS)",
+		legalBasis: "PRC Social Insurance Law, Article 4 — employers must register employees and report contribution base amounts. Social insurance contributions (pension, medical, unemployment) are calculated as a percentage of salary, making contribution records a reliable proxy for declared income level.",
+		dataType: "Monthly contribution base amount, employer name, contribution period, and derived annual income estimate. Data reflects the declared salary used for social insurance calculation.",
 	},
 	Tax: {
 		description: "Verify individual income tax filings through the State Taxation Administration and check for year-over-year discrepancies.",
 		Icon: FileTextIcon,
+		authority: "State Taxation Administration (STA)",
+		legalBasis: "PRC Individual Income Tax Law (2018 revision). Tax filing verification checks whether reported income is consistent with other data sources. Year-over-year comparison identifies unusual fluctuations that may indicate unreported income or tax evasion.",
+		dataType: "Annual taxable income, tax paid, filing status, year-over-year income trends, and consistency flags against social insurance and employment records.",
 	},
 };
+
+interface DashboardNotification {
+	id: string;
+	type: "review-due" | "alert" | "update" | "completed";
+	title: string;
+	detail: string;
+	time: string;
+	caseRef: string;
+	read: boolean;
+}
+
+interface ExistingCase {
+	caseRef: string;
+	name: string;
+	nameEn: string;
+	riskRating: "Low" | "High";
+	status: "Complete" | "Under Review" | "Pending EDD";
+	createdDate: string;
+	nextReview: string;
+	alertCount: number;
+}
+
+const MOCK_EXISTING_CASES: ExistingCase[] = [
+	{ caseRef: "SOW-2025-1203-412", name: "王建国", nameEn: "Wang Jianguo", riskRating: "Low", status: "Complete", createdDate: "03 Dec 2025", nextReview: "03 Dec 2026", alertCount: 0 },
+	{ caseRef: "SOW-2025-0918-087", name: "张丽华", nameEn: "Zhang Lihua", riskRating: "High", status: "Under Review", createdDate: "18 Sep 2025", nextReview: "18 Mar 2026", alertCount: 3 },
+	{ caseRef: "SOW-2026-0210-553", name: "李明辉", nameEn: "Li Minghui", riskRating: "Low", status: "Complete", createdDate: "10 Feb 2026", nextReview: "10 Feb 2027", alertCount: 1 },
+	{ caseRef: "SOW-2026-0402-291", name: "赵薇薇", nameEn: "Zhao Weiwei", riskRating: "High", status: "Pending EDD", createdDate: "02 Apr 2026", nextReview: "02 Oct 2026", alertCount: 5 },
+];
+
+const MOCK_NOTIFICATIONS: DashboardNotification[] = [
+	{ id: "n1", type: "alert", title: "New adverse media hit — 张丽华", detail: "Reuters article mentions subject in connection with a regulatory investigation in Guangdong Province.", time: "2 hours ago", caseRef: "SOW-2025-0918-087", read: false },
+	{ id: "n2", type: "review-due", title: "Periodic review due — 王建国", detail: "Annual SOW review is scheduled for 03 Dec 2026. Re-run assessment to update data sources.", time: "1 day ago", caseRef: "SOW-2025-1203-412", read: false },
+	{ id: "n3", type: "update", title: "Corporate filing update — 李明辉", detail: "SAMR registry shows new company registration: Hangzhou Minghui Consulting Co. Subject listed as legal representative.", time: "3 days ago", caseRef: "SOW-2026-0210-553", read: true },
+	{ id: "n4", type: "completed", title: "EDD interview scheduled — 赵薇薇", detail: "Enhanced due diligence interview confirmed for 20 May 2026, 14:00 CST. Documents pending.", time: "5 days ago", caseRef: "SOW-2026-0402-291", read: true },
+	{ id: "n5", type: "alert", title: "Tax discrepancy detected — 赵薇薇", detail: "Year-over-year income variance of 340% detected in latest STA filing. Flagged for manual review.", time: "1 week ago", caseRef: "SOW-2026-0402-291", read: true },
+];
 
 function generateCaseRef(): string {
 	const d = new Date();
@@ -108,7 +172,7 @@ function generateCaseRef(): string {
 }
 
 export default function SowDemo() {
-	const [phase, setPhase] = useState<Phase>("intake");
+	const [phase, setPhase] = useState<Phase>("dashboard");
 	const [selectedCase, setSelectedCase] = useState<SowReport | null>(null);
 	const [caseRef, setCaseRef] = useState("");
 	const [formData, setFormData] = useState<Record<string, string>>({});
@@ -116,6 +180,8 @@ export default function SowDemo() {
 	const [currentSourceIndex, setCurrentSourceIndex] = useState(-1);
 	const [elapsedMs, setElapsedMs] = useState(0);
 	const [confirmedActions, setConfirmedActions] = useState<Set<string>>(new Set());
+	const [consentChecks, setConsentChecks] = useState({ dataProcessing: false, clientAuth: false, regulatoryDisclosure: false });
+	const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
 	const cancelRef = useRef(false);
 	const reportRef = useRef<HTMLDivElement>(null);
 	const timerRef = useRef<ReturnType<typeof setInterval>>(undefined);
@@ -123,7 +189,7 @@ export default function SowDemo() {
 	const reset = () => {
 		cancelRef.current = true;
 		if (timerRef.current) clearInterval(timerRef.current);
-		setPhase("intake");
+		setPhase("dashboard");
 		setSelectedCase(null);
 		setCaseRef("");
 		setFormData({});
@@ -131,6 +197,8 @@ export default function SowDemo() {
 		setCurrentSourceIndex(-1);
 		setElapsedMs(0);
 		setConfirmedActions(new Set());
+		setConsentChecks({ dataProcessing: false, clientAuth: false, regulatoryDisclosure: false });
+		setUploadedFiles([]);
 	};
 
 	const selectDemoCase = (report: SowReport) => {
@@ -155,6 +223,10 @@ export default function SowDemo() {
 	const createCase = () => {
 		if (!selectedCase) return;
 		setCaseRef(generateCaseRef());
+		setPhase("consent");
+	};
+
+	const proceedFromConsent = () => {
 		setPhase("sources");
 	};
 
@@ -202,6 +274,10 @@ export default function SowDemo() {
 		};
 	}, [phase, selectedCase]);
 
+	if (phase === "dashboard") {
+		return <Dashboard onNewCase={() => setPhase("intake")} />;
+	}
+
 	return (
 		<div className="space-y-6">
 			<StepIndicator current={phase} />
@@ -213,6 +289,20 @@ export default function SowDemo() {
 					onSelectCase={selectDemoCase}
 					onUpdateField={(k, v) => setFormData((prev) => ({ ...prev, [k]: v }))}
 					onCreateCase={createCase}
+					onBack={() => setPhase("dashboard")}
+				/>
+			)}
+
+			{phase === "consent" && selectedCase && (
+				<ConsentPhase
+					report={selectedCase}
+					caseRef={caseRef}
+					consentChecks={consentChecks}
+					uploadedFiles={uploadedFiles}
+					onToggleConsent={(key) => setConsentChecks((prev) => ({ ...prev, [key]: !prev[key] }))}
+					onUploadFile={(name) => setUploadedFiles((prev) => [...prev, name])}
+					onProceed={proceedFromConsent}
+					onBack={() => setPhase("intake")}
 				/>
 			)}
 
@@ -221,7 +311,7 @@ export default function SowDemo() {
 					report={selectedCase}
 					caseRef={caseRef}
 					onBegin={beginAssessment}
-					onBack={() => setPhase("intake")}
+					onBack={() => setPhase("consent")}
 				/>
 			)}
 
@@ -254,9 +344,196 @@ export default function SowDemo() {
 	);
 }
 
+/* ─── Dashboard ─── */
+
+function Dashboard({ onNewCase }: { onNewCase: () => void }) {
+	const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
+	const [lastRefresh, setLastRefresh] = useState(new Date());
+	const unreadCount = notifications.filter((n) => !n.read).length;
+
+	const markRead = (id: string) => {
+		setNotifications((prev) => prev.map((n) => n.id === id ? { ...n, read: true } : n));
+	};
+
+	const refresh = () => {
+		setLastRefresh(new Date());
+	};
+
+	const casesByStatus = {
+		total: MOCK_EXISTING_CASES.length,
+		complete: MOCK_EXISTING_CASES.filter((c) => c.status === "Complete").length,
+		review: MOCK_EXISTING_CASES.filter((c) => c.status === "Under Review").length,
+		pending: MOCK_EXISTING_CASES.filter((c) => c.status === "Pending EDD").length,
+	};
+
+	const totalAlerts = MOCK_EXISTING_CASES.reduce((sum, c) => sum + c.alertCount, 0);
+
+	return (
+		<div className="space-y-6">
+			{/* Summary row */}
+			<div className="flex items-center justify-between">
+				<div>
+					<h2 className="text-lg font-semibold">Case Dashboard</h2>
+					<p className="text-sm text-muted-foreground">Overview of active SOW assessments and monitoring alerts</p>
+				</div>
+				<Button onClick={onNewCase} className="gap-2">
+					<PlusIcon className="size-4" />
+					New Case
+				</Button>
+			</div>
+
+			{/* Stat cards */}
+			<div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+				<StatCard label="Total Cases" value={casesByStatus.total} icon={FolderOpenIcon} />
+				<StatCard label="Completed" value={casesByStatus.complete} icon={CheckCircle2Icon} color="emerald" />
+				<StatCard label="Under Review" value={casesByStatus.review} icon={EyeIcon} color="amber" />
+				<StatCard label="Active Alerts" value={totalAlerts} icon={BellRingIcon} color="red" />
+			</div>
+
+			{/* Two-column layout: Cases + Notifications */}
+			<div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
+				{/* Existing cases table */}
+				<div className="lg:col-span-3 space-y-3">
+					<p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+						Active Cases
+					</p>
+					<div className="rounded-xl border border-border overflow-hidden shadow-sm">
+						<table className="w-full text-sm">
+							<thead className="bg-muted/40 text-muted-foreground">
+								<tr>
+									<th className="text-left px-4 py-2.5 font-medium">Case</th>
+									<th className="text-left px-4 py-2.5 font-medium hidden sm:table-cell">Subject</th>
+									<th className="text-center px-4 py-2.5 font-medium">Risk</th>
+									<th className="text-center px-4 py-2.5 font-medium">Status</th>
+									<th className="text-center px-4 py-2.5 font-medium hidden sm:table-cell">Alerts</th>
+								</tr>
+							</thead>
+							<tbody className="divide-y divide-border">
+								{MOCK_EXISTING_CASES.map((c) => (
+									<tr key={c.caseRef} className="hover:bg-muted/20 transition-colors">
+										<td className="px-4 py-3">
+											<div className="font-mono text-xs text-muted-foreground">{c.caseRef}</div>
+											<div className="font-medium sm:hidden mt-0.5">{c.name}</div>
+										</td>
+										<td className="px-4 py-3 hidden sm:table-cell">
+											<div className="font-medium">{c.name}</div>
+											<div className="text-xs text-muted-foreground">{c.nameEn}</div>
+										</td>
+										<td className="px-4 py-3 text-center">
+											<RiskBadge rating={c.riskRating} />
+										</td>
+										<td className="px-4 py-3 text-center">
+											<CaseStatusBadge status={c.status} />
+										</td>
+										<td className="px-4 py-3 text-center hidden sm:table-cell">
+											{c.alertCount > 0 ? (
+												<span className="text-xs font-semibold rounded px-1.5 py-0.5 bg-red-500/15 text-red-700">{c.alertCount}</span>
+											) : (
+												<span className="text-xs text-muted-foreground">—</span>
+											)}
+										</td>
+									</tr>
+								))}
+							</tbody>
+						</table>
+					</div>
+				</div>
+
+				{/* Notifications panel */}
+				<div className="lg:col-span-2 space-y-3">
+					<div className="flex items-center justify-between">
+						<div className="flex items-center gap-2">
+							<p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+								Notifications
+							</p>
+							{unreadCount > 0 && (
+								<span className="text-[10px] font-bold rounded-full px-1.5 py-0.5 bg-red-500 text-white">{unreadCount}</span>
+							)}
+						</div>
+						<button onClick={refresh} className="text-muted-foreground hover:text-foreground transition-colors" title="Refresh">
+							<RefreshCwIcon className="size-3.5" />
+						</button>
+					</div>
+					<div className="rounded-xl border border-border overflow-hidden shadow-sm divide-y divide-border max-h-[400px] overflow-y-auto">
+						{notifications.map((n) => (
+							<NotificationRow key={n.id} notification={n} onRead={() => markRead(n.id)} />
+						))}
+					</div>
+					<p className="text-[10px] text-muted-foreground text-right">
+						Last updated: {lastRefresh.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })} · Auto-refreshes every 60s
+					</p>
+				</div>
+			</div>
+		</div>
+	);
+}
+
+function StatCard({ label, value, icon: Icon, color }: { label: string; value: number; icon: typeof FolderOpenIcon; color?: string }) {
+	const colorMap: Record<string, string> = {
+		emerald: "text-emerald-600 bg-emerald-500/10",
+		amber: "text-amber-600 bg-amber-500/10",
+		red: "text-red-600 bg-red-500/10",
+	};
+	const c = color ? colorMap[color] : "text-primary bg-primary/10";
+	return (
+		<div className="rounded-xl border border-border bg-card p-4 shadow-sm">
+			<div className="flex items-center justify-between mb-2">
+				<span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">{label}</span>
+				<div className={`h-7 w-7 rounded-lg flex items-center justify-center ${c}`}>
+					<Icon className="size-3.5" />
+				</div>
+			</div>
+			<div className="text-2xl font-bold tabular-nums">{value}</div>
+		</div>
+	);
+}
+
+function CaseStatusBadge({ status }: { status: ExistingCase["status"] }) {
+	const styles: Record<string, string> = {
+		Complete: "bg-emerald-500/15 text-emerald-700",
+		"Under Review": "bg-amber-500/15 text-amber-700",
+		"Pending EDD": "bg-sky-500/15 text-sky-700",
+	};
+	return <span className={`text-[10px] font-semibold rounded px-1.5 py-0.5 whitespace-nowrap ${styles[status]}`}>{status}</span>;
+}
+
+function NotificationRow({ notification: n, onRead }: { notification: DashboardNotification; onRead: () => void }) {
+	const iconMap: Record<string, { Icon: typeof BellRingIcon; color: string }> = {
+		alert: { Icon: AlertTriangleIcon, color: "text-red-500" },
+		"review-due": { Icon: CalendarClockIcon, color: "text-amber-500" },
+		update: { Icon: InfoIcon, color: "text-sky-500" },
+		completed: { Icon: CheckCircle2Icon, color: "text-emerald-500" },
+	};
+	const { Icon, color } = iconMap[n.type] ?? iconMap.update;
+
+	return (
+		<button
+			onClick={onRead}
+			className={`w-full text-left px-4 py-3 hover:bg-muted/20 transition-colors ${!n.read ? "bg-primary/[0.03]" : ""}`}
+		>
+			<div className="flex items-start gap-2.5">
+				<Icon className={`size-4 mt-0.5 shrink-0 ${color}`} />
+				<div className="flex-1 min-w-0">
+					<div className="flex items-center gap-2">
+						<span className={`text-sm font-medium truncate ${!n.read ? "text-foreground" : "text-muted-foreground"}`}>{n.title}</span>
+						{!n.read && <div className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />}
+					</div>
+					<p className="text-[11px] text-muted-foreground leading-relaxed mt-0.5 line-clamp-2">{n.detail}</p>
+					<div className="flex items-center gap-2 mt-1">
+						<span className="font-mono text-[10px] text-muted-foreground/60">{n.caseRef}</span>
+						<span className="text-[10px] text-muted-foreground/60">·</span>
+						<span className="text-[10px] text-muted-foreground/60">{n.time}</span>
+					</div>
+				</div>
+			</div>
+		</button>
+	);
+}
+
 /* ─── Step Indicator ─── */
 
 function StepIndicator({ current }: { current: Phase }) {
+	if (current === "dashboard") return null;
 	const currentIdx = STEPS.findIndex((s) => s.key === current);
 	return (
 		<div className="flex items-center justify-center gap-0 py-2">
@@ -287,7 +564,7 @@ function StepIndicator({ current }: { current: Phase }) {
 							</span>
 						</div>
 						{i < STEPS.length - 1 && (
-							<div className={`w-12 sm:w-20 h-px mx-2 ${i < currentIdx ? "bg-primary" : "bg-border"}`} />
+							<div className={`w-12 sm:w-16 h-px mx-2 ${i < currentIdx ? "bg-primary" : "bg-border"}`} />
 						)}
 					</div>
 				);
@@ -340,17 +617,18 @@ function CaseIntake({
 	onSelectCase,
 	onUpdateField,
 	onCreateCase,
+	onBack,
 }: {
 	selectedCase: SowReport | null;
 	formData: Record<string, string>;
 	onSelectCase: (r: SowReport) => void;
 	onUpdateField: (key: string, value: string) => void;
 	onCreateCase: () => void;
+	onBack: () => void;
 }) {
 	return (
 		<div className="space-y-6">
-			{/* Demo profile selector */}
-			<div className="space-y-3">
+			<div className="flex items-center justify-between">
 				<div>
 					<p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
 						Select Demo Profile
@@ -359,50 +637,50 @@ function CaseIntake({
 						Choose a pre-built client profile to populate the intake form, or enter details manually.
 					</p>
 				</div>
-				<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-					{SOW_CASES.map((report) => {
-						const p = report.profile;
-						const isSelected = selectedCase?.profile.id === p.id;
-						const isHigh = p.riskRating === "High";
-						return (
-							<button
-								key={p.id}
-								onClick={() => onSelectCase(report)}
-								className={`text-left rounded-xl border p-4 transition-all ${
-									isSelected
-										? "border-primary bg-primary/5 ring-2 ring-primary/20"
-										: "border-border bg-card hover:border-primary/30 hover:bg-accent/30"
-								}`}
-							>
-								<div className="flex items-center justify-between mb-2">
-									<div className="flex items-center gap-2.5">
-										<div className={`h-9 w-9 rounded-full flex items-center justify-center ${isHigh ? "bg-red-500/15" : "bg-emerald-500/15"}`}>
-											<UserIcon className={`size-4 ${isHigh ? "text-red-600" : "text-emerald-600"}`} />
-										</div>
-										<div>
-											<div className="font-semibold text-sm">{p.name}</div>
-											<div className="text-xs text-muted-foreground">{p.nameEn}</div>
-										</div>
+				<Button variant="outline" size="sm" onClick={onBack}>Back to Dashboard</Button>
+			</div>
+			<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+				{SOW_CASES.map((report) => {
+					const p = report.profile;
+					const isSelected = selectedCase?.profile.id === p.id;
+					const isHigh = p.riskRating === "High";
+					return (
+						<button
+							key={p.id}
+							onClick={() => onSelectCase(report)}
+							className={`text-left rounded-xl border p-4 transition-all ${
+								isSelected
+									? "border-primary bg-primary/5 ring-2 ring-primary/20"
+									: "border-border bg-card hover:border-primary/30 hover:bg-accent/30"
+							}`}
+						>
+							<div className="flex items-center justify-between mb-2">
+								<div className="flex items-center gap-2.5">
+									<div className={`h-9 w-9 rounded-full flex items-center justify-center ${isHigh ? "bg-red-500/15" : "bg-emerald-500/15"}`}>
+										<UserIcon className={`size-4 ${isHigh ? "text-red-600" : "text-emerald-600"}`} />
 									</div>
-									<div className="flex items-center gap-2">
-										<RiskBadge rating={p.riskRating} />
-										{isSelected && (
-											<div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center">
-												<CheckIcon className="size-3 text-primary-foreground" />
-											</div>
-										)}
+									<div>
+										<div className="font-semibold text-sm">{p.name}</div>
+										<div className="text-xs text-muted-foreground">{p.nameEn}</div>
 									</div>
 								</div>
-								<div className="text-xs text-muted-foreground">
-									{p.age}, {p.gender} · {p.occupation} · {p.city}
+								<div className="flex items-center gap-2">
+									<RiskBadge rating={p.riskRating} />
+									{isSelected && (
+										<div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center">
+											<CheckIcon className="size-3 text-primary-foreground" />
+										</div>
+									)}
 								</div>
-							</button>
-						);
-					})}
-				</div>
+							</div>
+							<div className="text-xs text-muted-foreground">
+								{p.age}, {p.gender} · {p.occupation} · {p.city}
+							</div>
+						</button>
+					);
+				})}
 			</div>
 
-			{/* Intake form */}
 			{selectedCase && (
 				<div className="space-y-5 rounded-xl border border-border bg-card p-5 shadow-sm">
 					<FormSection title="Client Information">
@@ -530,7 +808,201 @@ function FormSelect({
 	);
 }
 
-/* ─── Phase 2: Data Source Overview ─── */
+/* ─── Phase 2: Consent & Document Upload ─── */
+
+function ConsentPhase({
+	report,
+	caseRef,
+	consentChecks,
+	uploadedFiles,
+	onToggleConsent,
+	onUploadFile,
+	onProceed,
+	onBack,
+}: {
+	report: SowReport;
+	caseRef: string;
+	consentChecks: { dataProcessing: boolean; clientAuth: boolean; regulatoryDisclosure: boolean };
+	uploadedFiles: string[];
+	onToggleConsent: (key: "dataProcessing" | "clientAuth" | "regulatoryDisclosure") => void;
+	onUploadFile: (name: string) => void;
+	onProceed: () => void;
+	onBack: () => void;
+}) {
+	const allChecked = consentChecks.dataProcessing && consentChecks.clientAuth && consentChecks.regulatoryDisclosure;
+
+	const simulateUpload = (label: string) => {
+		onUploadFile(label);
+	};
+
+	return (
+		<div className="space-y-5">
+			<CaseBanner caseRef={caseRef} report={report} status="In Progress" />
+
+			<div>
+				<p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
+					Consent & Authorization
+				</p>
+				<p className="text-sm text-muted-foreground">
+					Before querying government and financial data sources, the following consent confirmations and supporting documents are required.
+				</p>
+			</div>
+
+			{/* Consent checkboxes */}
+			<div className="rounded-xl border border-border bg-card p-5 shadow-sm space-y-4">
+				<h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Required Confirmations</h4>
+
+				<ConsentCheckbox
+					checked={consentChecks.dataProcessing}
+					onChange={() => onToggleConsent("dataProcessing")}
+					title="Data Processing Consent"
+					description="I confirm that the client has been informed of and consents to the processing of their personal data for the purpose of Source of Wealth verification, in compliance with applicable data protection regulations including the PRC Personal Information Protection Law (PIPL)."
+				/>
+				<ConsentCheckbox
+					checked={consentChecks.clientAuth}
+					onChange={() => onToggleConsent("clientAuth")}
+					title="Client Authorization"
+					description="I confirm that a signed client authorization form has been obtained, granting permission to query government registries, financial databases, and third-party data providers for the purpose of enhanced due diligence."
+				/>
+				<ConsentCheckbox
+					checked={consentChecks.regulatoryDisclosure}
+					onChange={() => onToggleConsent("regulatoryDisclosure")}
+					title="Regulatory Disclosure"
+					description="I acknowledge that assessment results may be shared with regulatory authorities in accordance with applicable anti-money laundering legislation, and that the client has been informed of this obligation."
+				/>
+			</div>
+
+			{/* Document upload */}
+			<div className="rounded-xl border border-border bg-card p-5 shadow-sm space-y-4">
+				<h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Supporting Documents</h4>
+				<p className="text-xs text-muted-foreground">
+					Upload signed consent forms and any supporting documentation. Accepted formats: PDF, JPG, PNG (max 10MB each).
+				</p>
+
+				<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+					<UploadSlot
+						label="Signed Consent Form"
+						uploaded={uploadedFiles.includes("Signed Consent Form")}
+						onUpload={() => simulateUpload("Signed Consent Form")}
+						required
+					/>
+					<UploadSlot
+						label="Client ID Document"
+						uploaded={uploadedFiles.includes("Client ID Document")}
+						onUpload={() => simulateUpload("Client ID Document")}
+						required
+					/>
+					<UploadSlot
+						label="Authorization Letter"
+						uploaded={uploadedFiles.includes("Authorization Letter")}
+						onUpload={() => simulateUpload("Authorization Letter")}
+					/>
+					<UploadSlot
+						label="Additional Evidence"
+						uploaded={uploadedFiles.includes("Additional Evidence")}
+						onUpload={() => simulateUpload("Additional Evidence")}
+					/>
+				</div>
+			</div>
+
+			<div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 px-4 py-3">
+				<div className="flex items-center gap-2 text-sm">
+					{allChecked ? (
+						<>
+							<CheckCircle2Icon className="size-4 text-emerald-600" />
+							<span className="text-emerald-700 font-medium">All confirmations received</span>
+						</>
+					) : (
+						<>
+							<AlertTriangleIcon className="size-4 text-amber-600" />
+							<span className="text-amber-700 font-medium">
+								{3 - [consentChecks.dataProcessing, consentChecks.clientAuth, consentChecks.regulatoryDisclosure].filter(Boolean).length} confirmation{3 - [consentChecks.dataProcessing, consentChecks.clientAuth, consentChecks.regulatoryDisclosure].filter(Boolean).length !== 1 ? "s" : ""} remaining
+							</span>
+						</>
+					)}
+				</div>
+				<div className="flex items-center gap-2">
+					<Button variant="outline" size="sm" onClick={onBack}>
+						Back
+					</Button>
+					<Button size="sm" onClick={onProceed} disabled={!allChecked} className="gap-1.5">
+						Proceed to Data Sources
+						<ArrowRightIcon className="size-3.5" />
+					</Button>
+				</div>
+			</div>
+		</div>
+	);
+}
+
+function ConsentCheckbox({
+	checked,
+	onChange,
+	title,
+	description,
+}: {
+	checked: boolean;
+	onChange: () => void;
+	title: string;
+	description: string;
+}) {
+	return (
+		<button onClick={onChange} className="w-full text-left flex items-start gap-3 group">
+			<div className={`mt-0.5 h-5 w-5 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${
+				checked
+					? "bg-primary border-primary"
+					: "border-border group-hover:border-primary/50"
+			}`}>
+				{checked && <CheckIcon className="size-3 text-primary-foreground" />}
+			</div>
+			<div>
+				<div className="text-sm font-medium">{title}</div>
+				<p className="text-xs text-muted-foreground leading-relaxed mt-0.5">{description}</p>
+			</div>
+		</button>
+	);
+}
+
+function UploadSlot({
+	label,
+	uploaded,
+	onUpload,
+	required,
+}: {
+	label: string;
+	uploaded: boolean;
+	onUpload: () => void;
+	required?: boolean;
+}) {
+	return (
+		<button
+			onClick={onUpload}
+			disabled={uploaded}
+			className={`flex items-center gap-3 rounded-lg border-2 border-dashed p-3 transition-all ${
+				uploaded
+					? "border-emerald-500/30 bg-emerald-500/5"
+					: "border-border hover:border-primary/40 hover:bg-primary/[0.02]"
+			}`}
+		>
+			{uploaded ? (
+				<FileCheckIcon className="size-5 text-emerald-600 shrink-0" />
+			) : (
+				<UploadIcon className="size-5 text-muted-foreground shrink-0" />
+			)}
+			<div className="text-left flex-1">
+				<div className="text-sm font-medium flex items-center gap-1">
+					{label}
+					{required && !uploaded && <span className="text-destructive text-xs">*</span>}
+				</div>
+				<div className="text-[11px] text-muted-foreground">
+					{uploaded ? "Uploaded successfully" : "Click to upload"}
+				</div>
+			</div>
+		</button>
+	);
+}
+
+/* ─── Phase 3: Data Source Overview ─── */
 
 function DataSourceOverview({
 	report,
@@ -543,6 +1015,7 @@ function DataSourceOverview({
 	onBegin: () => void;
 	onBack: () => void;
 }) {
+	const [infoOpen, setInfoOpen] = useState<string | null>(null);
 	const sources = report.dataSources;
 	const categories = ["Identity", "Banking", "Risk", "Corporate", "Income", "Tax"] as const;
 	const grouped = categories
@@ -563,7 +1036,7 @@ function DataSourceOverview({
 					Data Sources to Query
 				</p>
 				<p className="text-sm text-muted-foreground">
-					The following {sources.length} government and financial data sources will be queried to build the Source of Wealth assessment for {report.profile.name}.
+					The following {sources.length} government and financial data sources will be queried to build the Source of Wealth assessment for {report.profile.name}. Click the <span className="inline-flex items-center"><InfoIcon className="size-3 mx-0.5 text-primary inline" /></span> icon on each category to learn more about the data source authority and legal basis.
 				</p>
 			</div>
 
@@ -571,35 +1044,67 @@ function DataSourceOverview({
 				{grouped.map((group) => {
 					const meta = CATEGORY_META[group.category];
 					const CatIcon = meta?.Icon ?? SearchIcon;
+					const isInfoOpen = infoOpen === group.category;
 					return (
-						<div key={group.category} className="rounded-xl border border-border bg-card p-4 shadow-sm">
-							<div className="flex items-center gap-2.5 mb-2">
-								<div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
-									<CatIcon className="size-4 text-primary" />
-								</div>
-								<div>
-									<h4 className="text-sm font-semibold">{group.category}</h4>
-									<span className="text-[10px] text-muted-foreground">
-										{group.items.length} check{group.items.length !== 1 ? "s" : ""}
-									</span>
-								</div>
-							</div>
-							<p className="text-xs text-muted-foreground leading-relaxed mb-3">
-								{meta?.description}
-							</p>
-							<div className="space-y-1.5">
-								{group.items.map((source) => (
-									<div key={source.id} className="flex items-start gap-2">
-										<CheckCircle2Icon className="size-3.5 text-primary mt-0.5 shrink-0" />
+						<div key={group.category} className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+							<div className="p-4">
+								<div className="flex items-center justify-between mb-2">
+									<div className="flex items-center gap-2.5">
+										<div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+											<CatIcon className="size-4 text-primary" />
+										</div>
 										<div>
-											<div className="text-xs font-medium">{source.name}</div>
-											<div className="text-[11px] text-muted-foreground">
-												{SOURCE_PURPOSES[source.id] ?? source.provider}
-											</div>
+											<h4 className="text-sm font-semibold">{group.category}</h4>
+											<span className="text-[10px] text-muted-foreground">
+												{group.items.length} check{group.items.length !== 1 ? "s" : ""}
+											</span>
 										</div>
 									</div>
-								))}
+									<button
+										onClick={() => setInfoOpen(isInfoOpen ? null : group.category)}
+										className={`h-6 w-6 rounded-md flex items-center justify-center transition-colors ${
+											isInfoOpen ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+										}`}
+										title="Data source information"
+									>
+										<InfoIcon className="size-3.5" />
+									</button>
+								</div>
+								<p className="text-xs text-muted-foreground leading-relaxed mb-3">
+									{meta?.description}
+								</p>
+								<div className="space-y-1.5">
+									{group.items.map((source) => (
+										<div key={source.id} className="flex items-start gap-2">
+											<CheckCircle2Icon className="size-3.5 text-primary mt-0.5 shrink-0" />
+											<div>
+												<div className="text-xs font-medium">{source.name}</div>
+												<div className="text-[11px] text-muted-foreground">
+													{SOURCE_PURPOSES[source.id] ?? source.provider}
+												</div>
+											</div>
+										</div>
+									))}
+								</div>
 							</div>
+
+							{/* Info panel */}
+							{isInfoOpen && meta && (
+								<div className="border-t border-border bg-muted/20 px-4 py-3 space-y-2.5">
+									<div>
+										<div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-0.5">Governing Authority</div>
+										<p className="text-xs font-medium">{meta.authority}</p>
+									</div>
+									<div>
+										<div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-0.5">Legal Basis</div>
+										<p className="text-[11px] text-muted-foreground leading-relaxed">{meta.legalBasis}</p>
+									</div>
+									<div>
+										<div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-0.5">Data Retrieved</div>
+										<p className="text-[11px] text-muted-foreground leading-relaxed">{meta.dataType}</p>
+									</div>
+								</div>
+							)}
 						</div>
 					);
 				})}
@@ -630,7 +1135,7 @@ function DataSourceOverview({
 	);
 }
 
-/* ─── Phase 3: Generating ─── */
+/* ─── Phase 4: Generating ─── */
 
 function GeneratingView({
 	report,
@@ -719,7 +1224,7 @@ function GeneratingView({
 	);
 }
 
-/* ─── Phase 4: Report ─── */
+/* ─── Phase 5: Report ─── */
 
 function ReportView({
 	report,
@@ -738,7 +1243,6 @@ function ReportView({
 
 	return (
 		<div className="space-y-8">
-			{/* Header */}
 			<div className="flex items-center justify-between">
 				<div>
 					<p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
