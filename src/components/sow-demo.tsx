@@ -156,6 +156,9 @@ const MOCK_EXISTING_CASES: ExistingCase[] = [
 	{ caseRef: "SOW-2025-0918-087", name: "张丽华", nameEn: "Zhang Lihua", riskRating: "High", status: "Under Review", createdDate: "18 Sep 2025", nextReview: "18 Mar 2026", alertCount: 3 },
 	{ caseRef: "SOW-2026-0210-553", name: "李明辉", nameEn: "Li Minghui", riskRating: "Low", status: "Complete", createdDate: "10 Feb 2026", nextReview: "10 Feb 2027", alertCount: 1 },
 	{ caseRef: "SOW-2026-0402-291", name: "赵薇薇", nameEn: "Zhao Weiwei", riskRating: "High", status: "Pending EDD", createdDate: "02 Apr 2026", nextReview: "02 Oct 2026", alertCount: 5 },
+	{ caseRef: "SOW-2026-0315-744", name: "黄晓明", nameEn: "Huang Xiaoming", riskRating: "Low", status: "Complete", createdDate: "15 Mar 2026", nextReview: "15 Mar 2027", alertCount: 0 },
+	{ caseRef: "SOW-2026-0428-195", name: "林婉琪", nameEn: "Lin Wanqi", riskRating: "High", status: "Under Review", createdDate: "28 Apr 2026", nextReview: "28 Oct 2026", alertCount: 2 },
+	{ caseRef: "SOW-2026-0503-631", name: "周志强", nameEn: "Zhou Zhiqiang", riskRating: "Low", status: "Complete", createdDate: "03 May 2026", nextReview: "03 May 2027", alertCount: 0 },
 ];
 
 const MOCK_NOTIFICATIONS: DashboardNotification[] = [
@@ -164,6 +167,9 @@ const MOCK_NOTIFICATIONS: DashboardNotification[] = [
 	{ id: "n3", type: "update", title: "Corporate filing update — 李明辉", detail: "SAMR registry shows new company registration: Hangzhou Minghui Consulting Co. Subject listed as legal representative.", time: "3 days ago", caseRef: "SOW-2026-0210-553", read: true },
 	{ id: "n4", type: "completed", title: "EDD interview scheduled — 赵薇薇", detail: "Enhanced due diligence interview confirmed for 20 May 2026, 14:00 CST. Documents pending.", time: "5 days ago", caseRef: "SOW-2026-0402-291", read: true },
 	{ id: "n5", type: "alert", title: "Tax discrepancy detected — 赵薇薇", detail: "Year-over-year income variance of 340% detected in latest STA filing. Flagged for manual review.", time: "1 week ago", caseRef: "SOW-2026-0402-291", read: true },
+	{ id: "n6", type: "alert", title: "Sanctions list match — 林婉琪", detail: "Possible partial match on OFAC SDN list for associated entity Shenzhen Hengda Import Co. Manual verification required.", time: "1 week ago", caseRef: "SOW-2026-0428-195", read: true },
+	{ id: "n7", type: "update", title: "Annual review completed — 黄晓明", detail: "All 11 data sources re-queried. No material changes from prior assessment. Risk rating unchanged at Low.", time: "2 weeks ago", caseRef: "SOW-2026-0315-744", read: true },
+	{ id: "n8", type: "review-due", title: "90-day check due — 林婉琪", detail: "High-risk case requires 90-day interim review per enhanced monitoring policy. 6 data sources scheduled for re-query.", time: "2 weeks ago", caseRef: "SOW-2026-0428-195", read: true },
 ];
 
 function generateCaseRef(): string {
@@ -369,6 +375,7 @@ function Dashboard({ onNewCase }: { onNewCase: () => void }) {
 	};
 
 	const totalAlerts = MOCK_EXISTING_CASES.reduce((sum, c) => sum + c.alertCount, 0);
+	const highRiskCount = MOCK_EXISTING_CASES.filter((c) => c.riskRating === "High").length;
 
 	return (
 		<div className="space-y-6">
@@ -386,8 +393,33 @@ function Dashboard({ onNewCase }: { onNewCase: () => void }) {
 			<div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
 				<StatCard label="Total Cases" value={casesByStatus.total} icon={FolderOpenIcon} />
 				<StatCard label="Completed" value={casesByStatus.complete} icon={CheckCircle2Icon} color="emerald" />
-				<StatCard label="Under Review" value={casesByStatus.review} icon={EyeIcon} color="amber" />
+				<StatCard label="Under Review" value={casesByStatus.review + casesByStatus.pending} icon={EyeIcon} color="amber" />
 				<StatCard label="Active Alerts" value={totalAlerts} icon={BellRingIcon} color="red" />
+			</div>
+
+			<div className="rounded-2xl border border-border bg-gradient-to-r from-muted/30 to-transparent p-5 shadow-sm">
+				<div className="flex items-center gap-2 mb-3">
+					<ShieldCheckIcon className="size-4 text-primary" />
+					<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Compliance Summary</p>
+				</div>
+				<div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
+					<div>
+						<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Avg. Assessment Time</div>
+						<div className="mt-0.5 font-heading font-semibold">28.4s</div>
+					</div>
+					<div>
+						<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">High Risk Rate</div>
+						<div className="mt-0.5 font-heading font-semibold">{((highRiskCount / casesByStatus.total) * 100).toFixed(0)}%</div>
+					</div>
+					<div>
+						<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Data Sources Active</div>
+						<div className="mt-0.5 font-heading font-semibold">13 / 13</div>
+					</div>
+					<div>
+						<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">SLA Compliance</div>
+						<div className="mt-0.5 font-heading font-semibold text-emerald-700">100%</div>
+					</div>
+				</div>
 			</div>
 
 			<div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
@@ -675,6 +707,9 @@ function CaseIntake({
 							<div className="text-xs text-muted-foreground">
 								{p.age}, {p.gender} · {p.occupation} · {p.city}
 							</div>
+							<p className="text-[11px] text-muted-foreground/70 mt-2 leading-relaxed line-clamp-2">
+								{p.profileSummary}
+							</p>
 						</button>
 					);
 				})}
@@ -814,6 +849,8 @@ function ConsentPhase({
 				</p>
 				<p className="text-sm text-muted-foreground">
 					Before querying government and financial data sources, the following consent confirmations and supporting documents are required.
+					Under the PRC Personal Information Protection Law (PIPL), explicit informed consent must be obtained from the data subject
+					prior to processing sensitive personal information including identity records, financial data, and corporate affiliations.
 				</p>
 			</div>
 
@@ -1142,6 +1179,8 @@ function ReportView({ report, caseRef, confirmedActions, onConfirmAction, onRese
 			<CompanyNetworkGraph report={report} />
 			<DataSourceFindings sources={report.dataSources} />
 			<NarrativeSection narrative={report.narrative} />
+			<AssessmentMethodology />
+			<RegulatoryContext riskRating={p.riskRating} />
 			<PerpetualScreening alerts={report.screeningAlerts} nextReviewDate={report.nextReviewDate} riskRating={p.riskRating} />
 			<FollowUpActions riskRating={p.riskRating} confirmedActions={confirmedActions} onConfirm={onConfirmAction} />
 		</div>
@@ -1609,10 +1648,154 @@ function NarrativeSection({ narrative }: { narrative: string }) {
 	return (
 		<div className="space-y-3">
 			<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">SOW Narrative — AI-Generated Summary</p>
-			<div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-				{narrative.split("\n\n").map((para, i) => (
-					<p key={i} className="text-sm leading-[1.8] mb-3 last:mb-0">{para}</p>
-				))}
+			<div className="rounded-2xl border border-border bg-card p-6 shadow-sm space-y-4">
+				<div>
+					{narrative.split("\n\n").map((para, i) => (
+						<p key={i} className="text-sm leading-[1.8] mb-3 last:mb-0">{para}</p>
+					))}
+				</div>
+				<div className="rounded-lg bg-muted/30 border border-border/60 px-4 py-3 flex items-start gap-2.5">
+					<InfoIcon className="size-3.5 text-muted-foreground mt-0.5 shrink-0" />
+					<p className="text-[11px] text-muted-foreground leading-relaxed">
+						This narrative was generated by an AI model synthesizing findings from {narrative.length > 2000 ? "13" : "11"} verified data sources.
+						All factual claims are traceable to the source query results in Section 5 above. This summary is intended as an
+						analytical aid for compliance officers and should not be used as a standalone decision document. Final risk determination
+						must be made by a qualified compliance professional in accordance with institutional policies.
+					</p>
+				</div>
+			</div>
+		</div>
+	);
+}
+
+function AssessmentMethodology() {
+	const factors = [
+		{ name: "Identity Consistency", weight: "15%", desc: "Cross-validation of identity documents, mobile attribution, and residence claims across government databases." },
+		{ name: "Income Plausibility", weight: "20%", desc: "Comparison of declared income against social insurance contributions, tax filings, and employer verification." },
+		{ name: "Wealth-to-Income Ratio", weight: "20%", desc: "Assessment of whether accumulated assets are proportionate to verified income trajectory over career span." },
+		{ name: "Corporate Exposure", weight: "15%", desc: "Evaluation of associated entities including registration status, regulatory standing, and beneficial ownership structures." },
+		{ name: "Litigation & Enforcement", weight: "10%", desc: "Review of civil and criminal court records, enforcement actions, and dishonest debtor listings." },
+		{ name: "Financial Behaviour", weight: "10%", desc: "Analysis of multi-platform borrowing patterns, cross-provincial account activity, and fraud risk indicators." },
+		{ name: "Tax Compliance", weight: "10%", desc: "Year-over-year consistency of tax filings and alignment with other declared income sources." },
+	];
+
+	return (
+		<div className="space-y-3">
+			<div className="flex items-center gap-2">
+				<FileTextIcon className="size-4 text-muted-foreground" />
+				<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Assessment Methodology</p>
+			</div>
+			<div className="rounded-2xl border border-border bg-card p-6 shadow-sm space-y-4">
+				<p className="text-xs text-muted-foreground leading-relaxed">
+					The composite risk score is calculated using a weighted multi-factor model. Each factor is independently assessed against verified data from government and financial sources, then combined into an overall score from 0 (lowest risk) to 100 (highest risk). Scores above 60 trigger enhanced due diligence requirements.
+				</p>
+				<div className="rounded-xl border border-border overflow-hidden">
+					<table className="w-full text-sm">
+						<thead className="bg-gradient-to-r from-muted/60 to-muted/30 text-muted-foreground">
+							<tr>
+								<th className="text-left px-4 py-2.5 font-medium text-xs font-heading tracking-wide">Factor</th>
+								<th className="text-center px-4 py-2.5 font-medium text-xs font-heading tracking-wide w-20">Weight</th>
+								<th className="text-left px-4 py-2.5 font-medium text-xs font-heading tracking-wide hidden sm:table-cell">Description</th>
+							</tr>
+						</thead>
+						<tbody className="divide-y divide-border/60">
+							{factors.map((f) => (
+								<tr key={f.name} className="hover:bg-accent/30 transition-colors">
+									<td className="px-4 py-2.5 text-xs font-heading font-medium">{f.name}</td>
+									<td className="px-4 py-2.5 text-xs font-mono text-center text-primary font-semibold">{f.weight}</td>
+									<td className="px-4 py-2.5 text-[11px] text-muted-foreground hidden sm:table-cell">{f.desc}</td>
+								</tr>
+							))}
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+	);
+}
+
+function RegulatoryContext({ riskRating }: { riskRating: "Low" | "High" }) {
+	const isHigh = riskRating === "High";
+	return (
+		<div className="space-y-3">
+			<div className="flex items-center gap-2">
+				<LandmarkIcon className="size-4 text-muted-foreground" />
+				<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Regulatory Context & Obligations</p>
+			</div>
+			<div className="rounded-2xl border border-border bg-card p-6 shadow-sm space-y-4">
+				<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+					<div className="space-y-2">
+						<h5 className="text-xs font-heading font-semibold">Applicable Regulations</h5>
+						<ul className="space-y-1.5 text-[11px] text-muted-foreground">
+							<li className="flex items-start gap-2">
+								<span className="mt-1.5 h-1 w-1 rounded-full bg-primary shrink-0" />
+								PRC Anti-Money Laundering Law (2006, amended 2025)
+							</li>
+							<li className="flex items-start gap-2">
+								<span className="mt-1.5 h-1 w-1 rounded-full bg-primary shrink-0" />
+								PBOC Customer Due Diligence Measures for Financial Institutions
+							</li>
+							<li className="flex items-start gap-2">
+								<span className="mt-1.5 h-1 w-1 rounded-full bg-primary shrink-0" />
+								FATF Recommendations 10, 11, 12 (CDD / Record Keeping / PEPs)
+							</li>
+							<li className="flex items-start gap-2">
+								<span className="mt-1.5 h-1 w-1 rounded-full bg-primary shrink-0" />
+								PRC Personal Information Protection Law (PIPL) — data processing consent
+							</li>
+						</ul>
+					</div>
+					<div className="space-y-2">
+						<h5 className="text-xs font-heading font-semibold">Required Actions</h5>
+						<ul className="space-y-1.5 text-[11px] text-muted-foreground">
+							{isHigh ? (
+								<>
+									<li className="flex items-start gap-2">
+										<span className="mt-1.5 h-1 w-1 rounded-full bg-red-500 shrink-0" />
+										File Suspicious Transaction Report (STR) if funds cannot be explained within 30 days
+									</li>
+									<li className="flex items-start gap-2">
+										<span className="mt-1.5 h-1 w-1 rounded-full bg-red-500 shrink-0" />
+										Conduct enhanced due diligence interview per PBOC Directive 2024-003
+									</li>
+									<li className="flex items-start gap-2">
+										<span className="mt-1.5 h-1 w-1 rounded-full bg-amber-500 shrink-0" />
+										Escalate to MLRO for independent review before account activation
+									</li>
+									<li className="flex items-start gap-2">
+										<span className="mt-1.5 h-1 w-1 rounded-full bg-amber-500 shrink-0" />
+										Set 6-month accelerated review cycle with automated monitoring
+									</li>
+								</>
+							) : (
+								<>
+									<li className="flex items-start gap-2">
+										<span className="mt-1.5 h-1 w-1 rounded-full bg-emerald-500 shrink-0" />
+										Standard CDD complete — no enhanced measures required
+									</li>
+									<li className="flex items-start gap-2">
+										<span className="mt-1.5 h-1 w-1 rounded-full bg-emerald-500 shrink-0" />
+										Retain assessment records for minimum 5 years per AML regulations
+									</li>
+									<li className="flex items-start gap-2">
+										<span className="mt-1.5 h-1 w-1 rounded-full bg-primary shrink-0" />
+										Schedule annual periodic review with automated data source refresh
+									</li>
+									<li className="flex items-start gap-2">
+										<span className="mt-1.5 h-1 w-1 rounded-full bg-primary shrink-0" />
+										Maintain ongoing screening against sanctions and PEP databases
+									</li>
+								</>
+							)}
+						</ul>
+					</div>
+				</div>
+				<div className="rounded-lg bg-muted/30 border border-border/60 px-4 py-3">
+					<p className="text-[11px] text-muted-foreground leading-relaxed">
+						<span className="font-heading font-semibold text-foreground">Data Retention: </span>
+						All assessment data, source query results, and supporting documents will be retained for a minimum of 5 years from the date of the business relationship termination, in compliance with PRC AML record-keeping requirements. Data is stored in AES-256 encrypted format with audit trail logging.
+					</p>
+				</div>
 			</div>
 		</div>
 	);
@@ -1632,10 +1815,15 @@ function PerpetualScreening({ alerts, nextReviewDate, riskRating }: { alerts: Sc
 					Next review: {nextReviewDate}
 				</div>
 			</div>
+			<p className="text-xs text-muted-foreground leading-relaxed">
+				Continuous monitoring is active for this subject across all original data sources. Alerts are generated automatically when
+				changes are detected in court records, corporate registries, sanctions lists, adverse media, or tax filings. Monitoring
+				frequency is adjusted based on risk rating: standard cases are checked monthly, high-risk cases are checked weekly.
+			</p>
 			<div className={`rounded-xl border p-4 flex items-center justify-between ${isHigh ? "border-amber-500/30 bg-amber-500/5" : "border-emerald-500/30 bg-emerald-500/5"}`}>
 				<div className="flex items-center gap-2.5">
 					<ActivityIcon className={`size-4 ${isHigh ? "text-amber-600" : "text-emerald-600"}`} />
-					<span className="text-sm font-heading font-medium">{isHigh ? "Active Monitoring — Elevated Alerts" : "Active Monitoring — Routine"}</span>
+					<span className="text-sm font-heading font-medium">{isHigh ? "Active Monitoring — Weekly Scans" : "Active Monitoring — Monthly Scans"}</span>
 				</div>
 				<span className={`text-[10px] font-semibold rounded-md border px-2 py-0.5 ${isHigh ? "bg-amber-500/15 text-amber-700 border-amber-500/20" : "bg-emerald-500/15 text-emerald-700 border-emerald-500/20"}`}>
 					{alerts.length} alert{alerts.length !== 1 ? "s" : ""}

@@ -499,18 +499,39 @@ In summary, the subject's verified income does not support her declared wealth. 
 
 const LOW_RISK_SCREENING: ScreeningAlert[] = [
 	{
+		date: "2026-04-28",
+		type: "Sanctions",
+		severity: "Info",
+		title: "Sanctions screening clear — quarterly refresh",
+		detail: "Quarterly sanctions screening against OFAC SDN, EU Consolidated List, UN Security Council, and PBOC blacklist completed. No matches found for subject or associated entities.",
+	},
+	{
 		date: "2026-04-12",
 		type: "Corporate Change",
 		severity: "Info",
 		title: "Annual return filed — Shenzhen Yunchuang Technology",
-		detail: "2025 annual return filed with Shenzhen Market Supervision Bureau. No changes to shareholders, directors, or registered capital.",
+		detail: "2025 annual return filed with Shenzhen Market Supervision Bureau. No changes to shareholders, directors, or registered capital. Revenue reported at ¥12.3M (+8% YoY).",
+	},
+	{
+		date: "2026-03-22",
+		type: "Corporate Change",
+		severity: "Info",
+		title: "Employee count update — Shenzhen Yunchuang Technology",
+		detail: "Social insurance registration count increased from 45 to 52 employees. Consistent with reported business growth trajectory.",
 	},
 	{
 		date: "2026-03-08",
 		type: "Corporate Change",
 		severity: "Info",
 		title: "New patent registered — Guangdong Xinhe Software",
-		detail: "Utility patent #ZL202510234567.8 registered. Business scope remains consistent with prior filings.",
+		detail: "Utility patent #ZL202510234567.8 registered for cloud infrastructure optimization method. Business scope remains consistent with prior filings.",
+	},
+	{
+		date: "2026-02-15",
+		type: "Tax",
+		severity: "Info",
+		title: "FY2025 tax filing confirmed — Chen Zhiyuan",
+		detail: "Individual income tax filing for FY2025 confirmed by STA. Declared income of ¥1,280,000 is consistent with prior filings and social insurance contributions. No discrepancies.",
 	},
 ];
 
@@ -549,6 +570,27 @@ const HIGH_RISK_SCREENING: ScreeningAlert[] = [
 		severity: "Info",
 		title: "Director resignation — Shanghai Meihe Trading",
 		detail: "Zhang Wei (40% shareholder) resigned as co-director. Liu Yuwei now sole director. No corresponding share transfer recorded.",
+	},
+	{
+		date: "2026-01-30",
+		type: "Sanctions",
+		severity: "Warning",
+		title: "Near-match on PEP database — secondary association",
+		detail: "Automated PEP screening flagged a partial name match for 'Liu Wei' (brother, per client declaration) against provincial-level government official registry. Manual review determined this is a different individual — cleared, but flagged for ongoing monitoring.",
+	},
+	{
+		date: "2026-01-15",
+		type: "Adverse Media",
+		severity: "Warning",
+		title: "Social media activity flagged — luxury lifestyle inconsistency",
+		detail: "Automated adverse media scan detected social media posts showing overseas travel (Maldives, Switzerland) and luxury goods purchases inconsistent with declared ¥350K annual income. Screenshots archived for EDD file.",
+	},
+	{
+		date: "2025-12-20",
+		type: "Regulatory",
+		severity: "Critical",
+		title: "SAMR administrative penalty — Shanghai Meihe Trading",
+		detail: "Administrative penalty of ¥50,000 issued by Shanghai Market Supervision Bureau for failure to file 2024 annual report within statutory deadline. Second consecutive year of late filing.",
 	},
 ];
 
