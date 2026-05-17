@@ -42,6 +42,54 @@ export interface ScreeningAlert {
 	detail: string;
 }
 
+export interface DocumentEvidence {
+	id: string;
+	name: string;
+	type: "consent" | "identity" | "financial" | "corporate" | "correspondence";
+	format: "PDF" | "JPG" | "PNG" | "XLSX";
+	uploadedBy: string;
+	uploadedDate: string;
+	sizeKB: number;
+	verified: boolean;
+	verifiedBy?: string;
+	verifiedDate?: string;
+	notes?: string;
+}
+
+export interface AuditTrailEntry {
+	id: string;
+	timestamp: string;
+	action: string;
+	actor: string;
+	actorRole: string;
+	category: "system" | "analyst" | "approval" | "data" | "escalation";
+	detail?: string;
+}
+
+export interface RemediationItem {
+	id: string;
+	title: string;
+	description: string;
+	priority: "Critical" | "High" | "Medium" | "Low";
+	status: "Open" | "In Progress" | "Resolved" | "Overdue";
+	assignee: string;
+	createdDate: string;
+	dueDate: string;
+	resolvedDate?: string;
+	category: "documentation" | "verification" | "investigation" | "regulatory" | "monitoring";
+}
+
+export interface DashboardIssue {
+	id: string;
+	caseRef: string;
+	subjectName: string;
+	type: "Overdue Review" | "Unresolved Alert" | "Missing Document" | "EDD Pending" | "Remediation Overdue" | "Data Source Error";
+	severity: "Critical" | "High" | "Medium";
+	description: string;
+	daysPending: number;
+	assignee: string;
+}
+
 export interface SowReport {
 	profile: SowCaseProfile;
 	dataSources: SowDataSource[];
@@ -52,6 +100,9 @@ export interface SowReport {
 	screeningAlerts: ScreeningAlert[];
 	nextReviewDate: string;
 	keyParameters: { label: string; value: string; status: "normal" | "warning" | "critical" }[];
+	documentEvidence: DocumentEvidence[];
+	auditTrail: AuditTrailEntry[];
+	remediationItems: RemediationItem[];
 }
 
 const LOW_RISK_PROFILE: SowCaseProfile = {
@@ -616,6 +667,76 @@ const HIGH_RISK_PARAMS: SowReport["keyParameters"] = [
 	{ label: "Source of Funds", value: "Unexplained gap ¥800K+/yr", status: "critical" },
 ];
 
+const LOW_RISK_DOCUMENTS: DocumentEvidence[] = [
+	{ id: "doc-1", name: "Signed_Consent_Form_ChenZhiyuan.pdf", type: "consent", format: "PDF", uploadedBy: "Analyst Wang", uploadedDate: "2026-05-17 09:15", sizeKB: 245, verified: true, verifiedBy: "Senior Analyst Li", verifiedDate: "2026-05-17 09:22", notes: "Original consent form with wet signature, countersigned by relationship manager." },
+	{ id: "doc-2", name: "ID_Card_Front_Back.jpg", type: "identity", format: "JPG", uploadedBy: "Analyst Wang", uploadedDate: "2026-05-17 09:16", sizeKB: 1830, verified: true, verifiedBy: "System (MPS 4-Factor)", verifiedDate: "2026-05-17 09:18" },
+	{ id: "doc-3", name: "Bank_Statement_CMB_2025Q4.pdf", type: "financial", format: "PDF", uploadedBy: "Analyst Wang", uploadedDate: "2026-05-17 09:20", sizeKB: 412, verified: true, verifiedBy: "Analyst Wang", verifiedDate: "2026-05-17 10:05", notes: "Quarterly statement from China Merchants Bank. Income deposits consistent with declared salary." },
+	{ id: "doc-4", name: "Yunchuang_Business_License.pdf", type: "corporate", format: "PDF", uploadedBy: "System (SAMR)", uploadedDate: "2026-05-17 09:35", sizeKB: 890, verified: true, verifiedBy: "System (SAMR Registry)", verifiedDate: "2026-05-17 09:35" },
+	{ id: "doc-5", name: "Tax_Certificate_FY2025.pdf", type: "financial", format: "PDF", uploadedBy: "Analyst Wang", uploadedDate: "2026-05-17 09:25", sizeKB: 156, verified: true, verifiedBy: "Analyst Wang", verifiedDate: "2026-05-17 10:10" },
+	{ id: "doc-6", name: "Property_Deed_Nanshan.pdf", type: "financial", format: "PDF", uploadedBy: "Analyst Wang", uploadedDate: "2026-05-17 09:28", sizeKB: 2100, verified: true, verifiedBy: "Senior Analyst Li", verifiedDate: "2026-05-17 10:30", notes: "Property registration certificate for Nanshan District apartment. Purchased 2018, mortgage fully paid." },
+];
+
+const HIGH_RISK_DOCUMENTS: DocumentEvidence[] = [
+	{ id: "doc-1", name: "Signed_Consent_Form_LiuYuwei.pdf", type: "consent", format: "PDF", uploadedBy: "Analyst Zhang", uploadedDate: "2026-05-17 10:05", sizeKB: 198, verified: true, verifiedBy: "Senior Analyst Li", verifiedDate: "2026-05-17 10:12" },
+	{ id: "doc-2", name: "ID_Card_Scan.jpg", type: "identity", format: "JPG", uploadedBy: "Analyst Zhang", uploadedDate: "2026-05-17 10:06", sizeKB: 1650, verified: true, verifiedBy: "System (MPS 4-Factor)", verifiedDate: "2026-05-17 10:08" },
+	{ id: "doc-3", name: "ICBC_Statement_2025H2.pdf", type: "financial", format: "PDF", uploadedBy: "Analyst Zhang", uploadedDate: "2026-05-17 10:15", sizeKB: 380, verified: true, verifiedBy: "Analyst Zhang", verifiedDate: "2026-05-17 11:00", notes: "Statement shows irregular large deposits not matching declared consulting income." },
+	{ id: "doc-4", name: "Yuwei_Consulting_Registration.pdf", type: "corporate", format: "PDF", uploadedBy: "System (SAMR)", uploadedDate: "2026-05-17 10:32", sizeKB: 560, verified: true, verifiedBy: "System (SAMR Registry)", verifiedDate: "2026-05-17 10:32" },
+	{ id: "doc-5", name: "Meihe_Trading_Investigation_Notice.pdf", type: "corporate", format: "PDF", uploadedBy: "Analyst Zhang", uploadedDate: "2026-05-17 10:40", sizeKB: 125, verified: true, verifiedBy: "Senior Analyst Li", verifiedDate: "2026-05-17 11:15", notes: "Official notice from Shanghai MSB re: investigation opened Jan 2026." },
+	{ id: "doc-6", name: "Property_Deed_Jingan.jpg", type: "financial", format: "JPG", uploadedBy: "Analyst Zhang", uploadedDate: "2026-05-17 10:20", sizeKB: 3200, verified: false, notes: "Pending verification — deed shows purchase price ¥7.8M in 2022, inconsistent with declared income at that time." },
+	{ id: "doc-7", name: "Client_Email_SOF_Explanation.pdf", type: "correspondence", format: "PDF", uploadedBy: "Analyst Zhang", uploadedDate: "2026-05-17 14:30", sizeKB: 85, verified: false, notes: "Client's email response regarding source of funds for property. Claims family gift — no supporting documentation provided yet." },
+];
+
+const LOW_RISK_AUDIT: AuditTrailEntry[] = [
+	{ id: "at-1", timestamp: "2026-05-17 09:10:00", action: "Case created", actor: "Analyst Wang", actorRole: "L2 Analyst", category: "system", detail: "New SOW case initiated for onboarding. Client referred by Private Banking RM." },
+	{ id: "at-2", timestamp: "2026-05-17 09:15:00", action: "Consent form uploaded", actor: "Analyst Wang", actorRole: "L2 Analyst", category: "analyst", detail: "Signed consent form received and uploaded. Original retained in physical file." },
+	{ id: "at-3", timestamp: "2026-05-17 09:18:00", action: "Identity verified (MPS 4-Factor)", actor: "System", actorRole: "Automated", category: "data", detail: "All 4 factors confirmed against MPS database. Verification ID: MPS-2026-0517-88421." },
+	{ id: "at-4", timestamp: "2026-05-17 09:25:00", action: "Supporting documents uploaded", actor: "Analyst Wang", actorRole: "L2 Analyst", category: "analyst", detail: "Bank statement, tax certificate, and property deed uploaded for verification." },
+	{ id: "at-5", timestamp: "2026-05-17 09:35:00", action: "Automated assessment initiated", actor: "System", actorRole: "Automated", category: "system", detail: "13 data sources queried. Assessment completed in 28.4 seconds." },
+	{ id: "at-6", timestamp: "2026-05-17 10:05:00", action: "Document verification complete", actor: "Analyst Wang", actorRole: "L2 Analyst", category: "analyst", detail: "All uploaded documents reviewed and cross-referenced with data source findings." },
+	{ id: "at-7", timestamp: "2026-05-17 10:30:00", action: "Senior review completed", actor: "Senior Analyst Li", actorRole: "L3 Senior Analyst", category: "approval", detail: "Report reviewed. Findings consistent. Risk rating confirmed as Low." },
+	{ id: "at-8", timestamp: "2026-05-17 10:45:00", action: "Case approved — standard onboarding", actor: "Senior Analyst Li", actorRole: "L3 Senior Analyst", category: "approval", detail: "SOW assessment approved. Client cleared for standard onboarding. Annual review scheduled for 2027-05-17." },
+];
+
+const HIGH_RISK_AUDIT: AuditTrailEntry[] = [
+	{ id: "at-1", timestamp: "2026-05-17 10:00:00", action: "Case created", actor: "Analyst Zhang", actorRole: "L2 Analyst", category: "system", detail: "New SOW case initiated. Client referred by Investment Banking division." },
+	{ id: "at-2", timestamp: "2026-05-17 10:05:00", action: "Consent form uploaded", actor: "Analyst Zhang", actorRole: "L2 Analyst", category: "analyst" },
+	{ id: "at-3", timestamp: "2026-05-17 10:08:00", action: "Identity verified (MPS 4-Factor)", actor: "System", actorRole: "Automated", category: "data", detail: "All 4 factors confirmed. Verification ID: MPS-2026-0517-91034." },
+	{ id: "at-4", timestamp: "2026-05-17 10:15:00", action: "Supporting documents uploaded", actor: "Analyst Zhang", actorRole: "L2 Analyst", category: "analyst", detail: "Bank statement and ID scan uploaded." },
+	{ id: "at-5", timestamp: "2026-05-17 10:32:00", action: "Automated assessment initiated", actor: "System", actorRole: "Automated", category: "system", detail: "13 data sources queried. Assessment completed in 32.1 seconds." },
+	{ id: "at-6", timestamp: "2026-05-17 11:00:00", action: "Multiple risk flags identified", actor: "System", actorRole: "Automated", category: "data", detail: "Automated risk scoring flagged: income gap, litigation, corporate investigation, tax discrepancy." },
+	{ id: "at-7", timestamp: "2026-05-17 11:15:00", action: "Investigation notice uploaded", actor: "Analyst Zhang", actorRole: "L2 Analyst", category: "analyst", detail: "Shanghai MSB investigation notice for Meihe Trading added to case file." },
+	{ id: "at-8", timestamp: "2026-05-17 11:30:00", action: "Escalated to Senior Analyst", actor: "Analyst Zhang", actorRole: "L2 Analyst", category: "escalation", detail: "Case escalated due to High risk rating. Multiple unresolved findings require senior review." },
+	{ id: "at-9", timestamp: "2026-05-17 13:00:00", action: "Senior review — EDD recommended", actor: "Senior Analyst Li", actorRole: "L3 Senior Analyst", category: "approval", detail: "Reviewed all findings. Recommending enhanced due diligence interview. Property source of funds must be clarified." },
+	{ id: "at-10", timestamp: "2026-05-17 13:15:00", action: "MLRO notification sent", actor: "Senior Analyst Li", actorRole: "L3 Senior Analyst", category: "escalation", detail: "Case referred to MLRO (Chen Wei) for independent review per policy for cases scoring >70." },
+	{ id: "at-11", timestamp: "2026-05-17 14:00:00", action: "EDD interview scheduled", actor: "Senior Analyst Li", actorRole: "L3 Senior Analyst", category: "analyst", detail: "Enhanced due diligence interview scheduled for 2026-05-24 at 14:00 CST." },
+	{ id: "at-12", timestamp: "2026-05-17 14:30:00", action: "Client correspondence received", actor: "Analyst Zhang", actorRole: "L2 Analyst", category: "analyst", detail: "Client responded via email regarding source of funds query. Claims family gift for property — no documentation provided." },
+	{ id: "at-13", timestamp: "2026-05-17 15:00:00", action: "Remediation tasks created", actor: "Senior Analyst Li", actorRole: "L3 Senior Analyst", category: "analyst", detail: "4 remediation items assigned: property SOF docs, EDD interview, Meihe Trading investigation follow-up, tax discrepancy review." },
+];
+
+const LOW_RISK_REMEDIATION: RemediationItem[] = [
+	{ id: "rem-1", title: "Schedule annual periodic review", description: "Configure automated annual review with full data source refresh for 2027-05-17.", priority: "Low", status: "Resolved", assignee: "System", createdDate: "2026-05-17", dueDate: "2026-05-24", resolvedDate: "2026-05-17", category: "monitoring" },
+	{ id: "rem-2", title: "Activate perpetual screening", description: "Enable monthly automated screening across sanctions, PEP, adverse media, and corporate registry sources.", priority: "Medium", status: "Resolved", assignee: "System", createdDate: "2026-05-17", dueDate: "2026-05-17", resolvedDate: "2026-05-17", category: "monitoring" },
+];
+
+const HIGH_RISK_REMEDIATION: RemediationItem[] = [
+	{ id: "rem-1", title: "Obtain property source of funds documentation", description: "Request client to provide documentary evidence for source of funds for 3 Shanghai property acquisitions (total ¥18.5M). Acceptable: gift deed with donor's bank statement, sale contract showing prior asset sale, inheritance documentation.", priority: "Critical", status: "Open", assignee: "Analyst Zhang", createdDate: "2026-05-17", dueDate: "2026-05-31", category: "documentation" },
+	{ id: "rem-2", title: "Complete EDD interview", description: "Conduct enhanced due diligence interview with client to clarify: (1) source of funds for properties, (2) nature of Meihe Trading activities, (3) explanation for tax filing discrepancies.", priority: "Critical", status: "In Progress", assignee: "Senior Analyst Li", createdDate: "2026-05-17", dueDate: "2026-05-24", category: "verification" },
+	{ id: "rem-3", title: "Monitor Meihe Trading investigation outcome", description: "Track Shanghai MSB investigation progress. Administrative hearing scheduled June 2026. Request interim updates from public records.", priority: "High", status: "Open", assignee: "Analyst Zhang", createdDate: "2026-05-17", dueDate: "2026-07-31", category: "investigation" },
+	{ id: "rem-4", title: "Review tax filing discrepancies with STA records", description: "Cross-reference client's FY2023 and FY2024 tax returns against social insurance contributions and bank statement deposits. Quantify the gap.", priority: "High", status: "In Progress", assignee: "Analyst Zhang", createdDate: "2026-05-17", dueDate: "2026-06-15", category: "verification" },
+	{ id: "rem-5", title: "File STR if funds unexplained after 30 days", description: "Per PBOC directive, if source of funds for property acquisitions cannot be satisfactorily explained within 30 days of EDD request, file Suspicious Transaction Report.", priority: "Critical", status: "Open", assignee: "MLRO Chen Wei", createdDate: "2026-05-17", dueDate: "2026-06-24", category: "regulatory" },
+	{ id: "rem-6", title: "Activate weekly perpetual screening", description: "Enable weekly automated screening for high-risk subject across all data sources including sanctions, adverse media, court records, and corporate registry.", priority: "Medium", status: "Resolved", assignee: "System", createdDate: "2026-05-17", dueDate: "2026-05-17", resolvedDate: "2026-05-17", category: "monitoring" },
+];
+
+export const DASHBOARD_ISSUES: DashboardIssue[] = [
+	{ id: "iss-1", caseRef: "SOW-2025-0918-087", subjectName: "张丽华", type: "Unresolved Alert", severity: "Critical", description: "3 unresolved alerts including adverse media hit linked to regulatory investigation. Last reviewed 14 days ago.", daysPending: 14, assignee: "Senior Analyst Li" },
+	{ id: "iss-2", caseRef: "SOW-2026-0402-291", subjectName: "赵薇薇", type: "EDD Pending", severity: "Critical", description: "Enhanced due diligence interview scheduled but not completed. 5 active alerts pending resolution.", daysPending: 45, assignee: "Senior Analyst Li" },
+	{ id: "iss-3", caseRef: "SOW-2026-0402-291", subjectName: "赵薇薇", type: "Missing Document", severity: "High", description: "Client has not provided requested source of funds documentation for offshore transfers. Reminder sent 2 weeks ago.", daysPending: 30, assignee: "Analyst Zhang" },
+	{ id: "iss-4", caseRef: "SOW-2026-0428-195", subjectName: "林婉琪", type: "Unresolved Alert", severity: "High", description: "Possible OFAC SDN partial match for associated entity requires manual verification and clearance.", daysPending: 21, assignee: "Analyst Wang" },
+	{ id: "iss-5", caseRef: "SOW-2025-0918-087", subjectName: "张丽华", type: "Remediation Overdue", severity: "High", description: "Remediation task to obtain updated corporate filing from associated entity overdue by 8 days.", daysPending: 8, assignee: "Analyst Zhang" },
+	{ id: "iss-6", caseRef: "SOW-2026-0428-195", subjectName: "林婉琪", type: "Overdue Review", severity: "Medium", description: "90-day interim review for high-risk case is 5 days overdue. Re-query of 6 data sources required.", daysPending: 5, assignee: "Analyst Wang" },
+	{ id: "iss-7", caseRef: "SOW-2025-1203-412", subjectName: "王建国", type: "Data Source Error", severity: "Medium", description: "SAMR commercial registry query returned timeout during last automated monthly scan. Manual retry required.", daysPending: 3, assignee: "System" },
+];
+
 export const SOW_CASES: SowReport[] = [
 	{
 		profile: LOW_RISK_PROFILE,
@@ -627,6 +748,9 @@ export const SOW_CASES: SowReport[] = [
 		screeningAlerts: LOW_RISK_SCREENING,
 		nextReviewDate: "2027-05-17",
 		keyParameters: LOW_RISK_PARAMS,
+		documentEvidence: LOW_RISK_DOCUMENTS,
+		auditTrail: LOW_RISK_AUDIT,
+		remediationItems: LOW_RISK_REMEDIATION,
 	},
 	{
 		profile: HIGH_RISK_PROFILE,
@@ -638,5 +762,8 @@ export const SOW_CASES: SowReport[] = [
 		screeningAlerts: HIGH_RISK_SCREENING,
 		nextReviewDate: "2026-11-17",
 		keyParameters: HIGH_RISK_PARAMS,
+		documentEvidence: HIGH_RISK_DOCUMENTS,
+		auditTrail: HIGH_RISK_AUDIT,
+		remediationItems: HIGH_RISK_REMEDIATION,
 	},
 ];

@@ -41,6 +41,16 @@ import {
 	SquareCheckIcon,
 	NetworkIcon,
 	TrendingUpIcon,
+	FileBadgeIcon,
+	ClipboardListIcon,
+	StickyNoteIcon,
+	WrenchIcon,
+	CircleAlertIcon,
+	UserCheckIcon,
+	HistoryIcon,
+	BadgeCheckIcon,
+	TargetIcon,
+	ListTodoIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,10 +63,15 @@ import {
 } from "@/components/ui/select";
 import {
 	SOW_CASES,
+	DASHBOARD_ISSUES,
 	type SowReport,
 	type SowDataSource,
 	type SowWealthItem,
 	type ScreeningAlert,
+	type DocumentEvidence,
+	type AuditTrailEntry,
+	type RemediationItem,
+	type DashboardIssue,
 } from "@/lib/sow-mock-data";
 
 type Phase = "dashboard" | "intake" | "consent" | "sources" | "generating" | "report";
@@ -422,6 +437,9 @@ function Dashboard({ onNewCase }: { onNewCase: () => void }) {
 				</div>
 			</div>
 
+			{/* Issues Dashboard */}
+			<IssuesDashboard issues={DASHBOARD_ISSUES} />
+
 			<div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
 				<div className="lg:col-span-3 space-y-3">
 					<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">
@@ -558,6 +576,82 @@ function NotificationRow({ notification: n, onRead }: { notification: DashboardN
 				</div>
 			</div>
 		</button>
+	);
+}
+
+/* ─── Issues Dashboard ─── */
+
+function IssuesDashboard({ issues }: { issues: DashboardIssue[] }) {
+	const critical = issues.filter((i) => i.severity === "Critical").length;
+	const high = issues.filter((i) => i.severity === "High").length;
+
+	return (
+		<div className="space-y-3">
+			<div className="flex items-center justify-between">
+				<div className="flex items-center gap-2">
+					<CircleAlertIcon className="size-4 text-red-500" />
+					<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">
+						Open Issues
+					</p>
+					<span className="text-[9px] font-bold rounded-full px-1.5 py-0.5 bg-red-500 text-white min-w-[18px] text-center">
+						{issues.length}
+					</span>
+				</div>
+				<div className="flex items-center gap-2 text-[10px]">
+					<span className="rounded-md border border-red-500/20 bg-red-500/10 text-red-700 px-1.5 py-0.5 font-semibold">
+						{critical} Critical
+					</span>
+					<span className="rounded-md border border-amber-500/20 bg-amber-500/10 text-amber-700 px-1.5 py-0.5 font-semibold">
+						{high} High
+					</span>
+				</div>
+			</div>
+			<div className="rounded-2xl border border-red-500/20 bg-gradient-to-br from-red-500/[0.03] to-transparent overflow-hidden shadow-sm">
+				<div className="divide-y divide-border/50">
+					{issues.map((issue) => {
+						const sevColor: Record<string, string> = {
+							Critical: "bg-red-500/15 text-red-700 border-red-500/20",
+							High: "bg-amber-500/15 text-amber-700 border-amber-500/20",
+							Medium: "bg-sky-500/15 text-sky-700 border-sky-500/20",
+						};
+						const typeIcon: Record<string, typeof AlertTriangleIcon> = {
+							"Overdue Review": CalendarClockIcon,
+							"Unresolved Alert": AlertTriangleIcon,
+							"Missing Document": FileTextIcon,
+							"EDD Pending": UserCheckIcon,
+							"Remediation Overdue": ListTodoIcon,
+							"Data Source Error": CircleAlertIcon,
+						};
+						const Icon = typeIcon[issue.type] ?? AlertTriangleIcon;
+						return (
+							<div key={issue.id} className="flex items-start gap-3 px-5 py-3.5 hover:bg-accent/20 transition-colors">
+								<div className="mt-0.5">
+									<Icon className={`size-4 ${issue.severity === "Critical" ? "text-red-500" : "text-amber-500"}`} />
+								</div>
+								<div className="flex-1 min-w-0">
+									<div className="flex items-center gap-2 flex-wrap">
+										<span className="text-sm font-medium">{issue.subjectName}</span>
+										<span className="font-mono text-[9px] text-muted-foreground/50 tracking-wide">{issue.caseRef}</span>
+									</div>
+									<p className="text-[11px] text-muted-foreground leading-relaxed mt-0.5">{issue.description}</p>
+									<div className="flex items-center gap-2 mt-1.5">
+										<span className={`text-[9px] font-semibold rounded-md border px-1.5 py-0.5 ${sevColor[issue.severity]}`}>
+											{issue.severity}
+										</span>
+										<span className="text-[9px] font-semibold rounded-md border border-border px-1.5 py-0.5 bg-muted/50 text-muted-foreground">
+											{issue.type}
+										</span>
+										<span className="text-[10px] text-muted-foreground/60">
+											{issue.daysPending}d pending · {issue.assignee}
+										</span>
+									</div>
+								</div>
+							</div>
+						);
+					})}
+				</div>
+			</div>
+		</div>
 	);
 }
 
@@ -1181,7 +1275,12 @@ function ReportView({ report, caseRef, confirmedActions, onConfirmAction, onRese
 			<NarrativeSection narrative={report.narrative} />
 			<AssessmentMethodology />
 			<RegulatoryContext riskRating={p.riskRating} />
+			<DocumentEvidenceSection documents={report.documentEvidence} />
+			<AuditTrailSection entries={report.auditTrail} />
+			<AnalystNotes riskRating={p.riskRating} />
 			<PerpetualScreening alerts={report.screeningAlerts} nextReviewDate={report.nextReviewDate} riskRating={p.riskRating} />
+			<RemediationSection items={report.remediationItems} riskRating={p.riskRating} />
+			<PerpetualKycSetup riskRating={p.riskRating} nextReviewDate={report.nextReviewDate} />
 			<FollowUpActions riskRating={p.riskRating} confirmedActions={confirmedActions} onConfirm={onConfirmAction} />
 		</div>
 	);
@@ -1857,6 +1956,385 @@ function AlertRow({ alert, isLast }: { alert: ScreeningAlert; isLast: boolean })
 			{open && (
 				<div className="px-5 pb-3 pl-[5.5rem]"><p className="text-xs text-muted-foreground leading-relaxed">{alert.detail}</p></div>
 			)}
+		</div>
+	);
+}
+
+/* ─── Document Evidence ─── */
+
+function DocumentEvidenceSection({ documents }: { documents: DocumentEvidence[] }) {
+	const typeLabel: Record<string, string> = { consent: "Consent", identity: "Identity", financial: "Financial", corporate: "Corporate", correspondence: "Correspondence" };
+	const typeColor: Record<string, string> = {
+		consent: "bg-violet-500/15 text-violet-700 border-violet-500/20",
+		identity: "bg-sky-500/15 text-sky-700 border-sky-500/20",
+		financial: "bg-emerald-500/15 text-emerald-700 border-emerald-500/20",
+		corporate: "bg-amber-500/15 text-amber-700 border-amber-500/20",
+		correspondence: "bg-slate-500/15 text-slate-700 border-slate-500/20",
+	};
+
+	return (
+		<div className="space-y-3">
+			<div className="flex items-center gap-2">
+				<FileBadgeIcon className="size-4 text-muted-foreground" />
+				<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">
+					Document Evidence — {documents.length} files
+				</p>
+			</div>
+			<div className="rounded-2xl border border-border overflow-hidden shadow-sm bg-card">
+				<table className="w-full text-sm">
+					<thead className="bg-gradient-to-r from-muted/60 to-muted/30 text-muted-foreground">
+						<tr>
+							<th className="text-left px-4 py-2.5 font-medium text-xs font-heading tracking-wide">Document</th>
+							<th className="text-center px-4 py-2.5 font-medium text-xs font-heading tracking-wide w-24">Type</th>
+							<th className="text-center px-4 py-2.5 font-medium text-xs font-heading tracking-wide w-20 hidden sm:table-cell">Format</th>
+							<th className="text-left px-4 py-2.5 font-medium text-xs font-heading tracking-wide hidden sm:table-cell">Uploaded By</th>
+							<th className="text-center px-4 py-2.5 font-medium text-xs font-heading tracking-wide w-24">Verified</th>
+						</tr>
+					</thead>
+					<tbody className="divide-y divide-border/60">
+						{documents.map((doc) => (
+							<DocumentRow key={doc.id} doc={doc} typeLabel={typeLabel} typeColor={typeColor} />
+						))}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	);
+}
+
+function DocumentRow({ doc, typeLabel, typeColor }: { doc: DocumentEvidence; typeLabel: Record<string, string>; typeColor: Record<string, string> }) {
+	const [open, setOpen] = useState(false);
+	return (
+		<>
+			<tr className="hover:bg-accent/30 cursor-pointer transition-colors" onClick={() => setOpen((v) => !v)}>
+				<td className="px-4 py-3">
+					<div className="flex items-center gap-2">
+						<FileTextIcon className="size-3.5 text-muted-foreground shrink-0" />
+						<span className="text-xs font-medium truncate">{doc.name}</span>
+					</div>
+				</td>
+				<td className="px-4 py-3 text-center">
+					<span className={`text-[9px] font-semibold rounded-md border px-1.5 py-0.5 ${typeColor[doc.type]}`}>
+						{typeLabel[doc.type]}
+					</span>
+				</td>
+				<td className="px-4 py-3 text-center hidden sm:table-cell">
+					<span className="text-[10px] font-mono text-muted-foreground">{doc.format}</span>
+				</td>
+				<td className="px-4 py-3 text-xs text-muted-foreground hidden sm:table-cell">{doc.uploadedBy}</td>
+				<td className="px-4 py-3 text-center">
+					{doc.verified ? (
+						<BadgeCheckIcon className="size-4 text-emerald-600 mx-auto" />
+					) : (
+						<ClockIcon className="size-4 text-amber-500 mx-auto" />
+					)}
+				</td>
+			</tr>
+			{open && (
+				<tr>
+					<td colSpan={5} className="px-4 py-3 bg-muted/10">
+						<div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-[11px] pl-5">
+							<div>
+								<span className="text-muted-foreground">Size:</span>{" "}
+								<span className="font-medium">{doc.sizeKB < 1000 ? `${doc.sizeKB} KB` : `${(doc.sizeKB / 1024).toFixed(1)} MB`}</span>
+							</div>
+							<div>
+								<span className="text-muted-foreground">Uploaded:</span>{" "}
+								<span className="font-medium">{doc.uploadedDate}</span>
+							</div>
+							{doc.verified && doc.verifiedBy && (
+								<div>
+									<span className="text-muted-foreground">Verified by:</span>{" "}
+									<span className="font-medium">{doc.verifiedBy}</span>
+								</div>
+							)}
+							{doc.verified && doc.verifiedDate && (
+								<div>
+									<span className="text-muted-foreground">Verified:</span>{" "}
+									<span className="font-medium">{doc.verifiedDate}</span>
+								</div>
+							)}
+						</div>
+						{doc.notes && (
+							<p className="text-[11px] text-muted-foreground mt-2 pl-5 leading-relaxed">{doc.notes}</p>
+						)}
+					</td>
+				</tr>
+			)}
+		</>
+	);
+}
+
+/* ─── Audit Trail ─── */
+
+function AuditTrailSection({ entries }: { entries: AuditTrailEntry[] }) {
+	const [showAll, setShowAll] = useState(false);
+	const displayed = showAll ? entries : entries.slice(0, 6);
+
+	const categoryIcon: Record<string, { Icon: typeof CheckIcon; color: string }> = {
+		system: { Icon: HistoryIcon, color: "text-sky-500" },
+		analyst: { Icon: UserCheckIcon, color: "text-violet-500" },
+		approval: { Icon: BadgeCheckIcon, color: "text-emerald-500" },
+		data: { Icon: SearchIcon, color: "text-cyan-500" },
+		escalation: { Icon: ArrowUpRightIcon, color: "text-red-500" },
+	};
+
+	return (
+		<div className="space-y-3">
+			<div className="flex items-center gap-2">
+				<ClipboardListIcon className="size-4 text-muted-foreground" />
+				<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">
+					Audit Trail — {entries.length} events
+				</p>
+			</div>
+			<div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+				<div className="divide-y divide-border/50">
+					{displayed.map((entry) => {
+						const cat = categoryIcon[entry.category] ?? categoryIcon.system;
+						return (
+							<div key={entry.id} className="flex items-start gap-3 px-5 py-3 hover:bg-accent/20 transition-colors">
+								<div className="flex flex-col items-center gap-1 shrink-0 w-20 pt-0.5">
+									<span className="text-[10px] font-mono text-muted-foreground tracking-wide">
+										{entry.timestamp.split(" ")[1]?.slice(0, 5)}
+									</span>
+									<cat.Icon className={`size-3.5 ${cat.color}`} />
+								</div>
+								<div className="flex-1 min-w-0">
+									<div className="flex items-center gap-2">
+										<span className="text-sm font-medium">{entry.action}</span>
+									</div>
+									<div className="flex items-center gap-2 mt-0.5">
+										<span className="text-[11px] text-muted-foreground">{entry.actor}</span>
+										<span className="text-[9px] text-muted-foreground/40">·</span>
+										<span className="text-[10px] text-muted-foreground/60">{entry.actorRole}</span>
+									</div>
+									{entry.detail && (
+										<p className="text-[11px] text-muted-foreground/70 mt-1 leading-relaxed">{entry.detail}</p>
+									)}
+								</div>
+							</div>
+						);
+					})}
+				</div>
+				{entries.length > 6 && (
+					<button
+						onClick={() => setShowAll((v) => !v)}
+						className="w-full px-5 py-2.5 text-center text-xs font-heading font-medium text-primary hover:bg-primary/5 transition-colors border-t border-border/50"
+					>
+						{showAll ? "Show less" : `Show all ${entries.length} events`}
+					</button>
+				)}
+			</div>
+		</div>
+	);
+}
+
+/* ─── Analyst Notes ─── */
+
+function AnalystNotes({ riskRating }: { riskRating: "Low" | "High" }) {
+	const isHigh = riskRating === "High";
+	const [notes, setNotes] = useState(
+		isHigh
+			? "Client's email explanation for property source of funds (claims family gift) requires documentary corroboration. Requested gift deed and donor bank statement — no response as of 17 May 2026.\n\nMeihe Trading investigation: preliminary findings issued by Shanghai MSB. Company ordered to produce 3 years of financial records. Recommend monitoring for outcome before proceeding.\n\nPriority: clarify property SOF before EDD interview on 24 May 2026."
+			: "Standard onboarding case. All data sources returned consistent results with no anomalies. Wealth profile is coherent and proportionate to career trajectory.\n\nNo further action required. Approved for standard onboarding."
+	);
+	const [saved, setSaved] = useState(true);
+
+	const handleChange = (value: string) => {
+		setNotes(value);
+		setSaved(false);
+	};
+
+	const handleSave = () => {
+		setSaved(true);
+	};
+
+	return (
+		<div className="space-y-3">
+			<div className="flex items-center justify-between">
+				<div className="flex items-center gap-2">
+					<StickyNoteIcon className="size-4 text-muted-foreground" />
+					<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">
+						Analyst Notes & Manual Findings
+					</p>
+				</div>
+				<div className="flex items-center gap-2">
+					{!saved && <span className="text-[10px] text-amber-600 font-heading">Unsaved changes</span>}
+					<Button
+						variant="outline"
+						size="sm"
+						onClick={handleSave}
+						disabled={saved}
+						className="font-heading text-xs gap-1"
+					>
+						<CheckIcon className="size-3" />
+						Save
+					</Button>
+				</div>
+			</div>
+			<div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+				<textarea
+					value={notes}
+					onChange={(e) => handleChange(e.target.value)}
+					className="w-full min-h-[120px] bg-transparent text-sm leading-relaxed resize-y outline-none placeholder:text-muted-foreground/40"
+					placeholder="Add analyst observations, manual findings, or notes for the case file..."
+				/>
+				<div className="flex items-center justify-between pt-3 border-t border-border/50 mt-2">
+					<span className="text-[10px] text-muted-foreground/50">
+						Last edited: 17 May 2026, 15:00 by {isHigh ? "Senior Analyst Li" : "Analyst Wang"}
+					</span>
+					<span className="text-[10px] text-muted-foreground/50">
+						{notes.length} characters
+					</span>
+				</div>
+			</div>
+		</div>
+	);
+}
+
+/* ─── Remediation Section ─── */
+
+function RemediationSection({ items, riskRating }: { items: RemediationItem[]; riskRating: "Low" | "High" }) {
+	const priorityStyle: Record<string, string> = {
+		Critical: "bg-red-500/15 text-red-700 border-red-500/20",
+		High: "bg-amber-500/15 text-amber-700 border-amber-500/20",
+		Medium: "bg-sky-500/15 text-sky-700 border-sky-500/20",
+		Low: "bg-slate-500/15 text-slate-700 border-slate-500/20",
+	};
+	const statusStyle: Record<string, string> = {
+		Open: "bg-red-500/15 text-red-700 border-red-500/20",
+		"In Progress": "bg-amber-500/15 text-amber-700 border-amber-500/20",
+		Resolved: "bg-emerald-500/15 text-emerald-700 border-emerald-500/20",
+		Overdue: "bg-red-600/20 text-red-800 border-red-600/20",
+	};
+
+	const open = items.filter((i) => i.status !== "Resolved").length;
+	const resolved = items.filter((i) => i.status === "Resolved").length;
+
+	return (
+		<div className="space-y-3">
+			<div className="flex items-center justify-between">
+				<div className="flex items-center gap-2">
+					<ListTodoIcon className="size-4 text-muted-foreground" />
+					<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">
+						Remediation Tasks — {open} open, {resolved} resolved
+					</p>
+				</div>
+			</div>
+			<div className="space-y-2">
+				{items.map((item) => (
+					<div key={item.id} className={`rounded-xl border p-4 transition-all ${item.status === "Resolved" ? "border-border bg-muted/20 opacity-70" : "border-border bg-card shadow-sm"}`}>
+						<div className="flex items-start justify-between gap-3">
+							<div className="flex items-start gap-3 flex-1 min-w-0">
+								<div className="mt-0.5">
+									{item.status === "Resolved" ? (
+										<SquareCheckIcon className="size-4 text-emerald-600" />
+									) : (
+										<TargetIcon className={`size-4 ${item.priority === "Critical" ? "text-red-500" : "text-amber-500"}`} />
+									)}
+								</div>
+								<div className="flex-1 min-w-0">
+									<div className="text-sm font-heading font-medium">{item.title}</div>
+									<p className="text-[11px] text-muted-foreground leading-relaxed mt-0.5">{item.description}</p>
+									<div className="flex items-center flex-wrap gap-2 mt-2">
+										<span className={`text-[9px] font-semibold rounded-md border px-1.5 py-0.5 ${priorityStyle[item.priority]}`}>
+											{item.priority}
+										</span>
+										<span className={`text-[9px] font-semibold rounded-md border px-1.5 py-0.5 ${statusStyle[item.status]}`}>
+											{item.status}
+										</span>
+										<span className="text-[10px] text-muted-foreground/60">
+											Assignee: {item.assignee}
+										</span>
+										<span className="text-[10px] text-muted-foreground/60">
+											Due: {item.dueDate}
+										</span>
+										{item.resolvedDate && (
+											<span className="text-[10px] text-emerald-600/80">
+												Resolved: {item.resolvedDate}
+											</span>
+										)}
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				))}
+			</div>
+		</div>
+	);
+}
+
+/* ─── Perpetual KYC Setup ─── */
+
+function PerpetualKycSetup({ riskRating, nextReviewDate }: { riskRating: "Low" | "High"; nextReviewDate: string }) {
+	const isHigh = riskRating === "High";
+
+	const config = isHigh
+		? {
+			reviewCycle: "6 months",
+			screeningFreq: "Weekly",
+			dataSources: "All 13 sources",
+			autoEscalation: "Enabled — auto-escalate Critical alerts to MLRO",
+			sanctionsScreening: "Weekly (OFAC, EU, UN, PBOC)",
+			adverseMedia: "Weekly scan (Dow Jones, Caixin, Reuters)",
+			corporateRegistry: "Monthly SAMR registry refresh",
+			taxCompliance: "Quarterly STA cross-check",
+		}
+		: {
+			reviewCycle: "12 months",
+			screeningFreq: "Monthly",
+			dataSources: "11 core sources",
+			autoEscalation: "Enabled — auto-escalate Critical alerts to Senior Analyst",
+			sanctionsScreening: "Quarterly (OFAC, EU, UN, PBOC)",
+			adverseMedia: "Monthly scan (Dow Jones, Caixin)",
+			corporateRegistry: "Quarterly SAMR registry refresh",
+			taxCompliance: "Annual STA cross-check",
+		};
+
+	return (
+		<div className="space-y-3">
+			<div className="flex items-center gap-2">
+				<WrenchIcon className="size-4 text-muted-foreground" />
+				<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">
+					Perpetual KYC Configuration
+				</p>
+			</div>
+			<div className="rounded-2xl border border-border bg-card p-6 shadow-sm space-y-4">
+				<p className="text-xs text-muted-foreground leading-relaxed">
+					Automated perpetual KYC monitoring is configured for this subject. The system continuously monitors data sources
+					for material changes and generates alerts for compliance review. Configuration is based on the subject&apos;s risk
+					rating and can be adjusted by authorized analysts.
+				</p>
+
+				<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+					<KycConfigRow label="Review Cycle" value={config.reviewCycle} highlight={isHigh} />
+					<KycConfigRow label="Next Scheduled Review" value={nextReviewDate} />
+					<KycConfigRow label="Screening Frequency" value={config.screeningFreq} highlight={isHigh} />
+					<KycConfigRow label="Data Sources Monitored" value={config.dataSources} />
+					<KycConfigRow label="Sanctions Screening" value={config.sanctionsScreening} />
+					<KycConfigRow label="Adverse Media Monitoring" value={config.adverseMedia} />
+					<KycConfigRow label="Corporate Registry Refresh" value={config.corporateRegistry} />
+					<KycConfigRow label="Tax Compliance Check" value={config.taxCompliance} />
+				</div>
+
+				<div className={`rounded-lg px-4 py-3 border ${isHigh ? "bg-amber-500/5 border-amber-500/20" : "bg-emerald-500/5 border-emerald-500/20"}`}>
+					<div className="flex items-center gap-2 mb-1">
+						<ShieldCheckIcon className={`size-3.5 ${isHigh ? "text-amber-600" : "text-emerald-600"}`} />
+						<span className="text-xs font-heading font-semibold">Auto-Escalation</span>
+					</div>
+					<p className="text-[11px] text-muted-foreground leading-relaxed">{config.autoEscalation}</p>
+				</div>
+			</div>
+		</div>
+	);
+}
+
+function KycConfigRow({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
+	return (
+		<div className="rounded-lg border border-border/60 bg-muted/10 px-3.5 py-2.5">
+			<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">{label}</div>
+			<div className={`text-sm font-heading font-medium mt-0.5 ${highlight ? "text-amber-700" : ""}`}>{value}</div>
 		</div>
 	);
 }
