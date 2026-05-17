@@ -67,7 +67,6 @@ import {
 } from "@/components/ui/select";
 import {
 	SOW_CASES,
-	DASHBOARD_ISSUES,
 	type SowReport,
 	type SowDataSource,
 	type SowWealthItem,
@@ -75,10 +74,9 @@ import {
 	type DocumentEvidence,
 	type AuditTrailEntry,
 	type RemediationItem,
-	type DashboardIssue,
 } from "@/lib/sow-mock-data";
 
-type Phase = "dashboard" | "intake" | "consent" | "sources" | "generating" | "report";
+type Phase = "dashboard" | "profile" | "intake" | "consent" | "sources" | "generating" | "report";
 
 const STEPS = [
 	{ key: "intake", label: "New Case" },
@@ -180,28 +178,136 @@ const MOCK_EXISTING_CASES: ExistingCase[] = [
 	{ caseRef: "SOW-2026-0503-631", name: "周志强", nameEn: "Zhou Zhiqiang", riskRating: "Low", status: "Complete", createdDate: "03 May 2026", nextReview: "03 May 2027", alertCount: 0 },
 ];
 
+interface MonitoringAlert {
+	id: string;
+	date: string;
+	type: string;
+	severity: "Critical" | "Warning" | "Info";
+	description: string;
+	status: "Open" | "Resolved" | "Under Review";
+	resolvedDate?: string;
+	source: string;
+}
+
 interface MonitoringEntry {
 	caseRef: string;
 	subjectName: string;
+	subjectNameCn: string;
 	riskRating: "Low" | "High";
+	riskScore: number;
+	caseStatus: "Complete" | "Under Review" | "Pending EDD";
 	screeningFrequency: "Weekly" | "Monthly" | "Quarterly";
 	lastScanDate: string;
 	nextReviewDate: string;
+	createdDate: string;
 	sourcesMonitored: number;
 	sourcesHealthy: number;
 	openAlerts: number;
 	lastAlertType?: string;
 	status: "Active" | "Paused" | "Overdue";
+	idNumber: string;
+	occupation: string;
+	employer: string;
+	city: string;
+	alerts: MonitoringAlert[];
+	sanctionsScreening: string;
+	adverseMediaMonitoring: string;
+	corporateRegistryRefresh: string;
+	taxComplianceCheck: string;
+	autoEscalation: string;
 }
 
 const MOCK_MONITORING: MonitoringEntry[] = [
-	{ caseRef: "SOW-2025-0918-087", subjectName: "Zhang Lihua", riskRating: "High", screeningFrequency: "Weekly", lastScanDate: "2026-05-16", nextReviewDate: "2026-09-18", sourcesMonitored: 13, sourcesHealthy: 13, openAlerts: 3, lastAlertType: "Adverse Media", status: "Active" },
-	{ caseRef: "SOW-2026-0402-291", subjectName: "Zhao Weiwei", riskRating: "High", screeningFrequency: "Weekly", lastScanDate: "2026-05-15", nextReviewDate: "2026-10-02", sourcesMonitored: 13, sourcesHealthy: 12, openAlerts: 5, lastAlertType: "Tax Discrepancy", status: "Active" },
-	{ caseRef: "SOW-2026-0428-195", subjectName: "Lin Wanqi", riskRating: "High", screeningFrequency: "Weekly", lastScanDate: "2026-05-16", nextReviewDate: "2026-10-28", sourcesMonitored: 13, sourcesHealthy: 13, openAlerts: 2, lastAlertType: "Sanctions Match", status: "Active" },
-	{ caseRef: "SOW-2025-1203-412", subjectName: "Wang Jianguo", riskRating: "Low", screeningFrequency: "Monthly", lastScanDate: "2026-05-01", nextReviewDate: "2026-12-03", sourcesMonitored: 11, sourcesHealthy: 11, openAlerts: 0, status: "Active" },
-	{ caseRef: "SOW-2026-0210-553", subjectName: "Li Minghui", riskRating: "Low", screeningFrequency: "Monthly", lastScanDate: "2026-05-01", nextReviewDate: "2027-02-10", sourcesMonitored: 11, sourcesHealthy: 11, openAlerts: 1, lastAlertType: "Corporate Filing", status: "Active" },
-	{ caseRef: "SOW-2026-0315-744", subjectName: "Huang Xiaoming", riskRating: "Low", screeningFrequency: "Quarterly", lastScanDate: "2026-04-15", nextReviewDate: "2027-03-15", sourcesMonitored: 11, sourcesHealthy: 11, openAlerts: 0, status: "Active" },
-	{ caseRef: "SOW-2026-0503-631", subjectName: "Zhou Zhiqiang", riskRating: "Low", screeningFrequency: "Monthly", lastScanDate: "2026-05-03", nextReviewDate: "2027-05-03", sourcesMonitored: 11, sourcesHealthy: 10, openAlerts: 0, status: "Active" },
+	{
+		caseRef: "SOW-2025-0918-087", subjectName: "Zhang Lihua", subjectNameCn: "张丽华", riskRating: "High", riskScore: 78, caseStatus: "Under Review",
+		screeningFrequency: "Weekly", lastScanDate: "2026-05-16", nextReviewDate: "2026-09-18", createdDate: "18 Sep 2025",
+		sourcesMonitored: 13, sourcesHealthy: 13, openAlerts: 3, lastAlertType: "Adverse Media", status: "Active",
+		idNumber: "4401**********2847", occupation: "Business Owner", employer: "Guangzhou Lihua Trading Co.", city: "Guangzhou",
+		sanctionsScreening: "Weekly (OFAC, EU, UN, PBOC)", adverseMediaMonitoring: "Weekly scan (Dow Jones, Caixin, Reuters)",
+		corporateRegistryRefresh: "Monthly SAMR registry refresh", taxComplianceCheck: "Quarterly STA cross-check", autoEscalation: "Enabled — auto-escalate Critical alerts to MLRO",
+		alerts: [
+			{ id: "a1", date: "2026-05-16", type: "Adverse Media", severity: "Critical", description: "Reuters article mentions subject in connection with regulatory investigation in Guangdong Province regarding import/export irregularities.", status: "Open", source: "Dow Jones" },
+			{ id: "a2", date: "2026-05-10", type: "Corporate Change", severity: "Warning", description: "Associated company Lihua Trading Co. had its business license suspended for 30-day review by Guangzhou MSA.", status: "Open", source: "SAMR" },
+			{ id: "a3", date: "2026-04-22", type: "Litigation", severity: "Warning", description: "New civil case filed: supplier contract dispute, amount in controversy ¥2.3M.", status: "Open", source: "Supreme Court" },
+			{ id: "a4", date: "2026-03-15", type: "Tax Filing", severity: "Info", description: "FY2025 individual income tax return filed. Declared income consistent with prior year (+4.2%).", status: "Resolved", resolvedDate: "2026-03-16", source: "STA" },
+			{ id: "a5", date: "2026-02-01", type: "Sanctions", severity: "Info", description: "Weekly sanctions screening — no matches found across OFAC, EU, UN, PBOC lists.", status: "Resolved", resolvedDate: "2026-02-01", source: "Sanctions DB" },
+		],
+	},
+	{
+		caseRef: "SOW-2026-0402-291", subjectName: "Zhao Weiwei", subjectNameCn: "赵薇薇", riskRating: "High", riskScore: 85, caseStatus: "Pending EDD",
+		screeningFrequency: "Weekly", lastScanDate: "2026-05-15", nextReviewDate: "2026-10-02", createdDate: "02 Apr 2026",
+		sourcesMonitored: 13, sourcesHealthy: 12, openAlerts: 5, lastAlertType: "Tax Discrepancy", status: "Active",
+		idNumber: "3101**********6621", occupation: "Investment Manager", employer: "Shanghai Hengda Capital", city: "Shanghai",
+		sanctionsScreening: "Weekly (OFAC, EU, UN, PBOC)", adverseMediaMonitoring: "Weekly scan (Dow Jones, Caixin, Reuters)",
+		corporateRegistryRefresh: "Weekly SAMR registry refresh", taxComplianceCheck: "Monthly STA cross-check", autoEscalation: "Enabled — auto-escalate Critical alerts to MLRO",
+		alerts: [
+			{ id: "a6", date: "2026-05-15", type: "Tax Discrepancy", severity: "Critical", description: "Year-over-year income variance of 340% detected in latest STA filing. Declared income ¥4.8M vs ¥1.1M prior year.", status: "Open", source: "STA" },
+			{ id: "a7", date: "2026-05-12", type: "Missing Document", severity: "Warning", description: "Source of funds documentation for offshore transfers not provided. Reminder sent to client.", status: "Open", source: "Internal" },
+			{ id: "a8", date: "2026-05-08", type: "Adverse Media", severity: "Warning", description: "Caixin article references Shanghai Hengda Capital in connection with structured finance products under regulatory scrutiny.", status: "Open", source: "Caixin" },
+			{ id: "a9", date: "2026-04-28", type: "PEP Screening", severity: "Warning", description: "Associated entity director matches partial name on provincial government official registry. Manual review pending.", status: "Open", source: "PEP DB" },
+			{ id: "a10", date: "2026-04-20", type: "Corporate Change", severity: "Warning", description: "New company registration: Shanghai Weiwei Investment Consulting Co. Subject listed as sole shareholder.", status: "Open", source: "SAMR" },
+		],
+	},
+	{
+		caseRef: "SOW-2026-0428-195", subjectName: "Lin Wanqi", subjectNameCn: "林婉琪", riskRating: "High", riskScore: 72, caseStatus: "Under Review",
+		screeningFrequency: "Weekly", lastScanDate: "2026-05-16", nextReviewDate: "2026-10-28", createdDate: "28 Apr 2026",
+		sourcesMonitored: 13, sourcesHealthy: 13, openAlerts: 2, lastAlertType: "Sanctions Match", status: "Active",
+		idNumber: "4403**********5519", occupation: "Import/Export Director", employer: "Shenzhen Hengda Import Co.", city: "Shenzhen",
+		sanctionsScreening: "Weekly (OFAC, EU, UN, PBOC)", adverseMediaMonitoring: "Weekly scan (Dow Jones, Caixin, Reuters)",
+		corporateRegistryRefresh: "Monthly SAMR registry refresh", taxComplianceCheck: "Quarterly STA cross-check", autoEscalation: "Enabled — auto-escalate Critical alerts to MLRO",
+		alerts: [
+			{ id: "a11", date: "2026-05-14", type: "Sanctions Match", severity: "Critical", description: "Possible partial match on OFAC SDN list for associated entity Shenzhen Hengda Import Co. Manual verification required.", status: "Open", source: "OFAC" },
+			{ id: "a12", date: "2026-05-02", type: "Overdue Review", severity: "Warning", description: "90-day interim review for high-risk case is 5 days overdue. 6 data sources scheduled for re-query.", status: "Open", source: "Internal" },
+			{ id: "a13", date: "2026-04-10", type: "Corporate Change", severity: "Info", description: "Annual filing submitted for Shenzhen Hengda Import Co. No material changes to directors or capital.", status: "Resolved", resolvedDate: "2026-04-11", source: "SAMR" },
+		],
+	},
+	{
+		caseRef: "SOW-2025-1203-412", subjectName: "Wang Jianguo", subjectNameCn: "王建国", riskRating: "Low", riskScore: 22, caseStatus: "Complete",
+		screeningFrequency: "Monthly", lastScanDate: "2026-05-01", nextReviewDate: "2026-12-03", createdDate: "03 Dec 2025",
+		sourcesMonitored: 11, sourcesHealthy: 11, openAlerts: 0, status: "Active",
+		idNumber: "1101**********4523", occupation: "Senior Engineer", employer: "China National Petroleum Corp.", city: "Beijing",
+		sanctionsScreening: "Monthly (OFAC, EU, UN, PBOC)", adverseMediaMonitoring: "Monthly scan (Dow Jones, Caixin)",
+		corporateRegistryRefresh: "Quarterly SAMR registry refresh", taxComplianceCheck: "Annual STA cross-check", autoEscalation: "Disabled — low-risk standard monitoring",
+		alerts: [
+			{ id: "a14", date: "2026-05-01", type: "Routine Scan", severity: "Info", description: "Monthly screening completed. No adverse findings across all 11 data sources.", status: "Resolved", resolvedDate: "2026-05-01", source: "System" },
+			{ id: "a15", date: "2026-04-01", type: "Routine Scan", severity: "Info", description: "Monthly screening completed. No adverse findings.", status: "Resolved", resolvedDate: "2026-04-01", source: "System" },
+		],
+	},
+	{
+		caseRef: "SOW-2026-0210-553", subjectName: "Li Minghui", subjectNameCn: "李明辉", riskRating: "Low", riskScore: 31, caseStatus: "Complete",
+		screeningFrequency: "Monthly", lastScanDate: "2026-05-01", nextReviewDate: "2027-02-10", createdDate: "10 Feb 2026",
+		sourcesMonitored: 11, sourcesHealthy: 11, openAlerts: 1, lastAlertType: "Corporate Filing", status: "Active",
+		idNumber: "3301**********7712", occupation: "Technology Consultant", employer: "Hangzhou Minghui Consulting Co.", city: "Hangzhou",
+		sanctionsScreening: "Monthly (OFAC, EU, UN, PBOC)", adverseMediaMonitoring: "Monthly scan (Dow Jones, Caixin)",
+		corporateRegistryRefresh: "Monthly SAMR registry refresh", taxComplianceCheck: "Annual STA cross-check", autoEscalation: "Disabled — low-risk standard monitoring",
+		alerts: [
+			{ id: "a16", date: "2026-05-01", type: "Corporate Filing", severity: "Info", description: "SAMR registry shows new company registration: Hangzhou Minghui Consulting Co. Subject listed as legal representative.", status: "Open", source: "SAMR" },
+			{ id: "a17", date: "2026-04-01", type: "Routine Scan", severity: "Info", description: "Monthly screening completed. No adverse findings.", status: "Resolved", resolvedDate: "2026-04-01", source: "System" },
+		],
+	},
+	{
+		caseRef: "SOW-2026-0315-744", subjectName: "Huang Xiaoming", subjectNameCn: "黄晓明", riskRating: "Low", riskScore: 18, caseStatus: "Complete",
+		screeningFrequency: "Quarterly", lastScanDate: "2026-04-15", nextReviewDate: "2027-03-15", createdDate: "15 Mar 2026",
+		sourcesMonitored: 11, sourcesHealthy: 11, openAlerts: 0, status: "Active",
+		idNumber: "5101**********3356", occupation: "University Professor", employer: "Sichuan University", city: "Chengdu",
+		sanctionsScreening: "Quarterly (OFAC, EU, UN, PBOC)", adverseMediaMonitoring: "Quarterly scan (Dow Jones)",
+		corporateRegistryRefresh: "Annual SAMR registry refresh", taxComplianceCheck: "Annual STA cross-check", autoEscalation: "Disabled — low-risk standard monitoring",
+		alerts: [
+			{ id: "a18", date: "2026-04-15", type: "Routine Scan", severity: "Info", description: "Quarterly screening completed. All 11 data sources re-queried. No material changes from prior assessment.", status: "Resolved", resolvedDate: "2026-04-15", source: "System" },
+		],
+	},
+	{
+		caseRef: "SOW-2026-0503-631", subjectName: "Zhou Zhiqiang", subjectNameCn: "周志强", riskRating: "Low", riskScore: 25, caseStatus: "Complete",
+		screeningFrequency: "Monthly", lastScanDate: "2026-05-03", nextReviewDate: "2027-05-03", createdDate: "03 May 2026",
+		sourcesMonitored: 11, sourcesHealthy: 10, openAlerts: 0, status: "Active",
+		idNumber: "4201**********8894", occupation: "Logistics Manager", employer: "Wuhan Zhonghe Logistics Co.", city: "Wuhan",
+		sanctionsScreening: "Monthly (OFAC, EU, UN, PBOC)", adverseMediaMonitoring: "Monthly scan (Dow Jones, Caixin)",
+		corporateRegistryRefresh: "Monthly SAMR registry refresh", taxComplianceCheck: "Annual STA cross-check", autoEscalation: "Disabled — low-risk standard monitoring",
+		alerts: [
+			{ id: "a19", date: "2026-05-03", type: "Data Source Error", severity: "Warning", description: "SAMR commercial registry query returned timeout. Manual retry scheduled.", status: "Resolved", resolvedDate: "2026-05-04", source: "SAMR" },
+			{ id: "a20", date: "2026-05-03", type: "Routine Scan", severity: "Info", description: "Monthly screening completed. 10 of 11 sources returned successfully.", status: "Resolved", resolvedDate: "2026-05-03", source: "System" },
+		],
+	},
 ];
 
 const MOCK_NOTIFICATIONS: DashboardNotification[] = [
@@ -233,6 +339,7 @@ export default function SowDemo() {
 	const [confirmedActions, setConfirmedActions] = useState<Set<string>>(new Set());
 	const [consentChecks, setConsentChecks] = useState({ dataProcessing: false, clientAuth: false, regulatoryDisclosure: false });
 	const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
+	const [selectedMonitoringEntry, setSelectedMonitoringEntry] = useState<MonitoringEntry | null>(null);
 	const cancelRef = useRef(false);
 	const reportRef = useRef<HTMLDivElement>(null);
 	const timerRef = useRef<ReturnType<typeof setInterval>>(undefined);
@@ -242,6 +349,7 @@ export default function SowDemo() {
 		if (timerRef.current) clearInterval(timerRef.current);
 		setPhase("dashboard");
 		setSelectedCase(null);
+		setSelectedMonitoringEntry(null);
 		setCaseRef("");
 		setFormData({});
 		setCompletedSources([]);
@@ -326,7 +434,11 @@ export default function SowDemo() {
 	}, [phase, selectedCase]);
 
 	if (phase === "dashboard") {
-		return <Dashboard onNewCase={() => setPhase("intake")} />;
+		return <Dashboard onNewCase={() => setPhase("intake")} onSelectEntry={(entry) => { setSelectedMonitoringEntry(entry); setPhase("profile"); }} />;
+	}
+
+	if (phase === "profile" && selectedMonitoringEntry) {
+		return <CaseProfile entry={selectedMonitoringEntry} onBack={reset} />;
 	}
 
 	return (
@@ -397,7 +509,7 @@ export default function SowDemo() {
 
 /* ─── Dashboard ─── */
 
-function Dashboard({ onNewCase }: { onNewCase: () => void }) {
+function Dashboard({ onNewCase, onSelectEntry }: { onNewCase: () => void; onSelectEntry: (entry: MonitoringEntry) => void }) {
 	const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
 	const [lastRefresh, setLastRefresh] = useState(new Date());
 	const unreadCount = notifications.filter((n) => !n.read).length;
@@ -465,82 +577,33 @@ function Dashboard({ onNewCase }: { onNewCase: () => void }) {
 				</div>
 			</div>
 
-			{/* Issues Dashboard */}
-			<IssuesDashboard issues={DASHBOARD_ISSUES} />
-
 			{/* Ongoing Monitoring */}
-			<OngoingMonitoring entries={MOCK_MONITORING} />
+			<OngoingMonitoring entries={MOCK_MONITORING} onSelectEntry={onSelectEntry} />
 
-			<div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
-				<div className="lg:col-span-3 space-y-3">
-					<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">
-						Active Cases
-					</p>
-					<div className="rounded-2xl border border-border overflow-hidden shadow-sm bg-card">
-						<table className="w-full text-sm">
-							<thead className="bg-gradient-to-r from-muted/60 to-muted/30 text-muted-foreground">
-								<tr>
-									<th className="text-left px-4 py-3 font-medium text-xs tracking-wide">Case</th>
-									<th className="text-left px-4 py-3 font-medium text-xs tracking-wide hidden sm:table-cell">Subject</th>
-									<th className="text-center px-4 py-3 font-medium text-xs tracking-wide">Risk</th>
-									<th className="text-center px-4 py-3 font-medium text-xs tracking-wide">Status</th>
-									<th className="text-center px-4 py-3 font-medium text-xs tracking-wide hidden sm:table-cell">Alerts</th>
-								</tr>
-							</thead>
-							<tbody className="divide-y divide-border/60">
-								{MOCK_EXISTING_CASES.map((c) => (
-									<tr key={c.caseRef} className="hover:bg-accent/30 transition-colors">
-										<td className="px-4 py-3.5">
-											<div className="font-mono text-[10px] text-muted-foreground tracking-wide">{c.caseRef}</div>
-											<div className="font-medium sm:hidden mt-0.5">{c.name}</div>
-										</td>
-										<td className="px-4 py-3.5 hidden sm:table-cell">
-											<div className="font-medium">{c.name}</div>
-											<div className="text-xs text-muted-foreground">{c.nameEn}</div>
-										</td>
-										<td className="px-4 py-3.5 text-center">
-											<RiskBadge rating={c.riskRating} />
-										</td>
-										<td className="px-4 py-3.5 text-center">
-											<CaseStatusBadge status={c.status} />
-										</td>
-										<td className="px-4 py-3.5 text-center hidden sm:table-cell">
-											{c.alertCount > 0 ? (
-												<span className="text-[10px] font-bold rounded-full px-2 py-0.5 bg-red-500/15 text-red-700">{c.alertCount}</span>
-											) : (
-												<span className="text-xs text-muted-foreground/40">—</span>
-											)}
-										</td>
-									</tr>
-								))}
-							</tbody>
-						</table>
+			{/* Notifications */}
+			<div className="space-y-3">
+				<div className="flex items-center justify-between">
+					<div className="flex items-center gap-2">
+						<BellRingIcon className="size-4 text-amber-500" />
+						<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">
+							Notifications
+						</p>
+						{unreadCount > 0 && (
+							<span className="text-[9px] font-bold rounded-full px-1.5 py-0.5 bg-red-500 text-white min-w-[18px] text-center">{unreadCount}</span>
+						)}
 					</div>
+					<button onClick={refresh} className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded-md hover:bg-muted" title="Refresh">
+						<RefreshCwIcon className="size-3.5" />
+					</button>
 				</div>
-
-				<div className="lg:col-span-2 space-y-3">
-					<div className="flex items-center justify-between">
-						<div className="flex items-center gap-2">
-							<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">
-								Notifications
-							</p>
-							{unreadCount > 0 && (
-								<span className="text-[9px] font-bold rounded-full px-1.5 py-0.5 bg-red-500 text-white min-w-[18px] text-center">{unreadCount}</span>
-							)}
-						</div>
-						<button onClick={refresh} className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded-md hover:bg-muted" title="Refresh">
-							<RefreshCwIcon className="size-3.5" />
-						</button>
-					</div>
-					<div className="rounded-2xl border border-border overflow-hidden shadow-sm divide-y divide-border/60 max-h-[400px] overflow-y-auto bg-card">
-						{notifications.map((n) => (
-							<NotificationRow key={n.id} notification={n} onRead={() => markRead(n.id)} />
-						))}
-					</div>
-					<p className="text-[10px] text-muted-foreground/60 text-right tracking-wide">
-						Last updated: {lastRefresh.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })} · Auto-refreshes every 60s
-					</p>
+				<div className="rounded-2xl border border-border overflow-hidden shadow-sm divide-y divide-border/60 bg-card">
+					{notifications.map((n) => (
+						<NotificationRow key={n.id} notification={n} onRead={() => markRead(n.id)} />
+					))}
 				</div>
+				<p className="text-[10px] text-muted-foreground/60 text-right tracking-wide">
+					Last updated: {lastRefresh.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })} · Auto-refreshes every 60s
+				</p>
 			</div>
 		</div>
 	);
@@ -566,7 +629,7 @@ function StatCard({ label, value, icon: Icon, color }: { label: string; value: n
 	);
 }
 
-function CaseStatusBadge({ status }: { status: ExistingCase["status"] }) {
+function CaseStatusBadge({ status }: { status: "Complete" | "Under Review" | "Pending EDD" }) {
 	const styles: Record<string, string> = {
 		Complete: "bg-emerald-500/15 text-emerald-700 border-emerald-500/20",
 		"Under Review": "bg-amber-500/15 text-amber-700 border-amber-500/20",
@@ -610,85 +673,226 @@ function NotificationRow({ notification: n, onRead }: { notification: DashboardN
 	);
 }
 
-/* ─── Issues Dashboard ─── */
+/* ─── Case Profile ─── */
 
-function IssuesDashboard({ issues }: { issues: DashboardIssue[] }) {
-	const critical = issues.filter((i) => i.severity === "Critical").length;
-	const high = issues.filter((i) => i.severity === "High").length;
+function CaseProfile({ entry, onBack }: { entry: MonitoringEntry; onBack: () => void }) {
+	const openAlerts = entry.alerts.filter((a) => a.status === "Open" || a.status === "Under Review");
+	const resolvedAlerts = entry.alerts.filter((a) => a.status === "Resolved");
+	const [showResolved, setShowResolved] = useState(false);
 
 	return (
-		<div className="space-y-3">
-			<div className="flex items-center justify-between">
-				<div className="flex items-center gap-2">
-					<CircleAlertIcon className="size-4 text-red-500" />
-					<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">
-						Open Issues
-					</p>
-					<span className="text-[9px] font-bold rounded-full px-1.5 py-0.5 bg-red-500 text-white min-w-[18px] text-center">
-						{issues.length}
-					</span>
-				</div>
-				<div className="flex items-center gap-2 text-[10px]">
-					<span className="rounded-md border border-red-500/20 bg-red-500/10 text-red-700 px-1.5 py-0.5 font-semibold">
-						{critical} Critical
-					</span>
-					<span className="rounded-md border border-amber-500/20 bg-amber-500/10 text-amber-700 px-1.5 py-0.5 font-semibold">
-						{high} High
-					</span>
+		<div className="space-y-6">
+			<div className="flex items-center gap-3">
+				<button onClick={onBack} className="text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-lg hover:bg-muted">
+					<ArrowRightIcon className="size-4 rotate-180" />
+				</button>
+				<div className="flex-1">
+					<div className="flex items-center gap-3">
+						<h2 className="text-xl font-heading font-semibold tracking-tight">{entry.subjectNameCn}</h2>
+						<span className="text-lg text-muted-foreground font-heading">{entry.subjectName}</span>
+						<RiskBadge rating={entry.riskRating} />
+						<CaseStatusBadge status={entry.caseStatus} />
+					</div>
+					<p className="text-sm text-muted-foreground mt-0.5 font-mono tracking-wide">{entry.caseRef}</p>
 				</div>
 			</div>
-			<div className="rounded-2xl border border-red-500/20 bg-gradient-to-br from-red-500/[0.03] to-transparent overflow-hidden shadow-sm">
-				<div className="divide-y divide-border/50">
-					{issues.map((issue) => {
-						const sevColor: Record<string, string> = {
-							Critical: "bg-red-500/15 text-red-700 border-red-500/20",
-							High: "bg-amber-500/15 text-amber-700 border-amber-500/20",
-							Medium: "bg-sky-500/15 text-sky-700 border-sky-500/20",
-						};
-						const typeIcon: Record<string, typeof AlertTriangleIcon> = {
-							"Overdue Review": CalendarClockIcon,
-							"Unresolved Alert": AlertTriangleIcon,
-							"Missing Document": FileTextIcon,
-							"EDD Pending": UserCheckIcon,
-							"Remediation Overdue": ListTodoIcon,
-							"Data Source Error": CircleAlertIcon,
-						};
-						const Icon = typeIcon[issue.type] ?? AlertTriangleIcon;
-						return (
-							<div key={issue.id} className="flex items-start gap-3 px-5 py-3.5 hover:bg-accent/20 transition-colors">
-								<div className="mt-0.5">
-									<Icon className={`size-4 ${issue.severity === "Critical" ? "text-red-500" : "text-amber-500"}`} />
-								</div>
-								<div className="flex-1 min-w-0">
-									<div className="flex items-center gap-2 flex-wrap">
-										<span className="text-sm font-medium">{issue.subjectName}</span>
-										<span className="font-mono text-[9px] text-muted-foreground/50 tracking-wide">{issue.caseRef}</span>
-									</div>
-									<p className="text-[11px] text-muted-foreground leading-relaxed mt-0.5">{issue.description}</p>
-									<div className="flex items-center gap-2 mt-1.5">
-										<span className={`text-[9px] font-semibold rounded-md border px-1.5 py-0.5 ${sevColor[issue.severity]}`}>
-											{issue.severity}
-										</span>
-										<span className="text-[9px] font-semibold rounded-md border border-border px-1.5 py-0.5 bg-muted/50 text-muted-foreground">
-											{issue.type}
-										</span>
-										<span className="text-[10px] text-muted-foreground/60">
-											{issue.daysPending}d pending · {issue.assignee}
-										</span>
-									</div>
-								</div>
+
+			{/* Subject Info + Monitoring Config */}
+			<div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+				<div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
+					<div className="flex items-center gap-2">
+						<UserIcon className="size-4 text-primary" />
+						<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Subject Profile</p>
+					</div>
+					<div className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
+						<div>
+							<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">ID Number</div>
+							<div className="mt-0.5 font-mono text-xs">{entry.idNumber}</div>
+						</div>
+						<div>
+							<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Risk Score</div>
+							<div className={`mt-0.5 font-heading font-bold text-lg ${entry.riskScore >= 60 ? "text-red-600" : entry.riskScore >= 40 ? "text-amber-600" : "text-emerald-600"}`}>{entry.riskScore}/100</div>
+						</div>
+						<div>
+							<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Occupation</div>
+							<div className="mt-0.5">{entry.occupation}</div>
+						</div>
+						<div>
+							<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Employer</div>
+							<div className="mt-0.5">{entry.employer}</div>
+						</div>
+						<div>
+							<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">City</div>
+							<div className="mt-0.5">{entry.city}</div>
+						</div>
+						<div>
+							<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Case Created</div>
+							<div className="mt-0.5">{entry.createdDate}</div>
+						</div>
+					</div>
+				</div>
+
+				<div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
+					<div className="flex items-center gap-2">
+						<RadarIcon className="size-4 text-primary" />
+						<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Monitoring Configuration</p>
+					</div>
+					<div className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
+						<div>
+							<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Screening Frequency</div>
+							<div className="mt-0.5 font-heading font-semibold text-primary">{entry.screeningFrequency}</div>
+						</div>
+						<div>
+							<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Next Review</div>
+							<div className="mt-0.5 font-heading font-semibold">{entry.nextReviewDate}</div>
+						</div>
+						<div>
+							<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Sources Monitored</div>
+							<div className="mt-0.5 flex items-center gap-1.5">
+								<DatabaseIcon className={`size-3.5 ${entry.sourcesHealthy === entry.sourcesMonitored ? "text-emerald-500" : "text-amber-500"}`} />
+								<span className="font-heading font-semibold">{entry.sourcesHealthy}/{entry.sourcesMonitored}</span>
+								<span className="text-[10px] text-muted-foreground">{entry.sourcesHealthy === entry.sourcesMonitored ? "all healthy" : `${entry.sourcesMonitored - entry.sourcesHealthy} degraded`}</span>
 							</div>
-						);
-					})}
+						</div>
+						<div>
+							<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Last Scan</div>
+							<div className="mt-0.5">{entry.lastScanDate}</div>
+						</div>
+					</div>
 				</div>
 			</div>
+
+			{/* Screening Coverage */}
+			<div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
+				<div className="flex items-center gap-2">
+					<ShieldCheckIcon className="size-4 text-primary" />
+					<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Screening Coverage</p>
+				</div>
+				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+					{[
+						{ label: "Sanctions Screening", value: entry.sanctionsScreening, icon: ShieldAlertIcon },
+						{ label: "Adverse Media", value: entry.adverseMediaMonitoring, icon: SearchIcon },
+						{ label: "Corporate Registry", value: entry.corporateRegistryRefresh, icon: BuildingIcon },
+						{ label: "Tax Compliance", value: entry.taxComplianceCheck, icon: FileTextIcon },
+						{ label: "Auto-Escalation", value: entry.autoEscalation, icon: AlertTriangleIcon },
+					].map((item) => (
+						<div key={item.label} className="rounded-xl border border-border/60 bg-muted/20 p-3">
+							<div className="flex items-center gap-1.5 mb-1.5">
+								<item.icon className="size-3.5 text-muted-foreground" />
+								<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">{item.label}</div>
+							</div>
+							<div className="text-sm font-medium">{item.value}</div>
+						</div>
+					))}
+				</div>
+			</div>
+
+			{/* Open Alerts */}
+			<div className="space-y-3">
+				<div className="flex items-center justify-between">
+					<div className="flex items-center gap-2">
+						<CircleAlertIcon className="size-4 text-red-500" />
+						<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">
+							Open Alerts
+						</p>
+						{openAlerts.length > 0 && (
+							<span className="text-[9px] font-bold rounded-full px-1.5 py-0.5 bg-red-500 text-white min-w-[18px] text-center">{openAlerts.length}</span>
+						)}
+					</div>
+				</div>
+				{openAlerts.length === 0 ? (
+					<div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.03] p-6 text-center">
+						<CheckCircle2Icon className="size-6 text-emerald-500 mx-auto mb-2" />
+						<p className="text-sm font-medium text-emerald-700">No open alerts</p>
+						<p className="text-xs text-muted-foreground mt-0.5">All screening results are clear</p>
+					</div>
+				) : (
+					<div className="rounded-2xl border border-red-500/20 bg-gradient-to-br from-red-500/[0.03] to-transparent overflow-hidden shadow-sm">
+						<div className="divide-y divide-border/50">
+							{openAlerts.map((alert) => {
+								const sevStyle: Record<string, { bg: string; icon: string }> = {
+									Critical: { bg: "bg-red-500/15 text-red-700 border-red-500/20", icon: "text-red-500" },
+									Warning: { bg: "bg-amber-500/15 text-amber-700 border-amber-500/20", icon: "text-amber-500" },
+									Info: { bg: "bg-sky-500/15 text-sky-700 border-sky-500/20", icon: "text-sky-500" },
+								};
+								const s = sevStyle[alert.severity] ?? sevStyle.Info;
+								return (
+									<div key={alert.id} className="flex items-start gap-3 px-5 py-4 hover:bg-accent/20 transition-colors">
+										<div className="mt-0.5">
+											<AlertTriangleIcon className={`size-4 ${s.icon}`} />
+										</div>
+										<div className="flex-1 min-w-0">
+											<div className="flex items-center gap-2 flex-wrap">
+												<span className="text-sm font-medium">{alert.type}</span>
+												<span className="text-[10px] text-muted-foreground/60">{alert.date}</span>
+											</div>
+											<p className="text-[12px] text-muted-foreground leading-relaxed mt-1">{alert.description}</p>
+											<div className="flex items-center gap-2 mt-2">
+												<span className={`text-[9px] font-semibold rounded-md border px-1.5 py-0.5 ${s.bg}`}>
+													{alert.severity}
+												</span>
+												<span className="text-[9px] font-semibold rounded-md border border-border px-1.5 py-0.5 bg-muted/50 text-muted-foreground">
+													{alert.status}
+												</span>
+												<span className="text-[10px] text-muted-foreground/60">
+													Source: {alert.source}
+												</span>
+											</div>
+										</div>
+									</div>
+								);
+							})}
+						</div>
+					</div>
+				)}
+			</div>
+
+			{/* Resolved Alerts */}
+			{resolvedAlerts.length > 0 && (
+				<div className="space-y-3">
+					<button
+						onClick={() => setShowResolved(!showResolved)}
+						className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+					>
+						<HistoryIcon className="size-4" />
+						<p className="text-[10px] font-heading font-semibold uppercase tracking-widest">
+							Resolved Alerts
+						</p>
+						<span className="text-[9px] font-bold rounded-full px-1.5 py-0.5 bg-muted text-muted-foreground min-w-[18px] text-center">{resolvedAlerts.length}</span>
+						<ChevronDownIcon className={`size-3.5 transition-transform ${showResolved ? "rotate-180" : ""}`} />
+					</button>
+					{showResolved && (
+						<div className="rounded-2xl border border-border overflow-hidden shadow-sm bg-card">
+							<div className="divide-y divide-border/50">
+								{resolvedAlerts.map((alert) => (
+									<div key={alert.id} className="flex items-start gap-3 px-5 py-3.5 opacity-60">
+										<div className="mt-0.5">
+											<CheckCircle2Icon className="size-4 text-emerald-500" />
+										</div>
+										<div className="flex-1 min-w-0">
+											<div className="flex items-center gap-2 flex-wrap">
+												<span className="text-sm font-medium">{alert.type}</span>
+												<span className="text-[10px] text-muted-foreground/60">{alert.date}</span>
+												{alert.resolvedDate && (
+													<span className="text-[10px] text-emerald-600">Resolved {alert.resolvedDate}</span>
+												)}
+											</div>
+											<p className="text-[12px] text-muted-foreground leading-relaxed mt-0.5">{alert.description}</p>
+										</div>
+									</div>
+								))}
+							</div>
+						</div>
+					)}
+				</div>
+			)}
 		</div>
 	);
 }
 
 /* ─── Ongoing Monitoring ─── */
 
-function OngoingMonitoring({ entries }: { entries: MonitoringEntry[] }) {
+function OngoingMonitoring({ entries, onSelectEntry }: { entries: MonitoringEntry[]; onSelectEntry?: (entry: MonitoringEntry) => void }) {
 	const activeCount = entries.filter((e) => e.status === "Active").length;
 	const totalAlerts = entries.reduce((sum, e) => sum + e.openAlerts, 0);
 	const totalSources = entries.reduce((sum, e) => sum + e.sourcesMonitored, 0);
@@ -762,9 +966,9 @@ function OngoingMonitoring({ entries }: { entries: MonitoringEntry[] }) {
 								Quarterly: "bg-sky-500/10 text-sky-700 border-sky-500/15",
 							};
 							return (
-								<tr key={entry.caseRef} className="hover:bg-accent/30 transition-colors">
+								<tr key={entry.caseRef} className="hover:bg-accent/30 transition-colors cursor-pointer" onClick={() => onSelectEntry?.(entry)}>
 									<td className="px-4 py-3">
-										<div className="font-medium">{entry.subjectName}</div>
+										<div className="font-medium text-primary">{entry.subjectName}</div>
 										<div className="font-mono text-[9px] text-muted-foreground/50 tracking-wide">{entry.caseRef}</div>
 									</td>
 									<td className="px-4 py-3 text-center hidden sm:table-cell">
