@@ -51,6 +51,10 @@ import {
 	BadgeCheckIcon,
 	TargetIcon,
 	ListTodoIcon,
+	RadarIcon,
+	ScanIcon,
+	DatabaseIcon,
+	ShieldIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -174,6 +178,30 @@ const MOCK_EXISTING_CASES: ExistingCase[] = [
 	{ caseRef: "SOW-2026-0315-744", name: "黄晓明", nameEn: "Huang Xiaoming", riskRating: "Low", status: "Complete", createdDate: "15 Mar 2026", nextReview: "15 Mar 2027", alertCount: 0 },
 	{ caseRef: "SOW-2026-0428-195", name: "林婉琪", nameEn: "Lin Wanqi", riskRating: "High", status: "Under Review", createdDate: "28 Apr 2026", nextReview: "28 Oct 2026", alertCount: 2 },
 	{ caseRef: "SOW-2026-0503-631", name: "周志强", nameEn: "Zhou Zhiqiang", riskRating: "Low", status: "Complete", createdDate: "03 May 2026", nextReview: "03 May 2027", alertCount: 0 },
+];
+
+interface MonitoringEntry {
+	caseRef: string;
+	subjectName: string;
+	riskRating: "Low" | "High";
+	screeningFrequency: "Weekly" | "Monthly" | "Quarterly";
+	lastScanDate: string;
+	nextReviewDate: string;
+	sourcesMonitored: number;
+	sourcesHealthy: number;
+	openAlerts: number;
+	lastAlertType?: string;
+	status: "Active" | "Paused" | "Overdue";
+}
+
+const MOCK_MONITORING: MonitoringEntry[] = [
+	{ caseRef: "SOW-2025-0918-087", subjectName: "Zhang Lihua", riskRating: "High", screeningFrequency: "Weekly", lastScanDate: "2026-05-16", nextReviewDate: "2026-09-18", sourcesMonitored: 13, sourcesHealthy: 13, openAlerts: 3, lastAlertType: "Adverse Media", status: "Active" },
+	{ caseRef: "SOW-2026-0402-291", subjectName: "Zhao Weiwei", riskRating: "High", screeningFrequency: "Weekly", lastScanDate: "2026-05-15", nextReviewDate: "2026-10-02", sourcesMonitored: 13, sourcesHealthy: 12, openAlerts: 5, lastAlertType: "Tax Discrepancy", status: "Active" },
+	{ caseRef: "SOW-2026-0428-195", subjectName: "Lin Wanqi", riskRating: "High", screeningFrequency: "Weekly", lastScanDate: "2026-05-16", nextReviewDate: "2026-10-28", sourcesMonitored: 13, sourcesHealthy: 13, openAlerts: 2, lastAlertType: "Sanctions Match", status: "Active" },
+	{ caseRef: "SOW-2025-1203-412", subjectName: "Wang Jianguo", riskRating: "Low", screeningFrequency: "Monthly", lastScanDate: "2026-05-01", nextReviewDate: "2026-12-03", sourcesMonitored: 11, sourcesHealthy: 11, openAlerts: 0, status: "Active" },
+	{ caseRef: "SOW-2026-0210-553", subjectName: "Li Minghui", riskRating: "Low", screeningFrequency: "Monthly", lastScanDate: "2026-05-01", nextReviewDate: "2027-02-10", sourcesMonitored: 11, sourcesHealthy: 11, openAlerts: 1, lastAlertType: "Corporate Filing", status: "Active" },
+	{ caseRef: "SOW-2026-0315-744", subjectName: "Huang Xiaoming", riskRating: "Low", screeningFrequency: "Quarterly", lastScanDate: "2026-04-15", nextReviewDate: "2027-03-15", sourcesMonitored: 11, sourcesHealthy: 11, openAlerts: 0, status: "Active" },
+	{ caseRef: "SOW-2026-0503-631", subjectName: "Zhou Zhiqiang", riskRating: "Low", screeningFrequency: "Monthly", lastScanDate: "2026-05-03", nextReviewDate: "2027-05-03", sourcesMonitored: 11, sourcesHealthy: 10, openAlerts: 0, status: "Active" },
 ];
 
 const MOCK_NOTIFICATIONS: DashboardNotification[] = [
@@ -440,6 +468,9 @@ function Dashboard({ onNewCase }: { onNewCase: () => void }) {
 			{/* Issues Dashboard */}
 			<IssuesDashboard issues={DASHBOARD_ISSUES} />
 
+			{/* Ongoing Monitoring */}
+			<OngoingMonitoring entries={MOCK_MONITORING} />
+
 			<div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
 				<div className="lg:col-span-3 space-y-3">
 					<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">
@@ -650,6 +681,134 @@ function IssuesDashboard({ issues }: { issues: DashboardIssue[] }) {
 						);
 					})}
 				</div>
+			</div>
+		</div>
+	);
+}
+
+/* ─── Ongoing Monitoring ─── */
+
+function OngoingMonitoring({ entries }: { entries: MonitoringEntry[] }) {
+	const activeCount = entries.filter((e) => e.status === "Active").length;
+	const totalAlerts = entries.reduce((sum, e) => sum + e.openAlerts, 0);
+	const totalSources = entries.reduce((sum, e) => sum + e.sourcesMonitored, 0);
+	const healthySources = entries.reduce((sum, e) => sum + e.sourcesHealthy, 0);
+	const highRiskActive = entries.filter((e) => e.riskRating === "High").length;
+
+	return (
+		<div className="space-y-3">
+			<div className="flex items-center justify-between">
+				<div className="flex items-center gap-2">
+					<RadarIcon className="size-4 text-primary" />
+					<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">
+						Ongoing Monitoring
+					</p>
+					<span className="text-[9px] font-bold rounded-full px-1.5 py-0.5 bg-primary/15 text-primary min-w-[18px] text-center">
+						{activeCount} active
+					</span>
+				</div>
+				<div className="flex items-center gap-2 text-[10px]">
+					<span className="rounded-md border border-border bg-muted/50 text-muted-foreground px-1.5 py-0.5 font-semibold flex items-center gap-1">
+						<ScanIcon className="size-3" /> Last scan: {new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short" })}
+					</span>
+				</div>
+			</div>
+
+			<div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+				<div className="rounded-xl border border-border bg-card p-3 shadow-sm">
+					<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Subjects Monitored</div>
+					<div className="text-2xl font-heading font-bold mt-1 tabular-nums">{activeCount}</div>
+					<div className="text-[10px] text-muted-foreground mt-0.5">{highRiskActive} high-risk</div>
+				</div>
+				<div className="rounded-xl border border-border bg-card p-3 shadow-sm">
+					<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Open Alerts</div>
+					<div className={`text-2xl font-heading font-bold mt-1 tabular-nums ${totalAlerts > 0 ? "text-red-600" : "text-emerald-600"}`}>{totalAlerts}</div>
+					<div className="text-[10px] text-muted-foreground mt-0.5">across all subjects</div>
+				</div>
+				<div className="rounded-xl border border-border bg-card p-3 shadow-sm">
+					<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Data Sources</div>
+					<div className="text-2xl font-heading font-bold mt-1 tabular-nums">{totalSources}</div>
+					<div className="text-[10px] text-muted-foreground mt-0.5">
+						<span className={healthySources === totalSources ? "text-emerald-600" : "text-amber-600"}>{healthySources} healthy</span>
+					</div>
+				</div>
+				<div className="rounded-xl border border-border bg-card p-3 shadow-sm">
+					<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Source Health</div>
+					<div className={`text-2xl font-heading font-bold mt-1 tabular-nums ${healthySources === totalSources ? "text-emerald-600" : "text-amber-600"}`}>
+						{((healthySources / totalSources) * 100).toFixed(1)}%
+					</div>
+					<div className="text-[10px] text-muted-foreground mt-0.5">{totalSources - healthySources} degraded</div>
+				</div>
+			</div>
+
+			<div className="rounded-2xl border border-border overflow-hidden shadow-sm bg-card">
+				<table className="w-full text-sm">
+					<thead className="bg-gradient-to-r from-muted/60 to-muted/30 text-muted-foreground">
+						<tr>
+							<th className="text-left px-4 py-3 font-medium text-xs tracking-wide">Subject</th>
+							<th className="text-center px-4 py-3 font-medium text-xs tracking-wide hidden sm:table-cell">Risk</th>
+							<th className="text-center px-4 py-3 font-medium text-xs tracking-wide">Frequency</th>
+							<th className="text-center px-4 py-3 font-medium text-xs tracking-wide hidden sm:table-cell">Last Scan</th>
+							<th className="text-center px-4 py-3 font-medium text-xs tracking-wide hidden sm:table-cell">Sources</th>
+							<th className="text-center px-4 py-3 font-medium text-xs tracking-wide">Alerts</th>
+							<th className="text-center px-4 py-3 font-medium text-xs tracking-wide hidden sm:table-cell">Status</th>
+						</tr>
+					</thead>
+					<tbody className="divide-y divide-border/60">
+						{entries.map((entry) => {
+							const freqColor: Record<string, string> = {
+								Weekly: "bg-red-500/10 text-red-700 border-red-500/15",
+								Monthly: "bg-amber-500/10 text-amber-700 border-amber-500/15",
+								Quarterly: "bg-sky-500/10 text-sky-700 border-sky-500/15",
+							};
+							return (
+								<tr key={entry.caseRef} className="hover:bg-accent/30 transition-colors">
+									<td className="px-4 py-3">
+										<div className="font-medium">{entry.subjectName}</div>
+										<div className="font-mono text-[9px] text-muted-foreground/50 tracking-wide">{entry.caseRef}</div>
+									</td>
+									<td className="px-4 py-3 text-center hidden sm:table-cell">
+										<RiskBadge rating={entry.riskRating} />
+									</td>
+									<td className="px-4 py-3 text-center">
+										<span className={`text-[10px] font-semibold rounded-md border px-1.5 py-0.5 ${freqColor[entry.screeningFrequency]}`}>
+											{entry.screeningFrequency}
+										</span>
+									</td>
+									<td className="px-4 py-3 text-center hidden sm:table-cell">
+										<span className="text-xs text-muted-foreground">{entry.lastScanDate}</span>
+									</td>
+									<td className="px-4 py-3 text-center hidden sm:table-cell">
+										<div className="flex items-center justify-center gap-1">
+											<DatabaseIcon className={`size-3 ${entry.sourcesHealthy === entry.sourcesMonitored ? "text-emerald-500" : "text-amber-500"}`} />
+											<span className="text-xs">
+												{entry.sourcesHealthy}/{entry.sourcesMonitored}
+											</span>
+										</div>
+									</td>
+									<td className="px-4 py-3 text-center">
+										{entry.openAlerts > 0 ? (
+											<div>
+												<span className="text-[10px] font-bold rounded-full px-2 py-0.5 bg-red-500/15 text-red-700">{entry.openAlerts}</span>
+												{entry.lastAlertType && (
+													<div className="text-[9px] text-muted-foreground/60 mt-0.5">{entry.lastAlertType}</div>
+												)}
+											</div>
+										) : (
+											<span className="text-xs text-muted-foreground/40">—</span>
+										)}
+									</td>
+									<td className="px-4 py-3 text-center hidden sm:table-cell">
+										<span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700">
+											<ShieldIcon className="size-3" />
+											{entry.status}
+										</span>
+									</td>
+								</tr>
+							);
+						})}
+					</tbody>
+				</table>
 			</div>
 		</div>
 	);
