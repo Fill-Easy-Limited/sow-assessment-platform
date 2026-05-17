@@ -305,8 +305,13 @@ function BulkResultPanel({ items }: { items: BulkRowResult[] }) {
 	);
 }
 
+const API_SERVICES = SERVICES.filter((s) => s.id !== "sow");
+
+type TopTab = "sow" | "api";
+
 export default function ApiDemo() {
-	const [activeService, setActiveService] = useState(SERVICES[0].id);
+	const [topTab, setTopTab] = useState<TopTab>("sow");
+	const [activeService, setActiveService] = useState(API_SERVICES[0].id);
 	const [activeEndpoints, setActiveEndpoints] = useState<Record<string, string>>(
 		Object.fromEntries(
 			SERVICES.filter((s) => s.endpoints.length > 0).map((s) => [
@@ -434,27 +439,56 @@ export default function ApiDemo() {
 
 	return (
 		<div className="space-y-6">
-			{/* Service tabs */}
-			<div className="flex flex-wrap gap-0.5 border-b border-border/60 -mb-px">
-				{SERVICES.map((s) => (
-					<button
-						key={s.id}
-						onClick={() => switchService(s.id)}
-						className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-							s.id === activeService
-								? "border-primary text-foreground"
-								: "border-transparent text-muted-foreground hover:text-foreground"
-						}`}
-					>
-						{s.label}
-					</button>
-				))}
+			{/* Top-level tabs: SOW Agent (primary) + API Explorer */}
+			<div className="flex items-center gap-2">
+				<button
+					onClick={() => setTopTab("sow")}
+					className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+						topTab === "sow"
+							? "bg-[#0f2b3c] text-white shadow-sm"
+							: "bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/70"
+					}`}
+				>
+					<span className="flex items-center gap-2">
+						<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={topTab === "sow" ? "text-sky-300" : "text-muted-foreground"}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+						SOW Agent
+					</span>
+				</button>
+				<button
+					onClick={() => setTopTab("api")}
+					className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+						topTab === "api"
+							? "bg-muted/80 text-foreground shadow-sm ring-1 ring-border"
+							: "bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50"
+					}`}
+				>
+					API Explorer
+				</button>
 			</div>
+
+			{topTab === "sow" ? (
+				<SowDemo />
+			) : (
+				<>
+					{/* API service sub-tabs */}
+					<div className="flex flex-wrap gap-1 border-b border-border/60 pb-px">
+						{API_SERVICES.map((s) => (
+							<button
+								key={s.id}
+								onClick={() => switchService(s.id)}
+								className={`px-3 py-1.5 text-xs font-medium rounded-t-md transition-colors whitespace-nowrap ${
+									s.id === activeService
+										? "bg-muted/60 text-foreground border border-b-0 border-border/60"
+										: "text-muted-foreground hover:text-foreground"
+								}`}
+							>
+								{s.label}
+							</button>
+						))}
+					</div>
 
 			{activeService === "kyc-china" ? (
 				<KycChinaFlow />
-			) : activeService === "sow" ? (
-				<SowDemo />
 			) : endpoint ? (
 				<>
 			{activeService === "corpverify" && (
@@ -590,6 +624,8 @@ export default function ApiDemo() {
 			)}
 				</>
 			) : null}
+				</>
+			)}
 		</div>
 	);
 }
