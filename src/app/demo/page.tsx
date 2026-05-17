@@ -10,22 +10,26 @@ export default function DemoPage() {
 	return (
 		<div className="flex flex-col min-h-screen">
 			{/* Header */}
-			<header className="bg-[#0f2b3c] text-white border-b border-white/10">
-				<div className="max-w-6xl mx-auto w-full px-6 sm:px-10 py-4 flex items-center justify-between">
-					<div className="flex items-center gap-3">
-						<div className="h-9 w-9 rounded-lg bg-white/10 flex items-center justify-center">
-							<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+			<header className="relative bg-gradient-to-r from-[#0b1e2d] via-[#0f2b3c] to-[#0b1e2d] text-white border-b border-white/8">
+				<div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(56,189,248,0.08)_0%,_transparent_60%)]" />
+				<div className="relative max-w-6xl mx-auto w-full px-6 sm:px-10 py-4 flex items-center justify-between">
+					<div className="flex items-center gap-3.5">
+						<div className="h-10 w-10 rounded-xl bg-gradient-to-br from-sky-400/20 to-cyan-400/10 border border-white/10 flex items-center justify-center backdrop-blur-sm">
+							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="url(#headerGrad)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+								<defs><linearGradient id="headerGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#38bdf8"/><stop offset="100%" stopColor="#06b6d4"/></linearGradient></defs>
+								<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+							</svg>
 						</div>
 						<div>
-							<h1 className="text-base font-semibold tracking-tight leading-tight">
+							<h1 className="text-[15px] font-heading font-semibold tracking-tight leading-tight">
 								SOW Assessment Platform
 							</h1>
-							<p className="text-[11px] text-white/50 leading-tight">
+							<p className="text-[11px] text-white/45 leading-tight tracking-wide">
 								AI-powered due diligence · Government & financial data sources
 							</p>
 						</div>
 					</div>
-					<span className="text-[10px] font-bold tracking-widest uppercase px-2 py-1 rounded bg-sky-500/20 text-sky-300 border border-sky-400/20">
+					<span className="text-[9px] font-bold tracking-[0.2em] uppercase px-2.5 py-1 rounded-md bg-sky-500/15 text-sky-300 border border-sky-400/15 backdrop-blur-sm">
 						Demo
 					</span>
 				</div>
@@ -37,13 +41,13 @@ export default function DemoPage() {
 			</main>
 
 			{/* Footer */}
-			<footer className="bg-[#0a1e2c] text-white/40 border-t border-white/5">
+			<footer className="bg-gradient-to-r from-[#081620] via-[#0a1e2c] to-[#081620] text-white/35 border-t border-white/5">
 				<div className="max-w-6xl mx-auto w-full px-6 sm:px-10 py-5">
 					<div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px]">
-						<p>
+						<p className="tracking-wide">
 							This is a demonstration environment with simulated data. All names, identifiers, and financial figures are fictional.
 						</p>
-						<p className="text-white/25 shrink-0">
+						<p className="text-white/20 shrink-0 tracking-wider">
 							&copy; {new Date().getFullYear()} Confidential
 						</p>
 					</div>
