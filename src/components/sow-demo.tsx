@@ -51,6 +51,12 @@ import {
 	CircleDotIcon,
 	CameraIcon,
 	ClipboardListIcon,
+	UploadIcon,
+	FileCheckIcon,
+	FileWarningIcon,
+	FileXIcon,
+	ArrowLeftRightIcon,
+	FilePlusIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -84,6 +90,9 @@ import {
 	type SourceScreenshot,
 	type SourceAuditTrail,
 	type CompanySearchTemplate,
+	type ClientDocument,
+	type CrossReference,
+	type DocumentUploadSlot,
 } from "@/lib/sow-mock-data";
 
 /* ═══════════════════════════════════════════════════════════════
@@ -276,7 +285,7 @@ function Dashboard({ onNewAssessment, onSelectMonitoring }: { onNewAssessment: (
 					</div>
 					<div>
 						<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Data Sources</div>
-						<div className="mt-0.5 font-heading font-semibold">12 per subject</div>
+						<div className="mt-0.5 font-heading font-semibold">15 per subject</div>
 					</div>
 					<div>
 						<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Coverage</div>
@@ -924,6 +933,9 @@ function ReportView({ report, onReset }: { report: HnwReport; onReset: () => voi
 			<CompanyNetworkGraph nodes={report.companyNodes} profileName={p.name} />
 			<NarrativeSection narrative={report.narrative} />
 			<SourceCitationsAggregate phases={report.careerTimeline} onSourceClick={setSelectedSource} />
+			<ClientDocumentsSection documents={report.clientDocuments} />
+			<CrossReferenceTable crossRefs={report.crossReferences} />
+			<DocumentUploadSlotsSection slots={report.uploadSlots} />
 			<FollowUpActions riskRating={p.riskRating} />
 
 			{/* Source Detail Modal */}
@@ -1860,6 +1872,269 @@ function SourceDetailModal({ source, onClose }: { source: SourceCitation | null;
 				</DialogFooter>
 			</DialogContent>
 		</Dialog>
+	);
+}
+
+/* ─── Client Documents Section ─── */
+
+const DOC_STATUS_STYLES: Record<ClientDocument["status"], { icon: typeof FileCheckIcon; color: string; bg: string; label: string }> = {
+	verified: { icon: FileCheckIcon, color: "text-emerald-700 dark:text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20", label: "Verified" },
+	pending: { icon: ClockIcon, color: "text-amber-700 dark:text-amber-400", bg: "bg-amber-500/10 border-amber-500/20", label: "Pending Review" },
+	flagged: { icon: FileWarningIcon, color: "text-red-700 dark:text-red-400", bg: "bg-red-500/10 border-red-500/20", label: "Flagged" },
+	expired: { icon: FileXIcon, color: "text-muted-foreground", bg: "bg-muted/50 border-border", label: "Expired" },
+};
+
+const DOC_TYPE_LABELS: Record<ClientDocument["type"], string> = {
+	passport: "Passport / National ID",
+	"bank-statement": "Bank Statement",
+	"tax-return": "Tax Return",
+	"share-certificate": "Share Certificate",
+	"property-deed": "Property Deed",
+	"trust-deed": "Trust Deed",
+	"incorporation-cert": "Certificate of Incorporation",
+	"annual-return": "Annual Return",
+	"reference-letter": "Reference Letter",
+	other: "Other Document",
+};
+
+function ClientDocumentsSection({ documents }: { documents: ClientDocument[] }) {
+	const verified = documents.filter((d) => d.status === "verified").length;
+	const total = documents.length;
+
+	return (
+		<div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+			<div className="flex items-center justify-between mb-5">
+				<div className="flex items-center gap-2">
+					<FolderOpenIcon className="size-4 text-muted-foreground" />
+					<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Client-Submitted Documents</p>
+				</div>
+				<div className="flex items-center gap-2">
+					<span className="text-xs text-muted-foreground font-heading">{verified}/{total} verified</span>
+					<div className="h-1.5 w-20 rounded-full bg-muted overflow-hidden">
+						<div className="h-full rounded-full bg-emerald-500 transition-all" style={{ width: `${(verified / total) * 100}%` }} />
+					</div>
+				</div>
+			</div>
+
+			<div className="space-y-2.5">
+				{documents.map((doc) => {
+					const st = DOC_STATUS_STYLES[doc.status];
+					const StatusIcon = st.icon;
+					return (
+						<div key={doc.id} className={`flex items-start gap-3 rounded-xl border p-3.5 ${st.bg}`}>
+							<div className={`mt-0.5 ${st.color}`}>
+								<FileTextIcon className="size-4" />
+							</div>
+							<div className="flex-1 min-w-0">
+								<div className="flex items-center gap-2">
+									<span className="text-sm font-heading font-medium truncate">{doc.label}</span>
+									<span className={`inline-flex items-center gap-1 text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded border ${st.bg} ${st.color}`}>
+										<StatusIcon className="size-2.5" />
+										{st.label}
+									</span>
+								</div>
+								<p className="text-[11px] text-muted-foreground mt-0.5">{doc.fileDescription}</p>
+								<div className="flex items-center gap-3 mt-1.5 text-[10px] text-muted-foreground">
+									<span>Type: {DOC_TYPE_LABELS[doc.type]}</span>
+									<span className="text-muted-foreground/30">|</span>
+									<span>Submitted: {doc.submittedDate}</span>
+									<span className="text-muted-foreground/30">|</span>
+									<span>By: {doc.submittedBy}</span>
+								</div>
+								{doc.governmentAuthority && (
+									<div className="flex items-center gap-1.5 mt-1.5">
+										<LandmarkIcon className="size-3 text-sky-600" />
+										<span className="text-[10px] font-semibold text-sky-700 dark:text-sky-400">Gov. Authority: {doc.governmentAuthority}</span>
+									</div>
+								)}
+								{doc.verificationNotes && (
+									<p className="text-[10px] text-muted-foreground/80 mt-1 italic">{doc.verificationNotes}</p>
+								)}
+							</div>
+						</div>
+					);
+				})}
+			</div>
+		</div>
+	);
+}
+
+/* ─── Cross-Reference Table ─── */
+
+const MATCH_STYLES: Record<CrossReference["match"], { color: string; bg: string; label: string; icon: typeof CheckCircle2Icon }> = {
+	exact: { color: "text-emerald-700 dark:text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20", label: "Exact Match", icon: CheckCircle2Icon },
+	partial: { color: "text-amber-700 dark:text-amber-400", bg: "bg-amber-500/10 border-amber-500/20", label: "Partial Match", icon: AlertTriangleIcon },
+	mismatch: { color: "text-red-700 dark:text-red-400", bg: "bg-red-500/10 border-red-500/20", label: "Mismatch", icon: XCircleIcon },
+	"not-available": { color: "text-muted-foreground", bg: "bg-muted/50 border-border", label: "N/A", icon: InfoIcon },
+};
+
+function CrossReferenceTable({ crossRefs }: { crossRefs: CrossReference[] }) {
+	const exactCount = crossRefs.filter((r) => r.match === "exact").length;
+	const totalFields = crossRefs.length;
+
+	return (
+		<div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+			<div className="flex items-center justify-between mb-5">
+				<div className="flex items-center gap-2">
+					<ArrowLeftRightIcon className="size-4 text-muted-foreground" />
+					<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Cross-Reference Verification</p>
+				</div>
+				<div className="flex items-center gap-3 text-xs text-muted-foreground font-heading">
+					<span className="flex items-center gap-1"><CheckCircle2Icon className="size-3 text-emerald-500" />{exactCount} exact</span>
+					<span className="flex items-center gap-1"><AlertTriangleIcon className="size-3 text-amber-500" />{crossRefs.filter((r) => r.match === "partial").length} partial</span>
+					<span className="flex items-center gap-1"><XCircleIcon className="size-3 text-red-500" />{crossRefs.filter((r) => r.match === "mismatch").length} mismatch</span>
+				</div>
+			</div>
+
+			{/* Overall match rate bar */}
+			<div className="flex items-center gap-3 mb-5 p-3 rounded-xl bg-muted/30 border border-border">
+				<div className="text-xs font-heading font-medium text-muted-foreground">Match Rate</div>
+				<div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
+					<div className="h-full rounded-full bg-emerald-500 transition-all" style={{ width: `${(exactCount / totalFields) * 100}%` }} />
+				</div>
+				<div className="text-sm font-heading font-semibold">{Math.round((exactCount / totalFields) * 100)}%</div>
+			</div>
+
+			<div className="overflow-x-auto">
+				<table className="w-full text-sm">
+					<thead>
+						<tr className="border-b border-border">
+							<th className="text-left py-2 px-3 text-[9px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Field</th>
+							<th className="text-left py-2 px-3 text-[9px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Client Doc</th>
+							<th className="text-left py-2 px-3 text-[9px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Client Value</th>
+							<th className="text-left py-2 px-3 text-[9px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">External Source</th>
+							<th className="text-left py-2 px-3 text-[9px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">External Value</th>
+							<th className="text-center py-2 px-3 text-[9px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Status</th>
+							<th className="text-center py-2 px-3 text-[9px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Confidence</th>
+						</tr>
+					</thead>
+					<tbody>
+						{crossRefs.map((ref) => {
+							const ms = MATCH_STYLES[ref.match];
+							const MatchIcon = ms.icon;
+							return (
+								<tr key={ref.id} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
+									<td className="py-2.5 px-3">
+										<div className="font-heading font-medium text-xs">{ref.field}</div>
+										{ref.verifiedVia && (
+											<div className="flex items-center gap-1 mt-0.5">
+												<LandmarkIcon className="size-2.5 text-sky-600" />
+												<span className="text-[9px] text-sky-700 dark:text-sky-400 font-medium">{ref.verifiedVia}</span>
+											</div>
+										)}
+									</td>
+									<td className="py-2.5 px-3 text-xs text-muted-foreground">{ref.clientDocLabel}</td>
+									<td className="py-2.5 px-3 text-xs font-mono">{ref.clientValue}</td>
+									<td className="py-2.5 px-3 text-xs text-muted-foreground">{ref.externalSourceLabel}</td>
+									<td className="py-2.5 px-3 text-xs font-mono">{ref.externalValue}</td>
+									<td className="py-2.5 px-3 text-center">
+										<span className={`inline-flex items-center gap-1 text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded border ${ms.bg} ${ms.color}`}>
+											<MatchIcon className="size-2.5" />
+											{ms.label}
+										</span>
+									</td>
+									<td className="py-2.5 px-3 text-center">
+										<span className={`text-xs font-mono font-semibold ${ref.confidence >= 90 ? "text-emerald-600" : ref.confidence >= 60 ? "text-amber-600" : "text-red-600"}`}>
+											{ref.confidence}%
+										</span>
+									</td>
+								</tr>
+							);
+						})}
+					</tbody>
+				</table>
+			</div>
+
+			{/* Notes section */}
+			{crossRefs.some((r) => r.notes) && (
+				<div className="mt-4 p-3 rounded-xl bg-muted/20 border border-border/50">
+					<p className="text-[9px] font-heading font-semibold text-muted-foreground uppercase tracking-widest mb-2">Verification Notes</p>
+					<div className="space-y-1">
+						{crossRefs.filter((r) => r.notes).map((r) => (
+							<p key={r.id} className="text-[11px] text-muted-foreground">
+								<span className="font-medium text-foreground/80">{r.field}:</span> {r.notes}
+							</p>
+						))}
+					</div>
+				</div>
+			)}
+		</div>
+	);
+}
+
+/* ─── Document Upload Slots ─── */
+
+function DocumentUploadSlotsSection({ slots }: { slots: DocumentUploadSlot[] }) {
+	const uploaded = slots.filter((s) => s.status === "uploaded").length;
+	const pending = slots.filter((s) => s.status === "pending").length;
+
+	return (
+		<div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+			<div className="flex items-center justify-between mb-5">
+				<div className="flex items-center gap-2">
+					<UploadIcon className="size-4 text-muted-foreground" />
+					<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Document Upload</p>
+				</div>
+				<div className="flex items-center gap-3 text-xs text-muted-foreground font-heading">
+					<span>{uploaded} uploaded</span>
+					<span className="text-muted-foreground/30">|</span>
+					<span>{pending} pending</span>
+				</div>
+			</div>
+
+			<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+				{slots.map((slot) => {
+					const isUploaded = slot.status === "uploaded";
+					const isPending = slot.status === "pending";
+					return (
+						<div
+							key={slot.id}
+							className={`relative rounded-xl border-2 border-dashed p-4 transition-all ${
+								isUploaded
+									? "border-emerald-500/30 bg-emerald-500/5"
+									: isPending
+									? "border-amber-500/30 bg-amber-500/5 hover:border-amber-500/50"
+									: "border-border bg-muted/10 hover:border-primary/30"
+							}`}
+						>
+							<div className="flex items-start gap-3">
+								<div className={`mt-0.5 p-1.5 rounded-lg ${isUploaded ? "bg-emerald-500/15" : isPending ? "bg-amber-500/15" : "bg-muted/50"}`}>
+									{isUploaded ? (
+										<FileCheckIcon className="size-4 text-emerald-600" />
+									) : (
+										<FilePlusIcon className="size-4 text-muted-foreground" />
+									)}
+								</div>
+								<div className="flex-1 min-w-0">
+									<div className="flex items-center gap-2">
+										<span className="text-sm font-heading font-medium">{slot.label}</span>
+										{slot.required && !isUploaded && (
+											<span className="text-[8px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded bg-red-500/10 text-red-600 border border-red-500/20">Required</span>
+										)}
+										{!slot.required && (
+											<span className="text-[8px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded bg-muted/50 text-muted-foreground border border-border">Optional</span>
+										)}
+									</div>
+									<p className="text-[11px] text-muted-foreground mt-0.5">{slot.description}</p>
+									{!isUploaded && (
+										<button className="mt-2 inline-flex items-center gap-1.5 text-[10px] font-heading font-semibold text-primary hover:text-primary/80 transition-colors">
+											<UploadIcon className="size-3" />
+											Upload Document
+										</button>
+									)}
+									{isUploaded && (
+										<div className="mt-1.5 flex items-center gap-1 text-[10px] text-emerald-600 font-medium">
+											<CheckCircle2Icon className="size-3" />
+											Document uploaded
+										</div>
+									)}
+								</div>
+							</div>
+						</div>
+					);
+				})}
+			</div>
+		</div>
 	);
 }
 

@@ -29,6 +29,40 @@ export interface CompanySearchTemplate {
 	searchType: string;
 }
 
+export interface ClientDocument {
+	id: string;
+	type: "passport" | "bank-statement" | "tax-return" | "share-certificate" | "property-deed" | "trust-deed" | "incorporation-cert" | "annual-return" | "reference-letter" | "other";
+	label: string;
+	submittedBy: string;
+	submittedDate: string;
+	status: "verified" | "pending" | "flagged" | "expired";
+	fileDescription: string;
+	verificationNotes?: string;
+	governmentAuthority?: string;
+}
+
+export interface CrossReference {
+	id: string;
+	field: string;
+	clientDocLabel: string;
+	externalSourceLabel: string;
+	clientValue: string;
+	externalValue: string;
+	match: "exact" | "partial" | "mismatch" | "not-available";
+	confidence: number;
+	verifiedVia?: string;
+	notes?: string;
+}
+
+export interface DocumentUploadSlot {
+	id: string;
+	type: string;
+	label: string;
+	description: string;
+	required: boolean;
+	status: "uploaded" | "pending" | "optional";
+}
+
 export interface SourceCitation {
 	id: string;
 	label: string;
@@ -151,6 +185,9 @@ export interface HnwReport {
 	dataSources: DataSourceDef[];
 	companyNodes: CompanyNode[];
 	screeningResult: PepScreeningEntry;
+	clientDocuments: ClientDocument[];
+	crossReferences: CrossReference[];
+	uploadSlots: DocumentUploadSlot[];
 }
 
 export interface HnwMonitoringEntry {
@@ -276,6 +313,73 @@ const SRC_MA: Record<string, SourceCitation> = {
 		id: "s16", label: "PBOC: Ant Group restructuring approval", url: "http://www.pbc.gov.cn/en/", date: "2023-07-07", type: "public-record",
 		...srcMeta("pbc.gov.cn", "People's Bank of China | Ant Group Rectification", "PBOC official notice regarding Ant Group financial holding company restructuring completion. Regulatory approval for new corporate governance and capital requirements compliance.", "#8b0000"),
 	},
+	// Government authority & estimate sources (replacing inline estimates)
+	chinaSalaryStats: {
+		id: "s17", label: "China Statistical Yearbook — Education Sector Wages (1988-1995)", url: "http://www.stats.gov.cn/english/Statisticaldata/AnnualData/", type: "public-record",
+		...srcMeta("stats.gov.cn", "National Bureau of Statistics of China | Annual Data", "China NBS annual data tables showing education sector average wages by province. Zhejiang Province teacher salaries for 1988-1995 period ranging from ¥100-300/month.", "#003399"),
+	},
+	prcWageData: {
+		id: "s18", label: "NBS Average Wages by Sector (late 1990s)", url: "http://www.stats.gov.cn/english/Statisticaldata/", type: "public-record",
+		...srcMeta("stats.gov.cn", "NBS | Urban Average Wages by Industry", "National Bureau of Statistics wage tables showing private sector and government employee compensation norms in China during the late 1990s internet boom period.", "#003399"),
+	},
+	equilarComp: {
+		id: "s19", label: "Equilar: Chinese Tech CEO Compensation Study", url: "https://www.equilar.com/reports/chinese-tech-executive-compensation", date: "2013-01-01", type: "estimate",
+		...srcMeta("equilar.com", "Equilar | Executive Compensation Benchmarking", "Equilar executive compensation benchmarking report for Chinese technology companies. Median CEO total compensation for major Chinese tech firms in $2-8M range during 2005-2014.", "#1a237e"),
+	},
+	sharespostPreIPO: {
+		id: "s20", label: "SharesPost: Pre-IPO Alibaba Secondary Trading Data", url: "https://sharespost.com/company/alibaba-group/", date: "2013-06-01", type: "market-data",
+		...srcMeta("sharespost.com", "SharesPost | Alibaba Pre-IPO Trading Activity", "SharesPost secondary market platform showing pre-IPO block trading activity for Alibaba Group shares. Implied valuation of $75-100B based on 2013 secondary trades.", "#2e7d32"),
+	},
+	scmpProperty: {
+		id: "s21", label: "SCMP: Jack Ma's property portfolio investigation", url: "https://www.scmp.com/business/article/jack-ma-property-portfolio", type: "news",
+		...srcMeta("scmp.com", "Jack Ma's Property Portfolio: From Hangzhou to Hong Kong | SCMP", "South China Morning Post investigation into Jack Ma's known property holdings including a HK$1.5B Victoria Peak mansion, Hangzhou luxury residences, and reported properties overseas.", "#ffca05"),
+	},
+	alibabaBio: {
+		id: "s22", label: "Duncan Clark — 'Alibaba: The House That Jack Ma Built' (2016)", url: "https://www.harpercollins.com/products/alibaba-duncan-clark", date: "2016-04-12", type: "news",
+		...srcMeta("harpercollins.com", "Alibaba: The House That Jack Ma Built | HarperCollins", "Authoritative biography by Duncan Clark documenting Jack Ma's early ventures including China Pages, Hangzhou Telecom partnership, loss of control, and lessons learned.", "#333333"),
+	},
+	wealthXReport: {
+		id: "s23", label: "Wealth-X: UHNW Lifestyle Asset Benchmarks 2024", url: "https://www.wealthx.com/report/world-ultra-wealth-report/", date: "2024-01-01", type: "estimate",
+		...srcMeta("wealthx.com", "Wealth-X | World Ultra Wealth Report 2024", "Wealth-X annual report benchmarking UHNW lifestyle assets. Average UHNW individual holds 5-10% of net worth in art, wine, yachts, and luxury goods.", "#1b5e20"),
+	},
+	hkLandReg: {
+		id: "s24", label: "HK Land Registry: Victoria Peak Property Record", url: "https://www.landreg.gov.hk/en/", type: "registry",
+		...srcMeta("landreg.gov.hk", "Land Registry | Property Particulars — The Peak", "Hong Kong Land Registry search result showing property registration for a Victoria Peak residence. Transaction price HK$1.5 billion recorded. Owner details and memorial records.", "#333399"),
+		companySearchTemplate: {
+			registryName: "Hong Kong Land Registry",
+			registryUrl: "https://www.landreg.gov.hk/en/",
+			searchFields: [
+				{ label: "Property Address", value: "15 Barker Road, The Peak, Hong Kong" },
+				{ label: "Lot Number", value: "IL 8847" },
+				{ label: "Search Type", value: "Address Search" },
+			],
+			jurisdiction: "Hong Kong SAR",
+			searchType: "Property Search",
+		},
+	},
+	acraRegistry: {
+		id: "s25", label: "Singapore ACRA: Family Trust Entity Registration", url: "https://www.acra.gov.sg/", type: "registry",
+		...srcMeta("acra.gov.sg", "ACRA | BizFile+ Entity Search", "Singapore ACRA BizFile+ search result for trust-related entity. Shows entity registration date, registered address, filing status.", "#cc0000"),
+		companySearchTemplate: {
+			registryName: "Accounting and Corporate Regulatory Authority (ACRA) — BizFile+",
+			registryUrl: "https://www.acra.gov.sg/",
+			searchFields: [
+				{ label: "Entity Name", value: "Ma Family Trust Pte. Ltd." },
+				{ label: "UEN", value: "202312345A" },
+				{ label: "Entity Type", value: "Private Company Limited by Shares" },
+			],
+			jurisdiction: "Republic of Singapore",
+			searchType: "Entity Name / UEN Search",
+		},
+	},
+	sec20F: {
+		id: "s26", label: "SEC 20-F Annual Report — Alibaba Group (2024)", url: "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001577552&type=20-F", date: "2024-07-15", type: "filing",
+		...srcMeta("sec.gov", "SEC EDGAR | 20-F Annual Report | Alibaba Group", "SEC EDGAR filing showing Alibaba Group 20-F annual report. Updated beneficial ownership table showing Ma Yun holding ~4.5% of ordinary shares. Director compensation disclosed.", "#003366"),
+	},
+	chinaIIT: {
+		id: "s27", label: "China Individual Income Tax — Zhejiang Provincial Filing", url: "http://www.chinatax.gov.cn/eng/", type: "public-record",
+		...srcMeta("chinatax.gov.cn", "State Taxation Administration | IIT Filing Records", "China State Taxation Administration portal confirming individual income tax filing records for Zhejiang Province taxpayers. IIT rates and brackets for high-income earners referenced.", "#cc0000"),
+	},
 };
 
 // ── Jack Ma: Career Timeline ────────────────────────────────────
@@ -287,8 +391,8 @@ const JACK_MA_CAREER: CareerPhase[] = [
 		description: "Taught English at a local university after graduating from Hangzhou Normal University. Monthly salary approximately $12-20. Built foundational communication skills and first visited the US in 1995 where he encountered the internet.",
 		categories: [
 			{ category: "income", claims: [
-				{ id: "jm1-1", description: "University lecturer salary (~$15/month for 7 years)", estimatedValueUSD: 12_600, confidence: 60, sources: [{ id: "est-1", label: "Estimated from PRC public university salary scales (1988-1995)", type: "estimate" }] },
-			], subtotalUSD: 12_600, avgConfidence: 60 },
+				{ id: "jm1-1", description: "University lecturer salary (~$15/month for 7 years, confirmed via NBS education sector wage tables)", estimatedValueUSD: 12_600, confidence: 100, sources: [SRC_MA.chinaSalaryStats, SRC_MA.chinaIIT] },
+			], subtotalUSD: 12_600, avgConfidence: 100 },
 		],
 		phaseWealthUSD: 12_600, cumulativeWealthUSD: 12_600,
 		keyEvents: ["1988: Graduated Hangzhou Normal University", "1995: First visit to United States, discovered the internet"],
@@ -299,10 +403,10 @@ const JACK_MA_CAREER: CareerPhase[] = [
 		description: "Founded China Pages (Zhongguo Huangye), one of China's first internet companies. Partnered with Hangzhou Telecom, eventually lost control. Moved to Beijing to work on a government e-commerce project for MOFTEC (Ministry of Foreign Trade). Both ventures generated minimal personal wealth.",
 		categories: [
 			{ category: "income", claims: [
-				{ id: "jm2-1", description: "Salary and earnings from China Pages and MOFTEC (~$500/month average)", estimatedValueUSD: 24_000, confidence: 40, sources: [{ id: "est-2", label: "Estimated from PRC private/government sector norms (late 1990s)", type: "estimate" }] },
-			], subtotalUSD: 24_000, avgConfidence: 40 },
+				{ id: "jm2-1", description: "Salary and earnings from China Pages and MOFTEC (~$500/month, cross-checked against NBS sector wage data)", estimatedValueUSD: 24_000, confidence: 85, sources: [SRC_MA.prcWageData, SRC_MA.chinaIIT] },
+			], subtotalUSD: 24_000, avgConfidence: 85 },
 			{ category: "companies", claims: [
-				{ id: "jm2-2", description: "China Pages equity (diluted after Hangzhou Telecom partnership, eventually exited at near-zero)", estimatedValueUSD: 0, confidence: 50, sources: [{ id: "news-1", label: "Various biographies of Jack Ma document China Pages failure", type: "news" }] },
+				{ id: "jm2-2", description: "China Pages equity (diluted after Hangzhou Telecom partnership, exited near-zero — documented in Clark biography)", estimatedValueUSD: 0, confidence: 50, sources: [SRC_MA.alibabaBio, SRC_MA.samr] },
 			], subtotalUSD: 0, avgConfidence: 50 },
 		],
 		phaseWealthUSD: 24_000, cumulativeWealthUSD: 36_600,
@@ -314,11 +418,11 @@ const JACK_MA_CAREER: CareerPhase[] = [
 		description: "Founded Alibaba with 17 co-founders in his apartment with $60K pooled savings. Built Alibaba.com (B2B), launched Taobao (2003) to defeat eBay in China, created Alipay (2004). Raised successive rounds: Goldman Sachs $5M (1999), SoftBank $20M (2000), Yahoo $1B for 40% stake (2005). By 2014, Alibaba was China's dominant e-commerce platform.",
 		categories: [
 			{ category: "income", claims: [
-				{ id: "jm3-1", description: "CEO compensation at Alibaba Group (salary + bonuses, 1999-2014)", estimatedValueUSD: 5_000_000, confidence: 45, sources: [{ id: "est-3", label: "Estimated from Chinese tech CEO compensation benchmarks", type: "estimate" }] },
-			], subtotalUSD: 5_000_000, avgConfidence: 45 },
+				{ id: "jm3-1", description: "CEO compensation at Alibaba Group (salary + bonuses, 1999-2014, benchmarked via Equilar)", estimatedValueUSD: 5_000_000, confidence: 75, sources: [SRC_MA.equilarComp, SRC_MA.chinaIIT] },
+			], subtotalUSD: 5_000_000, avgConfidence: 75 },
 			{ category: "companies", claims: [
-				{ id: "jm3-2", description: "Pre-IPO Alibaba Group equity stake (accumulated ~8.9% through founding shares)", estimatedValueUSD: 1_500_000_000, confidence: 70, sources: [SRC_MA.goldmanSachs, SRC_MA.softbank, SRC_MA.yahooAcq, SRC_MA.samr, { id: "est-4", label: "Pre-IPO secondary market estimates", type: "estimate" }] },
-			], subtotalUSD: 1_500_000_000, avgConfidence: 70 },
+				{ id: "jm3-2", description: "Pre-IPO Alibaba Group equity stake (accumulated ~8.9% through founding shares, SAMR-verified entity)", estimatedValueUSD: 1_500_000_000, confidence: 80, sources: [SRC_MA.goldmanSachs, SRC_MA.softbank, SRC_MA.yahooAcq, SRC_MA.samr, SRC_MA.sharespostPreIPO] },
+			], subtotalUSD: 1_500_000_000, avgConfidence: 80 },
 		],
 		phaseWealthUSD: 1_505_000_000, cumulativeWealthUSD: 1_505_036_600,
 		keyEvents: ["1999: Alibaba founded, Goldman Sachs $5M Series A", "2000: SoftBank invests $20M", "2003: Taobao launched", "2004: Alipay spun out", "2005: Yahoo acquires 40% for $1B", "2013: Alibaba reaches $150B pre-IPO valuation"],
@@ -337,8 +441,8 @@ const JACK_MA_CAREER: CareerPhase[] = [
 				{ id: "jm4-4", description: "Yunfeng Capital co-founder (PE/VC fund, AUM ~$8B, Ma's carried interest estimated)", estimatedValueUSD: 800_000_000, confidence: 40, sources: [SRC_MA.yunfeng] },
 			], subtotalUSD: 800_000_000, avgConfidence: 40 },
 			{ category: "alternatives", claims: [
-				{ id: "jm4-5", description: "Property holdings including residences in Hong Kong, Hangzhou, and reported overseas properties", estimatedValueUSD: 200_000_000, confidence: 30, sources: [{ id: "est-5", label: "Media reports on luxury property purchases", type: "news" }] },
-			], subtotalUSD: 200_000_000, avgConfidence: 30 },
+				{ id: "jm4-5", description: "Property holdings — HK Victoria Peak mansion (HK$1.5B), Hangzhou residences, reported overseas properties", estimatedValueUSD: 200_000_000, confidence: 70, sources: [SRC_MA.scmpProperty, SRC_MA.hkLandReg] },
+			], subtotalUSD: 200_000_000, avgConfidence: 70 },
 		],
 		phaseWealthUSD: 26_000_000_000, cumulativeWealthUSD: 26_000_000_000,
 		keyEvents: ["2014-09-19: Alibaba IPO raises $25B on NYSE", "2016: Alibaba surpasses Walmart as world's largest retailer", "2018: Ant Financial raises $14B at $150B valuation", "2019-09-10: Ma steps down as Alibaba Chairman"],
@@ -367,12 +471,12 @@ const JACK_MA_CAREER: CareerPhase[] = [
 			], subtotalUSD: 18_500_000_000, avgConfidence: 58 },
 			{ category: "investments", claims: [
 				{ id: "jm6-3", description: "Yunfeng Capital and other PE/VC fund interests", estimatedValueUSD: 1_500_000_000, confidence: 35, sources: [SRC_MA.yunfeng] },
-				{ id: "jm6-4", description: "Singapore family trust (transferred $2.4B in BABA shares)", estimatedValueUSD: 2_400_000_000, confidence: 85, sources: [SRC_MA.ftTrust] },
-			], subtotalUSD: 3_900_000_000, avgConfidence: 60 },
+				{ id: "jm6-4", description: "Singapore family trust (transferred $2.4B in BABA shares, ACRA-registered entity)", estimatedValueUSD: 2_400_000_000, confidence: 95, sources: [SRC_MA.ftTrust, SRC_MA.acraRegistry] },
+			], subtotalUSD: 3_900_000_000, avgConfidence: 65 },
 			{ category: "alternatives", claims: [
-				{ id: "jm6-5", description: "Global real estate portfolio (Hong Kong, Hangzhou, reported properties in New York, France)", estimatedValueUSD: 300_000_000, confidence: 25, sources: [{ id: "news-re", label: "SCMP, Bloomberg reporting on property holdings", type: "news" }] },
-				{ id: "jm6-6", description: "Art collection, wine, other luxury assets", estimatedValueUSD: 50_000_000, confidence: 15, sources: [{ id: "est-lux", label: "Industry estimates for UHNW lifestyle assets", type: "estimate" }] },
-			], subtotalUSD: 350_000_000, avgConfidence: 20 },
+				{ id: "jm6-5", description: "Global real estate portfolio (HK Victoria Peak, Hangzhou, New York, France — HK Land Registry confirmed)", estimatedValueUSD: 300_000_000, confidence: 75, sources: [SRC_MA.scmpProperty, SRC_MA.hkLandReg] },
+				{ id: "jm6-6", description: "Art collection, wine, other luxury assets (benchmarked via Wealth-X UHNW report)", estimatedValueUSD: 50_000_000, confidence: 40, sources: [SRC_MA.wealthXReport, SRC_MA.forbes2024] },
+			], subtotalUSD: 350_000_000, avgConfidence: 58 },
 		],
 		phaseWealthUSD: 22_750_000_000, cumulativeWealthUSD: 25_500_000_000,
 		keyEvents: ["2023-04: $2.4B Alibaba shares transferred to Singapore trust", "2023-06: Alibaba splits into 6 business groups", "2024: Focus on agriculture technology and education"],
@@ -473,6 +577,86 @@ const SRC_SIU: Record<string, SourceCitation> = {
 		id: "y14", label: "Sequoia China leads Animoca $65M round", url: "https://www.sequoiacap.com/", date: "2021-05-01", type: "news",
 		...srcMeta("sequoiacap.com", "Sequoia Capital China | Animoca Brands Investment", "Sequoia Capital China press materials referencing lead investor role in Animoca Brands $65 million funding round (May 2021). Pre-money valuation and strategic rationale.", "#c00000"),
 	},
+	// Government authority & estimate sources (replacing inline estimates)
+	blsWages: {
+		id: "y15", label: "BLS / Statistics Austria: Tech Sector Wages (1990s)", url: "https://www.bls.gov/oes/", type: "public-record",
+		...srcMeta("bls.gov", "Bureau of Labor Statistics | Occupational Employment & Wages", "BLS occupational employment statistics showing computer/tech sector wages in the early 1990s. Entry-level software engineer salaries ranged $28-45K/year.", "#003399"),
+	},
+	hkCensusStats: {
+		id: "y16", label: "HK Census & Statistics: IT Sector Earnings Survey", url: "https://www.censtatd.gov.hk/", type: "public-record",
+		...srcMeta("censtatd.gov.hk", "C&SD | Earnings & Hours Statistics — IT Sector", "Hong Kong Census and Statistics Department survey data on earnings in the IT sector. Median CEO/MD compensation in HK tech companies during 2000-2010.", "#003366"),
+	},
+	hkLandRegistry: {
+		id: "y17", label: "HK Land Registry: Property Records", url: "https://www.landreg.gov.hk/en/", type: "registry",
+		...srcMeta("landreg.gov.hk", "Land Registry | Property Particulars Search", "Hong Kong Land Registry search showing property registration records. Historical transaction prices and current ownership records for residential properties in Mid-Levels.", "#333399"),
+		companySearchTemplate: {
+			registryName: "Hong Kong Land Registry",
+			registryUrl: "https://www.landreg.gov.hk/en/",
+			searchFields: [
+				{ label: "Owner Name", value: "SIU Yat" },
+				{ label: "Property Address", value: "Mid-Levels, Hong Kong Island" },
+				{ label: "Search Type", value: "Owner Name Search" },
+			],
+			jurisdiction: "Hong Kong SAR",
+			searchType: "Property Owner Search",
+		},
+	},
+	asxHistorical: {
+		id: "y18", label: "ASX Historical Market Cap: Animoca (AB1)", url: "https://www2.asx.com.au/markets/company/AB1", type: "market-data",
+		...srcMeta("asx.com.au", "ASX | AB1 Historical Market Data", "Australian Securities Exchange historical market data for Animoca Brands (AB1). Market capitalization history from listing to delisting, daily trading volumes.", "#002244"),
+	},
+	asxAnnualReport: {
+		id: "y19", label: "Animoca Brands ASX Annual Report — Executive Remuneration", url: "https://www.animocabrands.com/investors", date: "2019-01-01", type: "filing",
+		...srcMeta("animocabrands.com", "Animoca Brands | Annual Report FY2019 — Remuneration", "Animoca Brands annual report filed with ASX showing executive remuneration section. Chairman and director compensation as required by ASX listing rules.", "#ff6b35"),
+	},
+	pitchbook: {
+		id: "y20", label: "PitchBook: Animoca Brands Private Secondary Market", url: "https://pitchbook.com/profiles/animoca-brands", type: "estimate",
+		...srcMeta("pitchbook.com", "PitchBook | Animoca Brands Profile", "PitchBook private company profile for Animoca Brands showing funding history, post-money valuations, secondary market trading data, and implied discount from last round.", "#0066cc"),
+	},
+	hkRVD: {
+		id: "y21", label: "HK Rating & Valuation Dept: Property Price Indices", url: "https://www.rvd.gov.hk/en/property_market_statistics/", type: "public-record",
+		...srcMeta("rvd.gov.hk", "RVD | Private Domestic — Price Indices", "HK Rating and Valuation Department property price index showing residential price movements. Mid-Levels area index tracked.", "#003366"),
+	},
+	fileasyHKCR: {
+		id: "y22", label: "FilEasy API: HK Companies Registry — Animoca Brands Ltd", url: "https://www.fileasy.hk/", type: "registry",
+		...srcMeta("fileasy.hk", "FilEasy | HK Companies Registry — Animoca Brands Limited", "FilEasy API search result for HK Companies Registry. Returns CR No., incorporation date, registered office, directors (SIU Yat listed), secretary, and annual return filings.", "#0066aa"),
+		companySearchTemplate: {
+			registryName: "Hong Kong Companies Registry (via FilEasy API)",
+			registryUrl: "https://www.fileasy.hk/",
+			searchFields: [
+				{ label: "Company Name", value: "Animoca Brands Limited" },
+				{ label: "CR No.", value: "2283149" },
+				{ label: "Director Name", value: "SIU Yat" },
+				{ label: "Document Type", value: "Annual Return (NAR1) + Directors Register" },
+			],
+			jurisdiction: "Hong Kong SAR",
+			searchType: "CR Online Search (via FilEasy API)",
+		},
+	},
+	fileasyOutblaze: {
+		id: "y23", label: "FilEasy API: HK Companies Registry — Outblaze Limited", url: "https://www.fileasy.hk/", type: "registry",
+		...srcMeta("fileasy.hk", "FilEasy | HK Companies Registry — Outblaze Limited", "FilEasy API response for Outblaze Limited. Confirmed incorporation 1998, director SIU Yat, registered office in Wan Chai. Annual return filings from 1998-2012.", "#0066aa"),
+	},
+	hkIRD: {
+		id: "y24", label: "HK Inland Revenue Dept: Profits Tax Filing Confirmation", url: "https://www.ird.gov.hk/eng/", type: "public-record",
+		...srcMeta("ird.gov.hk", "IRD | eTAX — Filing Status Confirmation", "Hong Kong Inland Revenue Department eTAX portal showing profits tax filing confirmation for Outblaze Limited and salaries tax filing status for individual taxpayer.", "#003366"),
+	},
+	asicRegistry: {
+		id: "y25", label: "ASIC: Animoca Brands Corporation Ltd (ACN 122 921 813)", url: "https://connectonline.asic.gov.au/", type: "registry",
+		...srcMeta("asic.gov.au", "ASIC | Company Search — Animoca Brands Corporation Limited", "Australian Securities & Investments Commission company search. ACN 122 921 813. Registered in Victoria. Current and historical officeholder records including SIU Yat as director.", "#002244"),
+		companySearchTemplate: {
+			registryName: "Australian Securities & Investments Commission (ASIC)",
+			registryUrl: "https://connectonline.asic.gov.au/",
+			searchFields: [
+				{ label: "Company Name", value: "Animoca Brands Corporation Limited" },
+				{ label: "ACN", value: "122 921 813" },
+				{ label: "ABN", value: "29 122 921 813" },
+				{ label: "State", value: "VIC" },
+			],
+			jurisdiction: "Australia (Commonwealth)",
+			searchType: "Organisation & Business Names Search",
+		},
+	},
 };
 
 // ── Yat Siu: Career Timeline ────────────────────────────────────
@@ -484,8 +668,8 @@ const YAT_SIU_CAREER: CareerPhase[] = [
 		description: "Born in Vienna to a Chinese-Austrian family. Joined Atari in his teens as one of their youngest employees. Worked on the Atari Falcon and other projects before Atari's decline. Gained foundational experience in gaming and technology.",
 		categories: [
 			{ category: "income", claims: [
-				{ id: "ys1-1", description: "Atari software engineer salary (1990-1995)", estimatedValueUSD: 150_000, confidence: 40, sources: [{ id: "est-at", label: "Estimated from Austrian/US tech salaries (early 1990s)", type: "estimate" }] },
-			], subtotalUSD: 150_000, avgConfidence: 40 },
+				{ id: "ys1-1", description: "Atari software engineer salary (1990-1995, verified via BLS occupational wage data)", estimatedValueUSD: 150_000, confidence: 90, sources: [SRC_SIU.blsWages] },
+			], subtotalUSD: 150_000, avgConfidence: 90 },
 		],
 		phaseWealthUSD: 150_000, cumulativeWealthUSD: 150_000,
 		keyEvents: ["1990: Joined Atari as teenager", "1995: Left Atari after company restructuring"],
@@ -496,14 +680,14 @@ const YAT_SIU_CAREER: CareerPhase[] = [
 		description: "Founded Outblaze in Hong Kong as a white-label web services company. Grew it into a provider of messaging, community, and gaming services for major portals. Sold the messaging/community division to IBM in 2009 for an estimated $10-20M. Retained the gaming division which would eventually become Animoca Brands.",
 		categories: [
 			{ category: "income", claims: [
-				{ id: "ys2-1", description: "CEO salary at Outblaze (1998-2012)", estimatedValueUSD: 2_000_000, confidence: 35, sources: [{ id: "est-ob", label: "Estimated from HK tech CEO compensation", type: "estimate" }] },
-			], subtotalUSD: 2_000_000, avgConfidence: 35 },
+				{ id: "ys2-1", description: "CEO salary at Outblaze (1998-2012, cross-checked via HK C&SD IT sector earnings and IRD filings)", estimatedValueUSD: 2_000_000, confidence: 100, sources: [SRC_SIU.hkCensusStats, SRC_SIU.hkIRD, SRC_SIU.fileasyOutblaze] },
+			], subtotalUSD: 2_000_000, avgConfidence: 100 },
 			{ category: "companies", claims: [
-				{ id: "ys2-2", description: "Sale of Outblaze messaging division to IBM (~$10-20M, Siu retained majority)", estimatedValueUSD: 15_000_000, confidence: 55, sources: [SRC_SIU.ibmAcq, SRC_SIU.hkCompanies] },
-			], subtotalUSD: 15_000_000, avgConfidence: 55 },
+				{ id: "ys2-2", description: "Sale of Outblaze messaging division to IBM (~$10-20M, Siu retained majority — HK CR confirmed via FilEasy)", estimatedValueUSD: 15_000_000, confidence: 85, sources: [SRC_SIU.ibmAcq, SRC_SIU.hkCompanies, SRC_SIU.fileasyOutblaze] },
+			], subtotalUSD: 15_000_000, avgConfidence: 85 },
 			{ category: "alternatives", claims: [
-				{ id: "ys2-3", description: "Hong Kong residential property acquired during this period", estimatedValueUSD: 3_000_000, confidence: 35, sources: [{ id: "est-hk", label: "HK Land Registry records (estimated)", type: "estimate" }] },
-			], subtotalUSD: 3_000_000, avgConfidence: 35 },
+				{ id: "ys2-3", description: "Hong Kong residential property acquired during this period (HK Land Registry confirmed)", estimatedValueUSD: 3_000_000, confidence: 100, sources: [SRC_SIU.hkLandRegistry, SRC_SIU.hkRVD] },
+			], subtotalUSD: 3_000_000, avgConfidence: 100 },
 		],
 		phaseWealthUSD: 20_000_000, cumulativeWealthUSD: 20_150_000,
 		keyEvents: ["1998: Founded Outblaze in Hong Kong", "2004: Outblaze services powering 100+ portals", "2009: IBM acquires Outblaze messaging division"],
@@ -514,11 +698,11 @@ const YAT_SIU_CAREER: CareerPhase[] = [
 		description: "Repurposed the gaming division of Outblaze into Animoca Brands, focusing on mobile games. Licensed major brands (Garfield, Doraemon, Astro Boy, Power Rangers). Listed on the Australian Securities Exchange (ASX) in 2015. Generated revenue from mobile games but modest profitability.",
 		categories: [
 			{ category: "companies", claims: [
-				{ id: "ys3-1", description: "Animoca Brands ASX listing equity (co-founder stake ~55%, ASX market cap AU$20-50M)", estimatedValueUSD: 20_000_000, confidence: 60, sources: [SRC_SIU.asxListing, { id: "asx-mc", label: "ASX historical market cap data", type: "market-data" }] },
-			], subtotalUSD: 20_000_000, avgConfidence: 60 },
+				{ id: "ys3-1", description: "Animoca Brands ASX listing equity (co-founder stake ~55%, ASIC-registered, ASX market cap AU$20-50M)", estimatedValueUSD: 20_000_000, confidence: 95, sources: [SRC_SIU.asxListing, SRC_SIU.asxHistorical, SRC_SIU.asicRegistry, SRC_SIU.fileasyHKCR] },
+			], subtotalUSD: 20_000_000, avgConfidence: 95 },
 			{ category: "income", claims: [
-				{ id: "ys3-2", description: "Chairman compensation at Animoca Brands", estimatedValueUSD: 1_500_000, confidence: 40, sources: [{ id: "est-ch", label: "Estimated from ASX-listed company executive comp", type: "estimate" }] },
-			], subtotalUSD: 1_500_000, avgConfidence: 40 },
+				{ id: "ys3-2", description: "Chairman compensation at Animoca Brands (disclosed in ASX annual report — government authority)", estimatedValueUSD: 1_500_000, confidence: 100, sources: [SRC_SIU.asxAnnualReport, SRC_SIU.asicRegistry] },
+			], subtotalUSD: 1_500_000, avgConfidence: 100 },
 		],
 		phaseWealthUSD: 21_500_000, cumulativeWealthUSD: 41_650_000,
 		keyEvents: ["2014: Animoca Brands incorporated", "2015: Listed on ASX", "2016-17: Licensed Garfield, Doraemon, Power Rangers mobile games"],
@@ -529,8 +713,8 @@ const YAT_SIU_CAREER: CareerPhase[] = [
 		description: "Strategic pivot to blockchain gaming and NFTs. Acquired The Sandbox from Pixowl in 2018. Launched SAND token. Invested in Dapper Labs (CryptoKitties/NBA Top Shot). ASX delisted Animoca in March 2020 over disputes about crypto asset accounting. This delisting actually removed constraints on their crypto strategy.",
 		categories: [
 			{ category: "companies", claims: [
-				{ id: "ys4-1", description: "Animoca Brands equity (post-delisting, private valuation rising, ~$100M by late 2020)", estimatedValueUSD: 55_000_000, confidence: 50, sources: [SRC_SIU.asxDelist, { id: "priv-val", label: "Private secondary market estimates", type: "estimate" }] },
-			], subtotalUSD: 55_000_000, avgConfidence: 50 },
+				{ id: "ys4-1", description: "Animoca Brands equity (post-delisting, private valuation rising, ~$100M by late 2020 per PitchBook)", estimatedValueUSD: 55_000_000, confidence: 60, sources: [SRC_SIU.asxDelist, SRC_SIU.pitchbook, SRC_SIU.fileasyHKCR] },
+			], subtotalUSD: 55_000_000, avgConfidence: 60 },
 			{ category: "crypto", claims: [
 				{ id: "ys4-2", description: "SAND token allocation (team/founder allocation, tokens worth ~$0.05-0.10 pre-boom)", estimatedValueUSD: 5_000_000, confidence: 45, sources: [SRC_SIU.coinGecko, SRC_SIU.sandboxAcq] },
 				{ id: "ys4-3", description: "Various NFT and token holdings from early blockchain gaming investments", estimatedValueUSD: 3_000_000, confidence: 30, sources: [SRC_SIU.dappradar] },
@@ -559,8 +743,8 @@ const YAT_SIU_CAREER: CareerPhase[] = [
 				{ id: "ys5-5", description: "Portfolio of 340+ blockchain/Web3 investments (book value)", estimatedValueUSD: 500_000_000, confidence: 45, sources: [SRC_SIU.crunchbase, SRC_SIU.bloombergSiu] },
 			], subtotalUSD: 500_000_000, avgConfidence: 45 },
 			{ category: "alternatives", claims: [
-				{ id: "ys5-6", description: "Hong Kong property portfolio (appreciated significantly)", estimatedValueUSD: 8_000_000, confidence: 40, sources: [{ id: "hk-prop", label: "HK property index appreciation 2018-2022", type: "market-data" }] },
-			], subtotalUSD: 8_000_000, avgConfidence: 40 },
+				{ id: "ys5-6", description: "Hong Kong property portfolio (appreciated — Land Registry and RVD index confirmed)", estimatedValueUSD: 8_000_000, confidence: 100, sources: [SRC_SIU.hkLandRegistry, SRC_SIU.hkRVD] },
+			], subtotalUSD: 8_000_000, avgConfidence: 100 },
 		],
 		phaseWealthUSD: 3_658_000_000, cumulativeWealthUSD: 3_658_000_000,
 		keyEvents: ["2021-05: Sequoia China leads $65M round", "2021-11-25: SAND peaks at $8.40 (ATH)", "2022-01: Animoca raises $358.8M at $5.9B valuation", "2022: 340+ blockchain investments made"],
@@ -571,8 +755,8 @@ const YAT_SIU_CAREER: CareerPhase[] = [
 		description: "Crypto winter caused severe portfolio markdowns. SAND fell ~90% from peak. NFT market collapsed. However, Animoca Brands maintained its $5.9B valuation from last funding round (no down round). Siu became active in Hong Kong's virtual asset regulatory framework, positioning Animoca as a key player in HK's Web3 hub strategy.",
 		categories: [
 			{ category: "companies", claims: [
-				{ id: "ys6-1", description: "Animoca Brands equity (last round $5.9B, likely marked down 30-50% in secondary markets)", estimatedValueUSD: 1_200_000_000, confidence: 45, sources: [SRC_SIU.tcAnimoca, SRC_SIU.bloombergSiu, { id: "sec-est", label: "Secondary market estimates suggest 30-50% discount", type: "estimate" }] },
-			], subtotalUSD: 1_200_000_000, avgConfidence: 45 },
+				{ id: "ys6-1", description: "Animoca Brands equity (last round $5.9B, PitchBook secondary data suggests 30-50% discount)", estimatedValueUSD: 1_200_000_000, confidence: 55, sources: [SRC_SIU.tcAnimoca, SRC_SIU.bloombergSiu, SRC_SIU.pitchbook, SRC_SIU.fileasyHKCR] },
+			], subtotalUSD: 1_200_000_000, avgConfidence: 55 },
 			{ category: "crypto", claims: [
 				{ id: "ys6-2", description: "SAND token holdings at current price (~$0.30-0.60, down ~93% from peak)", estimatedValueUSD: 60_000_000, confidence: 65, sources: [SRC_SIU.coinGecko] },
 				{ id: "ys6-3", description: "NFT portfolio (severely depreciated, floor prices down 80-95%)", estimatedValueUSD: 15_000_000, confidence: 25, sources: [SRC_SIU.dappradar] },
@@ -582,8 +766,8 @@ const YAT_SIU_CAREER: CareerPhase[] = [
 				{ id: "ys6-5", description: "Blockchain/Web3 portfolio (heavily marked down but some survivors)", estimatedValueUSD: 150_000_000, confidence: 30, sources: [SRC_SIU.crunchbase] },
 			], subtotalUSD: 150_000_000, avgConfidence: 30 },
 			{ category: "alternatives", claims: [
-				{ id: "ys6-6", description: "Hong Kong property and other tangible assets", estimatedValueUSD: 7_000_000, confidence: 40, sources: [{ id: "hk-prop2", label: "HK property market data", type: "market-data" }] },
-			], subtotalUSD: 7_000_000, avgConfidence: 40 },
+				{ id: "ys6-6", description: "Hong Kong property and other tangible assets (Land Registry confirmed, RVD indexed)", estimatedValueUSD: 7_000_000, confidence: 100, sources: [SRC_SIU.hkLandRegistry, SRC_SIU.hkRVD] },
+			], subtotalUSD: 7_000_000, avgConfidence: 100 },
 		],
 		phaseWealthUSD: 1_462_000_000, cumulativeWealthUSD: 2_400_000_000,
 		keyEvents: ["2023: SAND drops below $0.50", "2023-06: HK launches virtual asset regulatory framework", "2024: Animoca active in HK Web3 hub strategy", "2024: No down-round — maintains $5.9B last-round valuation"],
@@ -646,6 +830,8 @@ const JACK_MA_SOURCES: DataSourceDef[] = [
 	{ id: "ds-10", name: "PEP Database (Global)", provider: "World-Check / Dow Jones", category: "PEP Screening", delayMs: 1100 },
 	{ id: "ds-11", name: "Crunchbase — Investment Portfolio", provider: "Crunchbase Inc.", category: "Investment Data", delayMs: 1300 },
 	{ id: "ds-12", name: "Singapore ACRA Registry", provider: "Accounting and Corporate Regulatory Authority", category: "Trust & Structures", delayMs: 1700 },
+	{ id: "ds-13", name: "FilEasy — HK Companies Registry Search", provider: "FilEasy Ltd / HKSAR CR", category: "Corporate Registry", delayMs: 1400 },
+	{ id: "ds-14", name: "China Individual Income Tax Records", provider: "State Taxation Administration", category: "Tax Records", delayMs: 1900 },
 ];
 
 const YAT_SIU_SOURCES: DataSourceDef[] = [
@@ -661,6 +847,9 @@ const YAT_SIU_SOURCES: DataSourceDef[] = [
 	{ id: "ds-10", name: "Dow Jones Adverse Media Screening", provider: "Dow Jones Risk & Compliance", category: "Adverse Media", delayMs: 1400 },
 	{ id: "ds-11", name: "OFAC / EU / UN Sanctions Lists", provider: "Multi-jurisdictional", category: "Sanctions Screening", delayMs: 900 },
 	{ id: "ds-12", name: "HKMA Virtual Asset Registry", provider: "Hong Kong Monetary Authority", category: "Regulatory Data", delayMs: 1200 },
+	{ id: "ds-13", name: "FilEasy — HK Companies Registry Search", provider: "FilEasy Ltd / HKSAR CR", category: "Corporate Registry", delayMs: 1100 },
+	{ id: "ds-14", name: "ASIC Company Register", provider: "Australian Securities and Investments Commission", category: "Corporate Registry", delayMs: 1600 },
+	{ id: "ds-15", name: "HK Inland Revenue Department", provider: "HKSAR IRD", category: "Tax Records", delayMs: 1800 },
 ];
 
 // ── Company Nodes (for network graph) ───────────────────────────
@@ -795,6 +984,63 @@ export const HNW_NOTIFICATIONS: HnwNotification[] = [
 	{ id: "n8", type: "alert", title: "Regulatory update — CZ / Binance", detail: "FinCEN monitoring report filed. Post-settlement compliance status reviewed.", time: "2 weeks ago", subjectName: "Changpeng Zhao", read: true },
 ];
 
+// ── Client Documents ───────────────────────────────────────────
+
+const JACK_MA_CLIENT_DOCS: ClientDocument[] = [
+	{ id: "cd-jm-1", type: "passport", label: "PRC Passport — Ma Yun (马云)", submittedBy: "Client (via legal counsel, King & Wood Mallesons)", submittedDate: "2026-04-15", status: "verified", fileDescription: "People's Republic of China passport. Name: MA YUN (马云). DOB: 10 SEP 1964. Passport No: E12••••78. Valid through 2031.", verificationNotes: "Name and DOB match SEC F-1 filing beneficial ownership table. Passport format valid for PRC issuance.", governmentAuthority: "PRC Ministry of Public Security" },
+	{ id: "cd-jm-2", type: "bank-statement", label: "DBS Private Banking Statement — SGD Account", submittedBy: "Client (via DBS Wealth Management)", submittedDate: "2026-04-20", status: "verified", fileDescription: "DBS Private Banking statement for account ending ••4821. Period: Jan-Mar 2026. Shows dividend income from Alibaba Holdings, trust distributions, and investment returns.", verificationNotes: "Dividend amounts cross-checked against BABA ex-dividend dates. Trust distributions consistent with Singapore family trust structure per ACRA records.", governmentAuthority: "Monetary Authority of Singapore (MAS) — regulated institution" },
+	{ id: "cd-jm-3", type: "share-certificate", label: "Morgan Stanley — BABA Beneficial Ownership Confirmation", submittedBy: "Client (via Morgan Stanley)", submittedDate: "2026-04-18", status: "verified", fileDescription: "Morgan Stanley custody confirmation showing beneficial ownership of BABA ADR shares. Current holding: ~131M shares (approximately 4.5% of outstanding).", verificationNotes: "Cross-verified against SEC Schedule 13D/A filing and 20-F beneficial ownership table. Custodian confirmed independently.", governmentAuthority: "U.S. Securities and Exchange Commission (SEC)" },
+	{ id: "cd-jm-4", type: "trust-deed", label: "Singapore Family Trust — Trust Deed (Redacted)", submittedBy: "Client (via Rajah & Tann, Singapore)", submittedDate: "2026-04-22", status: "verified", fileDescription: "Trust deed for Ma Family Trust Pte. Ltd. Settlor: Ma Yun. Trustee: independent corporate trustee. Trust assets include transferred BABA shares (~$2.4B at transfer).", verificationNotes: "ACRA entity registration confirmed. Trust structure consistent with FT reporting on $2.4B share transfer (April 2023).", governmentAuthority: "Singapore ACRA — Accounting and Corporate Regulatory Authority" },
+	{ id: "cd-jm-5", type: "tax-return", label: "PRC Individual Income Tax — 2025 Filing Summary", submittedBy: "Client (via PwC China)", submittedDate: "2026-04-25", status: "verified", fileDescription: "Summary of PRC Individual Income Tax (IIT) filing for calendar year 2025. Zhejiang Province filing. Comprehensive income, capital gains, and offshore income reported.", verificationNotes: "IIT filing consistent with disclosed compensation and investment income. Cross-referenced against NBS tax bracket data.", governmentAuthority: "China State Taxation Administration (STA)" },
+	{ id: "cd-jm-6", type: "property-deed", label: "HK Land Registry — Victoria Peak Residence", submittedBy: "Client (via Mayer Brown, Hong Kong)", submittedDate: "2026-04-28", status: "verified", fileDescription: "Hong Kong Land Registry memorial showing property at 15 Barker Road, The Peak. Purchase price: HK$1.5 billion. Registered owner details confirmed.", verificationNotes: "Land Registry record independently verified via ICRIS search. Transaction price matches SCMP reporting.", governmentAuthority: "Hong Kong Land Registry" },
+];
+
+const YAT_SIU_CLIENT_DOCS: ClientDocument[] = [
+	{ id: "cd-ys-1", type: "passport", label: "Austrian Passport — SIU Yat", submittedBy: "Client (directly)", submittedDate: "2026-04-10", status: "verified", fileDescription: "Republic of Austria passport. Name: SIU Yat. DOB: 01 JAN 1973. Passport No: P••••••12. Austrian citizenship. Valid through 2033.", verificationNotes: "Name matches HK Companies Registry (FilEasy API) director records for Animoca Brands Limited and Outblaze Limited.", governmentAuthority: "Austrian Federal Ministry of the Interior" },
+	{ id: "cd-ys-2", type: "other", label: "Hong Kong Identity Card — SIU Yat", submittedBy: "Client (directly)", submittedDate: "2026-04-10", status: "verified", fileDescription: "HKID card for SIU Yat. Permanent resident status confirmed. HKID No: A••••••(•).", verificationNotes: "HKID matches Immigration Department records cross-referenced via Companies Registry filings.", governmentAuthority: "HK Immigration Department" },
+	{ id: "cd-ys-3", type: "incorporation-cert", label: "HK Companies Registry — Outblaze Limited (CR via FilEasy)", submittedBy: "FilEasy API — automated retrieval", submittedDate: "2026-05-17", status: "verified", fileDescription: "Certificate of Incorporation for Outblaze Limited (CR No. 0651683). Incorporated 1998 in Hong Kong. Directors: SIU Yat. Registered office: Wan Chai, HK.", verificationNotes: "100% verified — government authority. FilEasy API returned exact match. Director name matches passport.", governmentAuthority: "Hong Kong Companies Registry (via FilEasy API)" },
+	{ id: "cd-ys-4", type: "annual-return", label: "ASIC — Animoca Brands Corporation Ltd Annual Return", submittedBy: "ASIC Connect Online — automated retrieval", submittedDate: "2026-05-17", status: "verified", fileDescription: "ASIC annual return for Animoca Brands Corporation Limited (ACN 122 921 813). Directors include SIU Yat. Registered in Victoria, Australia.", verificationNotes: "100% verified — government authority. ASIC records confirm directorship and company registration details.", governmentAuthority: "Australian Securities & Investments Commission (ASIC)" },
+	{ id: "cd-ys-5", type: "bank-statement", label: "HSBC Private Banking — HKD Account Statement", submittedBy: "Client (via HSBC HK)", submittedDate: "2026-04-15", status: "verified", fileDescription: "HSBC Private Banking statement for account ending ••7293. Period: Jan-Mar 2026. Shows salary credits from Animoca Brands, dividend income, and crypto exchange settlements.", verificationNotes: "Salary credits match ASX annual report executive remuneration disclosures. HSBC is HKMA-regulated institution.", governmentAuthority: "Hong Kong Monetary Authority (HKMA) — regulated institution" },
+	{ id: "cd-ys-6", type: "property-deed", label: "HK Land Registry — Mid-Levels Residential Property", submittedBy: "Client (via Deacons, Hong Kong)", submittedDate: "2026-04-20", status: "verified", fileDescription: "Hong Kong Land Registry memorial for residential property in Mid-Levels. Owner: SIU Yat. Purchase completed 2005. Current estimated value per RVD index.", verificationNotes: "100% verified — government authority. Land Registry search confirmed ownership. RVD price index applied for current valuation.", governmentAuthority: "Hong Kong Land Registry" },
+	{ id: "cd-ys-7", type: "incorporation-cert", label: "FilEasy API: Animoca Brands Limited — HK CR Search", submittedBy: "FilEasy API — automated retrieval", submittedDate: "2026-05-17", status: "verified", fileDescription: "HK Companies Registry record for Animoca Brands Limited (CR No. 2283149). Incorporation date, registered office, directors (SIU Yat), secretary, annual returns.", verificationNotes: "100% verified — government authority. FilEasy API exact match on company name and CR number.", governmentAuthority: "Hong Kong Companies Registry (via FilEasy API)" },
+];
+
+// ── Cross-References ───────────────────────────────────────────
+
+const JACK_MA_CROSS_REFS: CrossReference[] = [
+	{ id: "xr-jm-1", field: "Full Name", clientDocLabel: "PRC Passport", externalSourceLabel: "SEC Form F-1 (2014)", clientValue: "MA YUN (马云)", externalValue: "Ma Yun (Jack Ma)", match: "exact", confidence: 100, verifiedVia: "SEC EDGAR — government authority", notes: "English alias 'Jack Ma' confirmed in SEC filing" },
+	{ id: "xr-jm-2", field: "Date of Birth", clientDocLabel: "PRC Passport", externalSourceLabel: "Forbes Billionaires Profile", clientValue: "10 SEP 1964", externalValue: "September 10, 1964", match: "exact", confidence: 100, verifiedVia: "Multiple independent sources" },
+	{ id: "xr-jm-3", field: "BABA Shareholding", clientDocLabel: "Morgan Stanley Custody Confirmation", externalSourceLabel: "SEC 20-F Annual Report (2024)", clientValue: "~131M shares (4.5%)", externalValue: "4.5% beneficial ownership", match: "exact", confidence: 100, verifiedVia: "SEC EDGAR — government authority" },
+	{ id: "xr-jm-4", field: "Dividend Income (Q1 2026)", clientDocLabel: "DBS Bank Statement", externalSourceLabel: "NYSE BABA Dividend Record", clientValue: "$3.2M received", externalValue: "$3.18M (131M shares × $0.0243)", match: "exact", confidence: 100, verifiedVia: "NYSE market data + bank records" },
+	{ id: "xr-jm-5", field: "Trust Entity", clientDocLabel: "Singapore Trust Deed", externalSourceLabel: "Singapore ACRA — BizFile+", clientValue: "Ma Family Trust Pte. Ltd.", externalValue: "Ma Family Trust Pte. Ltd. (UEN: 202312345A)", match: "exact", confidence: 100, verifiedVia: "ACRA — government authority" },
+	{ id: "xr-jm-6", field: "HK Property", clientDocLabel: "HK Land Registry — Victoria Peak", externalSourceLabel: "SCMP Property Investigation", clientValue: "15 Barker Road, The Peak", externalValue: "Victoria Peak mansion, HK$1.5B", match: "exact", confidence: 100, verifiedVia: "HK Land Registry — government authority" },
+	{ id: "xr-jm-7", field: "Tax Filing Status", clientDocLabel: "PRC IIT Filing Summary", externalSourceLabel: "NBS Wage Data + SEC Compensation", clientValue: "IIT filed, Zhejiang Province", externalValue: "Alibaba HQ in Hangzhou, Zhejiang", match: "exact", confidence: 100, verifiedVia: "China STA — government authority" },
+	{ id: "xr-jm-8", field: "Alibaba Registration", clientDocLabel: "PRC Passport (founder identity)", externalSourceLabel: "SAMR National Enterprise Credit System", clientValue: "MA YUN — founder", externalValue: "Legal representative: 马云", match: "exact", confidence: 100, verifiedVia: "SAMR — government authority" },
+];
+
+const YAT_SIU_CROSS_REFS: CrossReference[] = [
+	{ id: "xr-ys-1", field: "Full Name", clientDocLabel: "Austrian Passport", externalSourceLabel: "HK Companies Registry (FilEasy API)", clientValue: "SIU Yat", externalValue: "SIU Yat — Director", match: "exact", confidence: 100, verifiedVia: "HK CR via FilEasy — government authority" },
+	{ id: "xr-ys-2", field: "HKID", clientDocLabel: "Hong Kong Identity Card", externalSourceLabel: "HK Companies Registry Director Record", clientValue: "A••••••(•)", externalValue: "HKID on file with CR", match: "exact", confidence: 100, verifiedVia: "HK CR — government authority" },
+	{ id: "xr-ys-3", field: "Outblaze Directorship", clientDocLabel: "HK CR Incorporation Cert (Outblaze)", externalSourceLabel: "IBM Acquisition Records", clientValue: "Director since 1998", externalValue: "Founder/CEO — selling party", match: "exact", confidence: 100, verifiedVia: "HK CR via FilEasy — government authority" },
+	{ id: "xr-ys-4", field: "Animoca Brands Directorship", clientDocLabel: "FilEasy: Animoca Brands Ltd", externalSourceLabel: "ASIC — Animoca Brands Corporation", clientValue: "Director — CR No. 2283149", externalValue: "Director — ACN 122 921 813", match: "exact", confidence: 100, verifiedVia: "Dual registry verification (HK CR + ASIC)" },
+	{ id: "xr-ys-5", field: "Salary Income", clientDocLabel: "HSBC Bank Statement", externalSourceLabel: "ASX Annual Report — Remuneration", clientValue: "HK$425,000/month salary credit", externalValue: "AU$780,000 p.a. chairman remuneration", match: "exact", confidence: 100, verifiedVia: "ASX filing + HKMA-regulated bank" },
+	{ id: "xr-ys-6", field: "Property Ownership", clientDocLabel: "HK Land Registry — Mid-Levels", externalSourceLabel: "RVD Property Price Index", clientValue: "Owner: SIU Yat, purchased 2005", externalValue: "Mid-Levels Class D index: +85% since 2005", match: "exact", confidence: 100, verifiedVia: "HK Land Registry — government authority" },
+	{ id: "xr-ys-7", field: "Austrian Citizenship", clientDocLabel: "Austrian Passport", externalSourceLabel: "ASIC Director Records", clientValue: "Austrian national", externalValue: "Nationality: Austria", match: "exact", confidence: 100, verifiedVia: "ASIC — government authority" },
+];
+
+// ── Document Upload Slots ──────────────────────────────────────
+
+const UPLOAD_SLOTS: DocumentUploadSlot[] = [
+	{ id: "up-1", type: "tax-return", label: "Tax Returns (Latest 3 Years)", description: "Individual income tax returns from all jurisdictions. Required for income verification and cross-referencing.", required: true, status: "uploaded" },
+	{ id: "up-2", type: "bank-statement", label: "Bank Statements (6 Months)", description: "Statements from all primary banking relationships. Used for income flow verification and dividend cross-check.", required: true, status: "uploaded" },
+	{ id: "up-3", type: "share-certificate", label: "Share Certificates / Custody Confirmations", description: "Brokerage or custodian confirmations for all equity holdings. Required for ownership verification.", required: true, status: "uploaded" },
+	{ id: "up-4", type: "property-valuation", label: "Professional Property Valuations", description: "Recent RICS or equivalent professional valuations for all real property. Replaces self-assessment values.", required: false, status: "pending" },
+	{ id: "up-5", type: "trust-documents", label: "Trust / Foundation Documents", description: "Trust deeds, letters of wishes, and beneficiary declarations. Required if wealth held via trust structures.", required: false, status: "uploaded" },
+	{ id: "up-6", type: "corporate-structure", label: "Corporate Structure Chart", description: "Organizational chart showing all corporate entities, subsidiaries, and SPVs with ownership percentages.", required: false, status: "pending" },
+	{ id: "up-7", type: "crypto-wallet", label: "Crypto Wallet Attestations", description: "Signed messages proving control of wallets, or exchange custody confirmations. Required for crypto holdings.", required: false, status: "optional" },
+	{ id: "up-8", type: "source-of-funds", label: "Source of Initial Funds Declaration", description: "Signed declaration explaining the origin of initial capital used to build wealth. Required for compliance.", required: true, status: "uploaded" },
+];
+
 // ── Assemble Reports ────────────────────────────────────────────
 
 const JACK_MA_REPORT: HnwReport = {
@@ -822,6 +1068,9 @@ const JACK_MA_REPORT: HnwReport = {
 	dataSources: JACK_MA_SOURCES,
 	companyNodes: JACK_MA_COMPANIES,
 	screeningResult: PEP_SCREENING[0],
+	clientDocuments: JACK_MA_CLIENT_DOCS,
+	crossReferences: JACK_MA_CROSS_REFS,
+	uploadSlots: UPLOAD_SLOTS,
 };
 
 const YAT_SIU_REPORT: HnwReport = {
@@ -849,6 +1098,9 @@ const YAT_SIU_REPORT: HnwReport = {
 	dataSources: YAT_SIU_SOURCES,
 	companyNodes: YAT_SIU_COMPANIES,
 	screeningResult: PEP_SCREENING[1],
+	clientDocuments: YAT_SIU_CLIENT_DOCS,
+	crossReferences: YAT_SIU_CROSS_REFS,
+	uploadSlots: UPLOAD_SLOTS,
 };
 
 export const HNW_CASES: HnwReport[] = [JACK_MA_REPORT, YAT_SIU_REPORT];
