@@ -285,7 +285,7 @@ function Dashboard({ onNewAssessment, onSelectMonitoring }: { onNewAssessment: (
 					</div>
 					<div>
 						<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Data Sources</div>
-						<div className="mt-0.5 font-heading font-semibold">15 per subject</div>
+						<div className="mt-0.5 font-heading font-semibold">16 per subject</div>
 					</div>
 					<div>
 						<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Coverage</div>
