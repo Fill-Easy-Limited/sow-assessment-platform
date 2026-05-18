@@ -49,8 +49,17 @@ import {
 	SparklesIcon,
 	BarChart3Icon,
 	CircleDotIcon,
+	CameraIcon,
+	ClipboardListIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogTitle,
+	DialogFooter,
+} from "@/components/ui/dialog";
 import {
 	HNW_CASES,
 	HNW_MONITORING,
@@ -72,6 +81,9 @@ import {
 	type DataSourceDef,
 	type CompanyNode,
 	type PepScreeningEntry,
+	type SourceScreenshot,
+	type SourceAuditTrail,
+	type CompanySearchTemplate,
 } from "@/lib/sow-mock-data";
 
 /* ═══════════════════════════════════════════════════════════════
@@ -883,6 +895,7 @@ function GeneratingView({ report, completedSources, currentSourceIndex, elapsedM
 
 function ReportView({ report, onReset }: { report: HnwReport; onReset: () => void }) {
 	const p = report.profile;
+	const [selectedSource, setSelectedSource] = useState<SourceCitation | null>(null);
 
 	return (
 		<div className="space-y-8">
@@ -907,11 +920,14 @@ function ReportView({ report, onReset }: { report: HnwReport; onReset: () => voi
 			<CareerTimeline phases={report.careerTimeline} />
 			<WealthAccumulationChart phases={report.careerTimeline} />
 			<WealthDonutChart wealthByCategory={report.wealthByCategory} totalWealth={report.totalEstimatedWealthUSD} overallConfidence={report.overallConfidence} />
-			<CareerPhaseCards phases={report.careerTimeline} />
+			<CareerPhaseCards phases={report.careerTimeline} onSourceClick={setSelectedSource} />
 			<CompanyNetworkGraph nodes={report.companyNodes} profileName={p.name} />
 			<NarrativeSection narrative={report.narrative} />
-			<SourceCitationsAggregate phases={report.careerTimeline} />
+			<SourceCitationsAggregate phases={report.careerTimeline} onSourceClick={setSelectedSource} />
 			<FollowUpActions riskRating={p.riskRating} />
+
+			{/* Source Detail Modal */}
+			<SourceDetailModal source={selectedSource} onClose={() => setSelectedSource(null)} />
 		</div>
 	);
 }
@@ -1328,7 +1344,7 @@ function WealthDonutChart({ wealthByCategory, totalWealth, overallConfidence }: 
 
 /* ─── Career Phase Cards ─── */
 
-function CareerPhaseCards({ phases }: { phases: CareerPhase[] }) {
+function CareerPhaseCards({ phases, onSourceClick }: { phases: CareerPhase[]; onSourceClick?: (src: SourceCitation) => void }) {
 	const [expandedId, setExpandedId] = useState<string | null>(null);
 
 	return (
@@ -1399,7 +1415,7 @@ function CareerPhaseCards({ phases }: { phases: CareerPhase[] }) {
 											</div>
 											<div className="space-y-2 ml-4">
 												{cat.claims.map((claim) => (
-													<WealthClaimRow key={claim.id} claim={claim} />
+													<WealthClaimRow key={claim.id} claim={claim} onSourceClick={onSourceClick} />
 												))}
 											</div>
 										</div>
@@ -1416,7 +1432,7 @@ function CareerPhaseCards({ phases }: { phases: CareerPhase[] }) {
 
 /* ─── Wealth Claim Row ─── */
 
-function WealthClaimRow({ claim }: { claim: WealthClaim }) {
+function WealthClaimRow({ claim, onSourceClick }: { claim: WealthClaim; onSourceClick?: (src: SourceCitation) => void }) {
 	return (
 		<div className="rounded-lg border border-border/40 bg-card p-3 space-y-1.5">
 			<div className="flex items-start justify-between gap-2">
@@ -1427,7 +1443,7 @@ function WealthClaimRow({ claim }: { claim: WealthClaim }) {
 				<ConfidenceBar value={claim.confidence} />
 				<div className="flex items-center gap-1.5 flex-wrap">
 					{claim.sources.map((src) => (
-						<SourceBadge key={src.id} source={src} />
+						<SourceBadge key={src.id} source={src} onClick={onSourceClick} />
 					))}
 				</div>
 			</div>
@@ -1451,31 +1467,45 @@ function ConfidenceBar({ value }: { value: number }) {
 
 /* ─── Source Badge ─── */
 
-function SourceBadge({ source }: { source: SourceCitation }) {
-	const typeColors: Record<string, string> = {
-		filing: "bg-blue-500/15 text-blue-700 border-blue-500/20",
-		news: "bg-purple-500/15 text-purple-700 border-purple-500/20",
-		registry: "bg-teal-500/15 text-teal-700 border-teal-500/20",
-		"market-data": "bg-cyan-500/15 text-cyan-700 border-cyan-500/20",
-		"public-record": "bg-emerald-500/15 text-emerald-700 border-emerald-500/20",
-		estimate: "bg-amber-500/15 text-amber-700 border-amber-500/20",
-	};
-	const typeIcons: Record<string, typeof FileTextIcon> = {
-		filing: FileTextIcon,
-		news: ExternalLinkIcon,
-		registry: BuildingIcon,
-		"market-data": TrendingUpIcon,
-		"public-record": ShieldCheckIcon,
-		estimate: SparklesIcon,
-	};
-	const Icon = typeIcons[source.type] ?? FileTextIcon;
-	const colorClass = typeColors[source.type] ?? typeColors.estimate;
+const SOURCE_TYPE_COLORS: Record<string, string> = {
+	filing: "bg-blue-500/15 text-blue-700 border-blue-500/20",
+	news: "bg-purple-500/15 text-purple-700 border-purple-500/20",
+	registry: "bg-teal-500/15 text-teal-700 border-teal-500/20",
+	"market-data": "bg-cyan-500/15 text-cyan-700 border-cyan-500/20",
+	"public-record": "bg-emerald-500/15 text-emerald-700 border-emerald-500/20",
+	estimate: "bg-amber-500/15 text-amber-700 border-amber-500/20",
+};
+const SOURCE_TYPE_ICONS: Record<string, typeof FileTextIcon> = {
+	filing: FileTextIcon,
+	news: ExternalLinkIcon,
+	registry: BuildingIcon,
+	"market-data": TrendingUpIcon,
+	"public-record": ShieldCheckIcon,
+	estimate: SparklesIcon,
+};
+const SOURCE_TYPE_LABELS: Record<string, string> = {
+	filing: "Regulatory Filing",
+	news: "News Report",
+	registry: "Corporate Registry",
+	"market-data": "Market Data",
+	"public-record": "Public Record",
+	estimate: "Estimate / Analysis",
+};
+
+function SourceBadge({ source, onClick }: { source: SourceCitation; onClick?: (src: SourceCitation) => void }) {
+	const Icon = SOURCE_TYPE_ICONS[source.type] ?? FileTextIcon;
+	const colorClass = SOURCE_TYPE_COLORS[source.type] ?? SOURCE_TYPE_COLORS.estimate;
 
 	return (
-		<span className={`inline-flex items-center gap-1 text-[9px] font-semibold rounded-md border px-1.5 py-0.5 ${colorClass}`} title={source.label}>
+		<button
+			type="button"
+			onClick={(e) => { e.stopPropagation(); onClick?.(source); }}
+			className={`inline-flex items-center gap-1 text-[9px] font-semibold rounded-md border px-1.5 py-0.5 cursor-pointer hover:opacity-80 hover:ring-1 hover:ring-current/20 transition-all ${colorClass}`}
+			title={`${source.label} — click for details`}
+		>
 			<Icon className="size-2.5" />
 			{source.label.length > 30 ? source.label.slice(0, 30) + "..." : source.label}
-		</span>
+		</button>
 	);
 }
 
@@ -1615,7 +1645,7 @@ function NarrativeSection({ narrative }: { narrative: string }) {
 
 /* ─── Source Citations Aggregate ─── */
 
-function SourceCitationsAggregate({ phases }: { phases: CareerPhase[] }) {
+function SourceCitationsAggregate({ phases, onSourceClick }: { phases: CareerPhase[]; onSourceClick?: (src: SourceCitation) => void }) {
 	const allSources = new Map<string, SourceCitation>();
 	for (const phase of phases) {
 		for (const cat of phase.categories) {
@@ -1628,15 +1658,6 @@ function SourceCitationsAggregate({ phases }: { phases: CareerPhase[] }) {
 	}
 	const sources = Array.from(allSources.values());
 
-	const typeLabels: Record<string, string> = {
-		filing: "Regulatory Filing",
-		news: "News Report",
-		registry: "Corporate Registry",
-		"market-data": "Market Data",
-		"public-record": "Public Record",
-		estimate: "Estimate / Analysis",
-	};
-
 	return (
 		<div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
 			<div className="flex items-center gap-2 mb-4">
@@ -1647,25 +1668,198 @@ function SourceCitationsAggregate({ phases }: { phases: CareerPhase[] }) {
 			</div>
 			<div className="space-y-2">
 				{sources.map((src, i) => (
-					<div key={src.id} className="flex items-start gap-3 text-xs">
+					<button
+						key={src.id}
+						type="button"
+						onClick={() => onSourceClick?.(src)}
+						className="flex items-start gap-3 text-xs w-full text-left rounded-lg px-2 py-1.5 hover:bg-accent/30 transition-colors cursor-pointer group"
+					>
 						<span className="text-muted-foreground/40 font-mono tabular-nums shrink-0 w-5 text-right">{i + 1}.</span>
 						<div className="flex-1 min-w-0">
-							<span className="font-medium">{src.label}</span>
+							<span className="font-medium group-hover:text-primary transition-colors">{src.label}</span>
 							{src.date && <span className="text-muted-foreground ml-2">({src.date})</span>}
-							<span className="ml-2 text-[9px] font-semibold rounded-md border px-1 py-0.5 bg-muted/50 text-muted-foreground border-border/60">
-								{typeLabels[src.type] ?? src.type}
+							<span className={`ml-2 text-[9px] font-semibold rounded-md border px-1 py-0.5 ${SOURCE_TYPE_COLORS[src.type] ?? "bg-muted/50 text-muted-foreground border-border/60"}`}>
+								{SOURCE_TYPE_LABELS[src.type] ?? src.type}
 							</span>
 							{src.url && (
-								<a href={src.url} target="_blank" rel="noopener noreferrer" className="ml-2 text-primary hover:underline inline-flex items-center gap-0.5">
+								<span className="ml-2 text-primary inline-flex items-center gap-0.5">
 									<ExternalLinkIcon className="size-2.5" />
 									Link
-								</a>
+								</span>
 							)}
+							{src.screenshot && <CameraIcon className="size-3 text-muted-foreground/50 ml-1.5 inline-block" />}
+							{src.auditTrail && <ClockIcon className="size-3 text-muted-foreground/50 ml-1 inline-block" />}
+							{src.companySearchTemplate && <SearchIcon className="size-3 text-muted-foreground/50 ml-1 inline-block" />}
 						</div>
-					</div>
+					</button>
 				))}
 			</div>
 		</div>
+	);
+}
+
+/* ─── Source Detail Modal ─── */
+
+function SourceDetailModal({ source, onClose }: { source: SourceCitation | null; onClose: () => void }) {
+	if (!source) return null;
+
+	const Icon = SOURCE_TYPE_ICONS[source.type] ?? FileTextIcon;
+	const colorClass = SOURCE_TYPE_COLORS[source.type] ?? SOURCE_TYPE_COLORS.estimate;
+	const typeLabel = SOURCE_TYPE_LABELS[source.type] ?? source.type;
+	const s = source.screenshot;
+	const a = source.auditTrail;
+	const t = source.companySearchTemplate;
+
+	const fmtTs = (iso: string) => {
+		const d = new Date(iso);
+		return d.toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", timeZoneName: "short" });
+	};
+
+	return (
+		<Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
+			<DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
+				<DialogHeader>
+					<div className="flex items-center gap-2 mb-1">
+						<span className={`inline-flex items-center gap-1 text-[10px] font-semibold rounded-md border px-2 py-0.5 ${colorClass}`}>
+							<Icon className="size-3" />
+							{typeLabel}
+						</span>
+						{source.date && <span className="text-xs text-muted-foreground">{source.date}</span>}
+					</div>
+					<DialogTitle className="text-sm leading-snug">{source.label}</DialogTitle>
+					{source.url && (
+						<a href={source.url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1 mt-1">
+							<ExternalLinkIcon className="size-3" />
+							{source.url.length > 60 ? source.url.slice(0, 60) + "…" : source.url}
+						</a>
+					)}
+				</DialogHeader>
+
+				{/* Screenshot Placeholder */}
+				{s && (
+					<div className="rounded-lg border border-border overflow-hidden shadow-sm">
+						{/* Browser chrome */}
+						<div className="bg-[#e8eaed] px-3 py-2 flex items-center gap-2 border-b border-border/60">
+							<div className="flex gap-1.5">
+								<div className="w-2.5 h-2.5 rounded-full bg-red-400/70" />
+								<div className="w-2.5 h-2.5 rounded-full bg-yellow-400/70" />
+								<div className="w-2.5 h-2.5 rounded-full bg-green-400/70" />
+							</div>
+							<div className="flex-1 bg-white rounded-md px-2.5 py-1 flex items-center gap-1.5 text-[10px] text-muted-foreground font-mono">
+								<div className="w-3 h-3 rounded-sm shrink-0" style={{ backgroundColor: s.faviconColor }} />
+								<span className="truncate">{s.domain}</span>
+								<ShieldCheckIcon className="size-2.5 text-emerald-600 shrink-0 ml-auto" />
+							</div>
+						</div>
+						{/* Page content mock */}
+						<div className="bg-white p-4 min-h-[120px] relative">
+							<div className="text-[10px] font-heading font-semibold text-foreground/80 mb-2 border-b border-border/40 pb-1.5">
+								{s.pageTitle}
+							</div>
+							<p className="text-[10px] text-muted-foreground leading-relaxed">
+								{s.thumbnailDescription}
+							</p>
+							{/* Capture watermark */}
+							<div className="absolute bottom-2 right-2 flex items-center gap-1 text-[8px] text-muted-foreground/50 bg-white/80 backdrop-blur-sm rounded px-1.5 py-0.5 border border-border/30">
+								<CameraIcon className="size-2.5" />
+								Captured: {fmtTs(s.capturedAt)}
+							</div>
+						</div>
+					</div>
+				)}
+
+				{/* Audit Trail */}
+				{a && (
+					<div className="rounded-lg border border-border bg-muted/20 p-3 space-y-2">
+						<div className="flex items-center gap-1.5">
+							<ClipboardListIcon className="size-3.5 text-muted-foreground" />
+							<span className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Audit Trail</span>
+						</div>
+						<div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-[11px]">
+							<div className="flex items-center gap-1.5 text-muted-foreground">
+								<GlobeIcon className="size-3 shrink-0" />
+								First accessed
+							</div>
+							<div className="font-mono tabular-nums">{fmtTs(a.firstAccessed)}</div>
+							<div className="flex items-center gap-1.5 text-muted-foreground">
+								<RefreshCwIcon className="size-3 shrink-0" />
+								Last accessed
+							</div>
+							<div className="font-mono tabular-nums">{fmtTs(a.lastAccessed)}</div>
+							<div className="flex items-center gap-1.5 text-muted-foreground">
+								<CameraIcon className="size-3 shrink-0" />
+								Screenshot captured
+							</div>
+							<div className="font-mono tabular-nums">{fmtTs(a.screenshotCaptured)}</div>
+							<div className="flex items-center gap-1.5 text-muted-foreground">
+								<ShieldCheckIcon className="size-3 shrink-0" />
+								Verified by
+							</div>
+							<div>{a.verifiedBy}</div>
+							<div className="flex items-center gap-1.5 text-muted-foreground">
+								<HashIcon className="size-3 shrink-0" />
+								Access count
+							</div>
+							<div>{a.accessCount} request{a.accessCount !== 1 ? "s" : ""}</div>
+						</div>
+					</div>
+				)}
+
+				{/* Company Search Template */}
+				{t && (
+					<div className="rounded-lg border border-border bg-muted/20 p-3 space-y-3">
+						<div className="flex items-center gap-1.5">
+							<SearchIcon className="size-3.5 text-muted-foreground" />
+							<span className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Company Search Template</span>
+						</div>
+						<div className="flex items-center justify-between text-[11px]">
+							<span className="font-heading font-semibold">{t.registryName}</span>
+							<span className="text-muted-foreground">{t.jurisdiction}</span>
+						</div>
+						<div className="rounded-md border border-border bg-card p-3 space-y-2">
+							<div className="text-[10px] text-muted-foreground font-medium mb-1">{t.searchType}</div>
+							{t.searchFields.map((f, i) => (
+								<div key={i} className="flex items-center gap-2">
+									<label className="text-[10px] text-muted-foreground w-28 shrink-0">{f.label}</label>
+									<div className="flex-1 text-[11px] font-mono bg-muted/40 border border-border/60 rounded px-2 py-1">{f.value}</div>
+								</div>
+							))}
+							<div className="flex items-center gap-2 mt-2">
+								<div className="bg-primary/10 text-primary text-[10px] font-heading font-semibold px-4 py-1.5 rounded-md border border-primary/20 opacity-60">
+									Search Registry
+								</div>
+								{t.registryUrl && (
+									<a href={t.registryUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] text-primary hover:underline flex items-center gap-1">
+										<ExternalLinkIcon className="size-2.5" />
+										Open registry
+									</a>
+								)}
+							</div>
+						</div>
+					</div>
+				)}
+
+				{/* No evidence fallback */}
+				{!s && !a && !t && (
+					<div className="rounded-lg border border-border/60 border-dashed bg-muted/10 p-4 text-center text-xs text-muted-foreground">
+						<SparklesIcon className="size-5 mx-auto mb-1.5 text-muted-foreground/40" />
+						Analyst estimate — no external source document available.<br />
+						This figure is derived from industry benchmarks and public reporting.
+					</div>
+				)}
+
+				<DialogFooter showCloseButton>
+					{source.url && (
+						<a href={source.url} target="_blank" rel="noopener noreferrer">
+							<Button variant="default" size="sm" className="gap-1.5 font-heading">
+								<ExternalLinkIcon className="size-3" />
+								Open Source
+							</Button>
+						</a>
+					)}
+				</DialogFooter>
+			</DialogContent>
+		</Dialog>
 	);
 }
 
