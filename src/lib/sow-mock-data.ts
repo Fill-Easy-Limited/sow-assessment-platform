@@ -259,15 +259,15 @@ const SRC_MA: Record<string, SourceCitation> = {
 		...srcMeta("scmp.com", "Ant Group's record $37 billion IPO halted | SCMP", "South China Morning Post article dated November 3, 2020. Headline about Ant Group's $37B dual IPO suspension in Shanghai and Hong Kong. Previous $150B valuation figure referenced.", "#ffca05"),
 	},
 	reutersAnt: {
-		id: "s6", label: "Reuters: Ant Group IPO suspended by regulators", url: "https://www.reuters.com/article/ant-group-ipo-suspension/", date: "2020-11-03", type: "news",
+		id: "s6", label: "Reuters: Ant Group IPO suspended by regulators", url: "https://www.reuters.com/business/finance/ant-group-ipo-suspension-2020-11-03/", date: "2020-11-03", type: "news",
 		...srcMeta("reuters.com", "Ant Group IPO suspended by Shanghai exchange | Reuters", "Reuters exclusive reporting on Chinese regulators halting Ant Group's record IPO. Article details regulatory interview with Jack Ma and other executives two days prior.", "#ff8000"),
 	},
 	wsj2023: {
-		id: "s7", label: "WSJ: Ma cedes control of Ant Group", url: "https://www.wsj.com/articles/jack-ma-ant-group-control/", date: "2023-01-07", type: "news",
+		id: "s7", label: "WSJ: Ma cedes control of Ant Group", url: "https://www.wsj.com/articles/jack-ma-to-cede-control-of-ant-group-11673023404", date: "2023-01-07", type: "news",
 		...srcMeta("wsj.com", "Jack Ma to Cede Control of Ant Group | WSJ", "Wall Street Journal article reporting Jack Ma's decision to relinquish control of Ant Group following Beijing's regulatory crackdown. Restructuring details and new governance structure outlined.", "#0274b6"),
 	},
 	ftTrust: {
-		id: "s8", label: "FT: Jack Ma transfers $2.4B Alibaba shares to Singapore trust", url: "https://www.ft.com/content/jack-ma-alibaba-shares-singapore-trust", date: "2023-04-18", type: "news",
+		id: "s8", label: "FT: Jack Ma transfers $2.4B Alibaba shares to Singapore trust", url: "https://www.ft.com/content/4e5b3c91-8d4a-44b8-bd4f-8a9c1d2e3f4a", date: "2023-04-18", type: "news",
 		...srcMeta("ft.com", "Jack Ma transfers $2.4bn in Alibaba shares to Singapore trust | FT", "Financial Times article detailing Jack Ma's transfer of approximately $2.4B worth of Alibaba shares to a family trust structure based in Singapore.", "#fff1e5"),
 	},
 	samr: {
@@ -290,12 +290,12 @@ const SRC_MA: Record<string, SourceCitation> = {
 		...srcMeta("nytimes.com", "Yahoo to Buy 40% of Alibaba | NYT", "New York Times article from August 2005 reporting Yahoo's acquisition of 40% stake in Alibaba for $1 billion plus the contribution of Yahoo China operations.", "#000000"),
 	},
 	softbank: {
-		id: "s11", label: "SoftBank $20M investment in Alibaba (2000)", url: "https://group.softbank/en/news/press/20000101", date: "2000-01-01", type: "news",
-		...srcMeta("softbank.com", "SoftBank Group Press Release | Alibaba Investment", "SoftBank Group Corporation press archive showing year 2000 investment announcement. $20 million investment in Alibaba.com Corporation referenced in early-stage funding round.", "#f0f0f0"),
+		id: "s11", label: "SoftBank $20M investment in Alibaba (2000)", url: "https://group.softbank/en/about/history", date: "2000-01-01", type: "news",
+		...srcMeta("group.softbank", "SoftBank Group | Corporate History — Key Milestones", "SoftBank Group corporate history page listing key investments. Year 2000 milestone: $20 million investment in Alibaba.com Corporation, Masayoshi Son's personal decision after a 5-minute meeting with Jack Ma.", "#f0f0f0"),
 	},
 	goldmanSachs: {
-		id: "s12", label: "Goldman Sachs leads $5M Series A for Alibaba", url: "https://www.goldmansachs.com/", date: "1999-10-01", type: "news",
-		...srcMeta("goldmansachs.com", "Goldman Sachs | Alibaba Series A Investment", "Goldman Sachs historical deal record referencing $5 million Series A investment in Alibaba.com in October 1999, leading a consortium of investors.", "#7399c6"),
+		id: "s12", label: "Goldman Sachs leads $5M Series A for Alibaba", url: "https://www.crunchbase.com/funding_round/alibaba-group-series-a--3f4e3b9d", date: "1999-10-01", type: "news",
+		...srcMeta("crunchbase.com", "Alibaba Group Series A — Goldman Sachs Lead | Crunchbase", "Crunchbase funding round record for Alibaba Group Series A, October 1999. Lead investor Goldman Sachs. Total raised $5 million from consortium of investors.", "#0288d1"),
 	},
 	yunfeng: {
 		id: "s13", label: "Yunfeng Capital AUM ~$8B (Crunchbase)", url: "https://www.crunchbase.com/organization/yunfeng-capital", type: "estimate",
@@ -331,7 +331,7 @@ const SRC_MA: Record<string, SourceCitation> = {
 		...srcMeta("sharespost.com", "SharesPost | Alibaba Pre-IPO Trading Activity", "SharesPost secondary market platform showing pre-IPO block trading activity for Alibaba Group shares. Implied valuation of $75-100B based on 2013 secondary trades.", "#2e7d32"),
 	},
 	scmpProperty: {
-		id: "s21", label: "SCMP: Jack Ma's property portfolio investigation", url: "https://www.scmp.com/business/article/jack-ma-property-portfolio", type: "news",
+		id: "s21", label: "SCMP: Jack Ma's property portfolio investigation", url: "https://www.scmp.com/business/article/3175321/jack-ma-property-hong-kong-peak-mansion", type: "news",
 		...srcMeta("scmp.com", "Jack Ma's Property Portfolio: From Hangzhou to Hong Kong | SCMP", "South China Morning Post investigation into Jack Ma's known property holdings including a HK$1.5B Victoria Peak mansion, Hangzhou luxury residences, and reported properties overseas.", "#ffca05"),
 	},
 	alibabaBio: {
@@ -343,18 +343,18 @@ const SRC_MA: Record<string, SourceCitation> = {
 		...srcMeta("wealthx.com", "Wealth-X | World Ultra Wealth Report 2024", "Wealth-X annual report benchmarking UHNW lifestyle assets. Average UHNW individual holds 5-10% of net worth in art, wine, yachts, and luxury goods.", "#1b5e20"),
 	},
 	hkLandReg: {
-		id: "s24", label: "HK Land Registry: Victoria Peak Property Record", url: "https://www.landreg.gov.hk/en/", type: "registry",
-		...srcMeta("landreg.gov.hk", "Land Registry | Property Particulars — The Peak", "Hong Kong Land Registry search result showing property registration for a Victoria Peak residence. Transaction price HK$1.5 billion recorded. Owner details and memorial records.", "#333399"),
+		id: "s24", label: "FilEasy API: HK Land Registry — Victoria Peak Property Record", url: "https://www.fileasy.hk/", type: "registry",
+		...srcMeta("fileasy.hk", "FilEasy | HK Land Registry — Property Search — The Peak", "FilEasy API property search result for Hong Kong Land Registry. Victoria Peak residence at 15 Barker Road. Transaction price HK$1.5 billion. Registered owner details, lot number, and memorial records returned via API.", "#0066aa"),
 		companySearchTemplate: {
-			registryName: "Hong Kong Land Registry",
-			registryUrl: "https://www.landreg.gov.hk/en/",
+			registryName: "Hong Kong Land Registry (via FilEasy API)",
+			registryUrl: "https://www.fileasy.hk/",
 			searchFields: [
 				{ label: "Property Address", value: "15 Barker Road, The Peak, Hong Kong" },
 				{ label: "Lot Number", value: "IL 8847" },
 				{ label: "Search Type", value: "Address Search" },
 			],
 			jurisdiction: "Hong Kong SAR",
-			searchType: "Property Search",
+			searchType: "Property Search (via FilEasy API)",
 		},
 	},
 	acraRegistry: {
@@ -474,7 +474,7 @@ const JACK_MA_CAREER: CareerPhase[] = [
 				{ id: "jm6-4", description: "Singapore family trust (transferred $2.4B in BABA shares, ACRA-registered entity)", estimatedValueUSD: 2_400_000_000, confidence: 95, sources: [SRC_MA.ftTrust, SRC_MA.acraRegistry] },
 			], subtotalUSD: 3_900_000_000, avgConfidence: 65 },
 			{ category: "alternatives", claims: [
-				{ id: "jm6-5", description: "Global real estate portfolio (HK Victoria Peak, Hangzhou, New York, France — HK Land Registry confirmed)", estimatedValueUSD: 300_000_000, confidence: 75, sources: [SRC_MA.scmpProperty, SRC_MA.hkLandReg] },
+				{ id: "jm6-5", description: "Global real estate portfolio (HK Victoria Peak, Hangzhou, New York, France — FilEasy Land Registry search confirmed)", estimatedValueUSD: 300_000_000, confidence: 75, sources: [SRC_MA.scmpProperty, SRC_MA.hkLandReg] },
 				{ id: "jm6-6", description: "Art collection, wine, other luxury assets (benchmarked via Wealth-X UHNW report)", estimatedValueUSD: 50_000_000, confidence: 40, sources: [SRC_MA.wealthXReport, SRC_MA.forbes2024] },
 			], subtotalUSD: 350_000_000, avgConfidence: 58 },
 		],
@@ -487,7 +487,7 @@ const JACK_MA_CAREER: CareerPhase[] = [
 
 const SRC_SIU: Record<string, SourceCitation> = {
 	ibmAcq: {
-		id: "y1", label: "IBM acquires Outblaze messaging division", url: "https://www.ibm.com/", date: "2009-01-01", type: "news",
+		id: "y1", label: "IBM acquires Outblaze messaging division", url: "https://newsroom.ibm.com/2009-08-05-IBM-Acquires-Outblaze-Web-Community-Technology", date: "2009-01-01", type: "news",
 		...srcMeta("ibm.com", "IBM Acquires Outblaze Web Community Technology | IBM", "IBM press release announcing acquisition of Outblaze's web messaging and community services division. Deal value estimated at $10-20 million. Hong Kong-based technology transfer.", "#0530ad"),
 	},
 	asxListing: {
@@ -558,7 +558,7 @@ const SRC_SIU: Record<string, SourceCitation> = {
 		...srcMeta("forbes.com", "Yat Siu - Forbes Profile", "Forbes profile page for Yat Siu. Net worth estimate based on Animoca Brands stake and crypto holdings. Industry classification: Blockchain/Gaming.", "#c4112f"),
 	},
 	bloombergSiu: {
-		id: "y10", label: "Bloomberg: Animoca Brands profile", url: "https://www.bloomberg.com/profile/company/1234567", type: "news",
+		id: "y10", label: "Bloomberg: Animoca Brands profile", url: "https://www.bloomberg.com/profile/company/1610751D:HK", type: "news",
 		...srcMeta("bloomberg.com", "Animoca Brands | Bloomberg Company Profile", "Bloomberg company profile for Animoca Brands showing key executives, financial data, funding rounds, and recent news coverage. Chairman Yat Siu listed as key person.", "#1e1e1e"),
 	},
 	sandboxAcq: {
@@ -574,8 +574,8 @@ const SRC_SIU: Record<string, SourceCitation> = {
 		...srcMeta("hkma.gov.hk", "HKMA | Virtual Assets Regulatory Framework", "Hong Kong Monetary Authority page outlining virtual asset service provider (VASP) licensing regime. Guidelines for banks dealing with crypto entities.", "#003366"),
 	},
 	sequoia: {
-		id: "y14", label: "Sequoia China leads Animoca $65M round", url: "https://www.sequoiacap.com/", date: "2021-05-01", type: "news",
-		...srcMeta("sequoiacap.com", "Sequoia Capital China | Animoca Brands Investment", "Sequoia Capital China press materials referencing lead investor role in Animoca Brands $65 million funding round (May 2021). Pre-money valuation and strategic rationale.", "#c00000"),
+		id: "y14", label: "Sequoia China leads Animoca $65M round", url: "https://www.crunchbase.com/funding_round/animoca-brands-series-b--8f7d2c4a", date: "2021-05-01", type: "news",
+		...srcMeta("crunchbase.com", "Animoca Brands Series B — Sequoia China Lead | Crunchbase", "Crunchbase funding round record for Animoca Brands May 2021 raise. Lead investor Sequoia Capital China. Total $65 million raised. Post-money valuation disclosed.", "#0288d1"),
 	},
 	// Government authority & estimate sources (replacing inline estimates)
 	blsWages: {
@@ -587,18 +587,18 @@ const SRC_SIU: Record<string, SourceCitation> = {
 		...srcMeta("censtatd.gov.hk", "C&SD | Earnings & Hours Statistics — IT Sector", "Hong Kong Census and Statistics Department survey data on earnings in the IT sector. Median CEO/MD compensation in HK tech companies during 2000-2010.", "#003366"),
 	},
 	hkLandRegistry: {
-		id: "y17", label: "HK Land Registry: Property Records", url: "https://www.landreg.gov.hk/en/", type: "registry",
-		...srcMeta("landreg.gov.hk", "Land Registry | Property Particulars Search", "Hong Kong Land Registry search showing property registration records. Historical transaction prices and current ownership records for residential properties in Mid-Levels.", "#333399"),
+		id: "y17", label: "FilEasy API: HK Land Registry — Mid-Levels Property", url: "https://www.fileasy.hk/", type: "registry",
+		...srcMeta("fileasy.hk", "FilEasy | HK Land Registry — Property Search — Mid-Levels", "FilEasy API property search result for Hong Kong Land Registry. Mid-Levels residential property. Owner: SIU Yat. Purchase date 2005. Historical transaction prices and ownership memorials returned via API.", "#0066aa"),
 		companySearchTemplate: {
-			registryName: "Hong Kong Land Registry",
-			registryUrl: "https://www.landreg.gov.hk/en/",
+			registryName: "Hong Kong Land Registry (via FilEasy API)",
+			registryUrl: "https://www.fileasy.hk/",
 			searchFields: [
 				{ label: "Owner Name", value: "SIU Yat" },
 				{ label: "Property Address", value: "Mid-Levels, Hong Kong Island" },
 				{ label: "Search Type", value: "Owner Name Search" },
 			],
 			jurisdiction: "Hong Kong SAR",
-			searchType: "Property Owner Search",
+			searchType: "Property Owner Search (via FilEasy API)",
 		},
 	},
 	asxHistorical: {
@@ -686,7 +686,7 @@ const YAT_SIU_CAREER: CareerPhase[] = [
 				{ id: "ys2-2", description: "Sale of Outblaze messaging division to IBM (~$10-20M, Siu retained majority — HK CR confirmed via FilEasy)", estimatedValueUSD: 15_000_000, confidence: 85, sources: [SRC_SIU.ibmAcq, SRC_SIU.hkCompanies, SRC_SIU.fileasyOutblaze] },
 			], subtotalUSD: 15_000_000, avgConfidence: 85 },
 			{ category: "alternatives", claims: [
-				{ id: "ys2-3", description: "Hong Kong residential property acquired during this period (HK Land Registry confirmed)", estimatedValueUSD: 3_000_000, confidence: 100, sources: [SRC_SIU.hkLandRegistry, SRC_SIU.hkRVD] },
+				{ id: "ys2-3", description: "Hong Kong residential property acquired during this period (FilEasy Land Registry search confirmed)", estimatedValueUSD: 3_000_000, confidence: 100, sources: [SRC_SIU.hkLandRegistry, SRC_SIU.hkRVD] },
 			], subtotalUSD: 3_000_000, avgConfidence: 100 },
 		],
 		phaseWealthUSD: 20_000_000, cumulativeWealthUSD: 20_150_000,
@@ -743,7 +743,7 @@ const YAT_SIU_CAREER: CareerPhase[] = [
 				{ id: "ys5-5", description: "Portfolio of 340+ blockchain/Web3 investments (book value)", estimatedValueUSD: 500_000_000, confidence: 45, sources: [SRC_SIU.crunchbase, SRC_SIU.bloombergSiu] },
 			], subtotalUSD: 500_000_000, avgConfidence: 45 },
 			{ category: "alternatives", claims: [
-				{ id: "ys5-6", description: "Hong Kong property portfolio (appreciated — Land Registry and RVD index confirmed)", estimatedValueUSD: 8_000_000, confidence: 100, sources: [SRC_SIU.hkLandRegistry, SRC_SIU.hkRVD] },
+				{ id: "ys5-6", description: "Hong Kong property portfolio (appreciated — FilEasy Land Registry search and RVD index confirmed)", estimatedValueUSD: 8_000_000, confidence: 100, sources: [SRC_SIU.hkLandRegistry, SRC_SIU.hkRVD] },
 			], subtotalUSD: 8_000_000, avgConfidence: 100 },
 		],
 		phaseWealthUSD: 3_658_000_000, cumulativeWealthUSD: 3_658_000_000,
@@ -766,7 +766,7 @@ const YAT_SIU_CAREER: CareerPhase[] = [
 				{ id: "ys6-5", description: "Blockchain/Web3 portfolio (heavily marked down but some survivors)", estimatedValueUSD: 150_000_000, confidence: 30, sources: [SRC_SIU.crunchbase] },
 			], subtotalUSD: 150_000_000, avgConfidence: 30 },
 			{ category: "alternatives", claims: [
-				{ id: "ys6-6", description: "Hong Kong property and other tangible assets (Land Registry confirmed, RVD indexed)", estimatedValueUSD: 7_000_000, confidence: 100, sources: [SRC_SIU.hkLandRegistry, SRC_SIU.hkRVD] },
+				{ id: "ys6-6", description: "Hong Kong property and other tangible assets (FilEasy Land Registry search confirmed, RVD indexed)", estimatedValueUSD: 7_000_000, confidence: 100, sources: [SRC_SIU.hkLandRegistry, SRC_SIU.hkRVD] },
 			], subtotalUSD: 7_000_000, avgConfidence: 100 },
 		],
 		phaseWealthUSD: 1_462_000_000, cumulativeWealthUSD: 2_400_000_000,
@@ -992,7 +992,7 @@ const JACK_MA_CLIENT_DOCS: ClientDocument[] = [
 	{ id: "cd-jm-3", type: "share-certificate", label: "Morgan Stanley — BABA Beneficial Ownership Confirmation", submittedBy: "Client (via Morgan Stanley)", submittedDate: "2026-04-18", status: "verified", fileDescription: "Morgan Stanley custody confirmation showing beneficial ownership of BABA ADR shares. Current holding: ~131M shares (approximately 4.5% of outstanding).", verificationNotes: "Cross-verified against SEC Schedule 13D/A filing and 20-F beneficial ownership table. Custodian confirmed independently.", governmentAuthority: "U.S. Securities and Exchange Commission (SEC)" },
 	{ id: "cd-jm-4", type: "trust-deed", label: "Singapore Family Trust — Trust Deed (Redacted)", submittedBy: "Client (via Rajah & Tann, Singapore)", submittedDate: "2026-04-22", status: "verified", fileDescription: "Trust deed for Ma Family Trust Pte. Ltd. Settlor: Ma Yun. Trustee: independent corporate trustee. Trust assets include transferred BABA shares (~$2.4B at transfer).", verificationNotes: "ACRA entity registration confirmed. Trust structure consistent with FT reporting on $2.4B share transfer (April 2023).", governmentAuthority: "Singapore ACRA — Accounting and Corporate Regulatory Authority" },
 	{ id: "cd-jm-5", type: "tax-return", label: "PRC Individual Income Tax — 2025 Filing Summary", submittedBy: "Client (via PwC China)", submittedDate: "2026-04-25", status: "verified", fileDescription: "Summary of PRC Individual Income Tax (IIT) filing for calendar year 2025. Zhejiang Province filing. Comprehensive income, capital gains, and offshore income reported.", verificationNotes: "IIT filing consistent with disclosed compensation and investment income. Cross-referenced against NBS tax bracket data.", governmentAuthority: "China State Taxation Administration (STA)" },
-	{ id: "cd-jm-6", type: "property-deed", label: "HK Land Registry — Victoria Peak Residence", submittedBy: "Client (via Mayer Brown, Hong Kong)", submittedDate: "2026-04-28", status: "verified", fileDescription: "Hong Kong Land Registry memorial showing property at 15 Barker Road, The Peak. Purchase price: HK$1.5 billion. Registered owner details confirmed.", verificationNotes: "Land Registry record independently verified via ICRIS search. Transaction price matches SCMP reporting.", governmentAuthority: "Hong Kong Land Registry" },
+	{ id: "cd-jm-6", type: "property-deed", label: "FilEasy API: HK Land Registry — Victoria Peak Residence", submittedBy: "FilEasy API — automated retrieval", submittedDate: "2026-05-17", status: "verified", fileDescription: "Hong Kong Land Registry memorial showing property at 15 Barker Road, The Peak. Purchase price: HK$1.5 billion. Registered owner details confirmed via FilEasy property search API.", verificationNotes: "100% verified — government authority. FilEasy API returned land registry memorial with registered owner, lot number, and transaction history. Price matches SCMP reporting.", governmentAuthority: "Hong Kong Land Registry (via FilEasy API)" },
 ];
 
 const YAT_SIU_CLIENT_DOCS: ClientDocument[] = [
@@ -1001,7 +1001,7 @@ const YAT_SIU_CLIENT_DOCS: ClientDocument[] = [
 	{ id: "cd-ys-3", type: "incorporation-cert", label: "HK Companies Registry — Outblaze Limited (CR via FilEasy)", submittedBy: "FilEasy API — automated retrieval", submittedDate: "2026-05-17", status: "verified", fileDescription: "Certificate of Incorporation for Outblaze Limited (CR No. 0651683). Incorporated 1998 in Hong Kong. Directors: SIU Yat. Registered office: Wan Chai, HK.", verificationNotes: "100% verified — government authority. FilEasy API returned exact match. Director name matches passport.", governmentAuthority: "Hong Kong Companies Registry (via FilEasy API)" },
 	{ id: "cd-ys-4", type: "annual-return", label: "ASIC — Animoca Brands Corporation Ltd Annual Return", submittedBy: "ASIC Connect Online — automated retrieval", submittedDate: "2026-05-17", status: "verified", fileDescription: "ASIC annual return for Animoca Brands Corporation Limited (ACN 122 921 813). Directors include SIU Yat. Registered in Victoria, Australia.", verificationNotes: "100% verified — government authority. ASIC records confirm directorship and company registration details.", governmentAuthority: "Australian Securities & Investments Commission (ASIC)" },
 	{ id: "cd-ys-5", type: "bank-statement", label: "HSBC Private Banking — HKD Account Statement", submittedBy: "Client (via HSBC HK)", submittedDate: "2026-04-15", status: "verified", fileDescription: "HSBC Private Banking statement for account ending ••7293. Period: Jan-Mar 2026. Shows salary credits from Animoca Brands, dividend income, and crypto exchange settlements.", verificationNotes: "Salary credits match ASX annual report executive remuneration disclosures. HSBC is HKMA-regulated institution.", governmentAuthority: "Hong Kong Monetary Authority (HKMA) — regulated institution" },
-	{ id: "cd-ys-6", type: "property-deed", label: "HK Land Registry — Mid-Levels Residential Property", submittedBy: "Client (via Deacons, Hong Kong)", submittedDate: "2026-04-20", status: "verified", fileDescription: "Hong Kong Land Registry memorial for residential property in Mid-Levels. Owner: SIU Yat. Purchase completed 2005. Current estimated value per RVD index.", verificationNotes: "100% verified — government authority. Land Registry search confirmed ownership. RVD price index applied for current valuation.", governmentAuthority: "Hong Kong Land Registry" },
+	{ id: "cd-ys-6", type: "property-deed", label: "FilEasy API: HK Land Registry — Mid-Levels Residential Property", submittedBy: "FilEasy API — automated retrieval", submittedDate: "2026-05-17", status: "verified", fileDescription: "Hong Kong Land Registry memorial for residential property in Mid-Levels. Owner: SIU Yat. Purchase completed 2005. Current estimated value per RVD index. Retrieved via FilEasy property search API.", verificationNotes: "100% verified — government authority. FilEasy API returned land registry memorial with registered owner and transaction history. RVD price index applied for current valuation.", governmentAuthority: "Hong Kong Land Registry (via FilEasy API)" },
 	{ id: "cd-ys-7", type: "incorporation-cert", label: "FilEasy API: Animoca Brands Limited — HK CR Search", submittedBy: "FilEasy API — automated retrieval", submittedDate: "2026-05-17", status: "verified", fileDescription: "HK Companies Registry record for Animoca Brands Limited (CR No. 2283149). Incorporation date, registered office, directors (SIU Yat), secretary, annual returns.", verificationNotes: "100% verified — government authority. FilEasy API exact match on company name and CR number.", governmentAuthority: "Hong Kong Companies Registry (via FilEasy API)" },
 ];
 
@@ -1013,7 +1013,7 @@ const JACK_MA_CROSS_REFS: CrossReference[] = [
 	{ id: "xr-jm-3", field: "BABA Shareholding", clientDocLabel: "Morgan Stanley Custody Confirmation", externalSourceLabel: "SEC 20-F Annual Report (2024)", clientValue: "~131M shares (4.5%)", externalValue: "4.5% beneficial ownership", match: "exact", confidence: 100, verifiedVia: "SEC EDGAR — government authority" },
 	{ id: "xr-jm-4", field: "Dividend Income (Q1 2026)", clientDocLabel: "DBS Bank Statement", externalSourceLabel: "NYSE BABA Dividend Record", clientValue: "$3.2M received", externalValue: "$3.18M (131M shares × $0.0243)", match: "exact", confidence: 100, verifiedVia: "NYSE market data + bank records" },
 	{ id: "xr-jm-5", field: "Trust Entity", clientDocLabel: "Singapore Trust Deed", externalSourceLabel: "Singapore ACRA — BizFile+", clientValue: "Ma Family Trust Pte. Ltd.", externalValue: "Ma Family Trust Pte. Ltd. (UEN: 202312345A)", match: "exact", confidence: 100, verifiedVia: "ACRA — government authority" },
-	{ id: "xr-jm-6", field: "HK Property", clientDocLabel: "HK Land Registry — Victoria Peak", externalSourceLabel: "SCMP Property Investigation", clientValue: "15 Barker Road, The Peak", externalValue: "Victoria Peak mansion, HK$1.5B", match: "exact", confidence: 100, verifiedVia: "HK Land Registry — government authority" },
+	{ id: "xr-jm-6", field: "HK Property", clientDocLabel: "FilEasy: HK Land Registry — Victoria Peak", externalSourceLabel: "SCMP Property Investigation", clientValue: "15 Barker Road, The Peak", externalValue: "Victoria Peak mansion, HK$1.5B", match: "exact", confidence: 100, verifiedVia: "HK Land Registry via FilEasy API — government authority" },
 	{ id: "xr-jm-7", field: "Tax Filing Status", clientDocLabel: "PRC IIT Filing Summary", externalSourceLabel: "NBS Wage Data + SEC Compensation", clientValue: "IIT filed, Zhejiang Province", externalValue: "Alibaba HQ in Hangzhou, Zhejiang", match: "exact", confidence: 100, verifiedVia: "China STA — government authority" },
 	{ id: "xr-jm-8", field: "Alibaba Registration", clientDocLabel: "PRC Passport (founder identity)", externalSourceLabel: "SAMR National Enterprise Credit System", clientValue: "MA YUN — founder", externalValue: "Legal representative: 马云", match: "exact", confidence: 100, verifiedVia: "SAMR — government authority" },
 ];
@@ -1024,7 +1024,7 @@ const YAT_SIU_CROSS_REFS: CrossReference[] = [
 	{ id: "xr-ys-3", field: "Outblaze Directorship", clientDocLabel: "HK CR Incorporation Cert (Outblaze)", externalSourceLabel: "IBM Acquisition Records", clientValue: "Director since 1998", externalValue: "Founder/CEO — selling party", match: "exact", confidence: 100, verifiedVia: "HK CR via FilEasy — government authority" },
 	{ id: "xr-ys-4", field: "Animoca Brands Directorship", clientDocLabel: "FilEasy: Animoca Brands Ltd", externalSourceLabel: "ASIC — Animoca Brands Corporation", clientValue: "Director — CR No. 2283149", externalValue: "Director — ACN 122 921 813", match: "exact", confidence: 100, verifiedVia: "Dual registry verification (HK CR + ASIC)" },
 	{ id: "xr-ys-5", field: "Salary Income", clientDocLabel: "HSBC Bank Statement", externalSourceLabel: "ASX Annual Report — Remuneration", clientValue: "HK$425,000/month salary credit", externalValue: "AU$780,000 p.a. chairman remuneration", match: "exact", confidence: 100, verifiedVia: "ASX filing + HKMA-regulated bank" },
-	{ id: "xr-ys-6", field: "Property Ownership", clientDocLabel: "HK Land Registry — Mid-Levels", externalSourceLabel: "RVD Property Price Index", clientValue: "Owner: SIU Yat, purchased 2005", externalValue: "Mid-Levels Class D index: +85% since 2005", match: "exact", confidence: 100, verifiedVia: "HK Land Registry — government authority" },
+	{ id: "xr-ys-6", field: "Property Ownership", clientDocLabel: "FilEasy: HK Land Registry — Mid-Levels", externalSourceLabel: "RVD Property Price Index", clientValue: "Owner: SIU Yat, purchased 2005", externalValue: "Mid-Levels Class D index: +85% since 2005", match: "exact", confidence: 100, verifiedVia: "HK Land Registry via FilEasy API — government authority" },
 	{ id: "xr-ys-7", field: "Austrian Citizenship", clientDocLabel: "Austrian Passport", externalSourceLabel: "ASIC Director Records", clientValue: "Austrian national", externalValue: "Nationality: Austria", match: "exact", confidence: 100, verifiedVia: "ASIC — government authority" },
 ];
 
