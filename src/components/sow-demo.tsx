@@ -24,322 +24,79 @@ import {
 	FileTextIcon,
 	ClockIcon,
 	HashIcon,
-	MessageSquareIcon,
 	ArrowUpRightIcon,
-	PauseCircleIcon,
 	CalendarClockIcon,
-	CircleCheckBigIcon,
 	SearchIcon,
 	PlusIcon,
 	FolderOpenIcon,
-	UploadIcon,
 	InfoIcon,
 	EyeIcon,
-	FileCheckIcon,
-	ExternalLinkIcon,
 	RefreshCwIcon,
-	SquareCheckIcon,
 	NetworkIcon,
 	TrendingUpIcon,
-	FileBadgeIcon,
-	ClipboardListIcon,
-	StickyNoteIcon,
-	WrenchIcon,
-	CircleAlertIcon,
-	UserCheckIcon,
-	HistoryIcon,
-	BadgeCheckIcon,
-	TargetIcon,
-	ListTodoIcon,
 	RadarIcon,
 	ScanIcon,
 	DatabaseIcon,
 	ShieldIcon,
+	ExternalLinkIcon,
+	GlobeIcon,
+	BriefcaseIcon,
+	MapPinIcon,
+	BadgePercentIcon,
+	BookOpenIcon,
+	LinkIcon,
+	ChevronUpIcon,
+	SparklesIcon,
+	BarChart3Icon,
+	CircleDotIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
-import {
-	SOW_CASES,
-	type SowReport,
-	type SowDataSource,
-	type SowWealthItem,
-	type ScreeningAlert,
-	type DocumentEvidence,
-	type AuditTrailEntry,
-	type RemediationItem,
+	HNW_CASES,
+	HNW_MONITORING,
+	HNW_NOTIFICATIONS,
+	PEP_SCREENING,
+	CATEGORY_LABELS,
+	CATEGORY_COLORS,
+	formatUSD,
+	type HnwReport,
+	type HnwMonitoringEntry,
+	type HnwNotification,
+	type HnwProfile,
+	type CareerPhase,
+	type CategoryBreakdown,
+	type WealthClaim,
+	type SourceCitation,
+	type WealthCategory,
+	type KeyParameter,
+	type DataSourceDef,
+	type CompanyNode,
+	type PepScreeningEntry,
 } from "@/lib/sow-mock-data";
 
-type Phase = "dashboard" | "profile" | "intake" | "consent" | "sources" | "generating" | "report";
+/* ═══════════════════════════════════════════════════════════════
+   State & Types
+   ═══════════════════════════════════════════════════════════════ */
+
+type Phase = "dashboard" | "profile" | "select" | "generating" | "report";
 
 const STEPS = [
-	{ key: "intake", label: "New Case" },
-	{ key: "consent", label: "Consent" },
-	{ key: "sources", label: "Data Sources" },
+	{ key: "select", label: "Select Subject" },
 	{ key: "generating", label: "Assessment" },
 	{ key: "report", label: "Report" },
 ] as const;
 
-const SOURCE_PURPOSES: Record<string, string> = {
-	"kyc-2fv": "Verify full name and ID number against the national population registry",
-	"kyc-4fv": "Extended verification with ID card issue and expiry dates",
-	"mobile-attr": "Check mobile registration — carrier, location, and tenure",
-	"bank-3fv": "Confirm bank account ownership via name, ID, and card number",
-	adverse: "Screen for criminal records, financial defaults, and adverse history",
-	fraud: "Assess fraud risk from multi-platform borrowing patterns",
-	litigation: "Search civil and criminal court records for litigation history",
-	commercial: "Identify all commercial interests and shareholdings",
-	"kyb-a": "Company verification — primary business association",
-	"kyb-b": "Company verification — secondary business association",
-	"kyb-c": "Company verification — tertiary business association",
-	income: "Estimate annual income from social insurance contributions",
-	tax: "Verify individual income tax filings for consistency",
-};
-
-const CATEGORY_META: Record<string, { description: string; Icon: typeof UserIcon; authority: string; legalBasis: string; dataType: string }> = {
-	Identity: {
-		description: "Cross-reference subject identity against the Ministry of Public Security population registry and telecom operator records.",
-		Icon: ShieldCheckIcon,
-		authority: "Ministry of Public Security (MPS)",
-		legalBasis: "PRC Resident Identity Card Law, Article 3 — MPS maintains the national population information database. Identity verification is conducted through the National Citizen Identity Information Center (NCIIC).",
-		dataType: "Full name, gender, date of birth, ID card number, issue/expiry dates. Mobile number attribution via telecom carrier registration records.",
-	},
-	Banking: {
-		description: "Verify bank account ownership through the UnionPay interbank settlement network.",
-		Icon: LandmarkIcon,
-		authority: "China UnionPay / People's Bank of China (PBOC)",
-		legalBasis: "PBOC Anti-Money Laundering Law (2006) and Measures for the Administration of Financial Institutions' Customer Identification. Bank account verification via the UnionPay interbank network cross-checks cardholder name, ID number, and bank card number.",
-		dataType: "Bank card number, cardholder name, associated ID number. Returns match/mismatch status and bank issuer details.",
-	},
-	Risk: {
-		description: "Screen for criminal records, civil litigation, financial fraud indicators, and adverse media mentions.",
-		Icon: ShieldAlertIcon,
-		authority: "People's Bank of China (PBOC) Credit Reference Center / Supreme People's Court",
-		legalBasis: "PBOC credit reporting regulations and the Supreme People's Court judicial transparency platform (China Judgements Online). Adverse history checks reference the PBOC personal credit information database. Litigation records are sourced from the national court case database.",
-		dataType: "Criminal records, civil judgments, enforcement records, financial default history, multi-platform borrowing patterns, and blacklist/sanctions screening results.",
-	},
-	Corporate: {
-		description: "Search SAMR business registries for commercial interests and run full KYB verification reports on associated entities.",
-		Icon: BuildingIcon,
-		authority: "State Administration for Market Regulation (SAMR)",
-		legalBasis: "PRC Company Law and SAMR National Enterprise Credit Information Publicity System. Commercial interest searches identify all companies where the subject serves as a legal representative, shareholder, or director. KYB reports include registration details, capital structure, and filing history.",
-		dataType: "Company name, registration number, legal representative, shareholders, registered capital, establishment date, business scope, annual filing status, and regulatory penalties.",
-	},
-	Income: {
-		description: "Estimate annual income bracket from MOHRSS social insurance contribution records.",
-		Icon: BanknoteIcon,
-		authority: "Ministry of Human Resources and Social Security (MOHRSS)",
-		legalBasis: "PRC Social Insurance Law, Article 4 — employers must register employees and report contribution base amounts. Social insurance contributions (pension, medical, unemployment) are calculated as a percentage of salary, making contribution records a reliable proxy for declared income level.",
-		dataType: "Monthly contribution base amount, employer name, contribution period, and derived annual income estimate. Data reflects the declared salary used for social insurance calculation.",
-	},
-	Tax: {
-		description: "Verify individual income tax filings through the State Taxation Administration and check for year-over-year discrepancies.",
-		Icon: FileTextIcon,
-		authority: "State Taxation Administration (STA)",
-		legalBasis: "PRC Individual Income Tax Law (2018 revision). Tax filing verification checks whether reported income is consistent with other data sources. Year-over-year comparison identifies unusual fluctuations that may indicate unreported income or tax evasion.",
-		dataType: "Annual taxable income, tax paid, filing status, year-over-year income trends, and consistency flags against social insurance and employment records.",
-	},
-};
-
-interface DashboardNotification {
-	id: string;
-	type: "review-due" | "alert" | "update" | "completed";
-	title: string;
-	detail: string;
-	time: string;
-	caseRef: string;
-	read: boolean;
-}
-
-interface ExistingCase {
-	caseRef: string;
-	name: string;
-	nameEn: string;
-	riskRating: "Low" | "High";
-	status: "Complete" | "Under Review" | "Pending EDD";
-	createdDate: string;
-	nextReview: string;
-	alertCount: number;
-}
-
-const MOCK_EXISTING_CASES: ExistingCase[] = [
-	{ caseRef: "SOW-2025-1203-412", name: "王建国", nameEn: "Wang Jianguo", riskRating: "Low", status: "Complete", createdDate: "03 Dec 2025", nextReview: "03 Dec 2026", alertCount: 0 },
-	{ caseRef: "SOW-2025-0918-087", name: "张丽华", nameEn: "Zhang Lihua", riskRating: "High", status: "Under Review", createdDate: "18 Sep 2025", nextReview: "18 Mar 2026", alertCount: 3 },
-	{ caseRef: "SOW-2026-0210-553", name: "李明辉", nameEn: "Li Minghui", riskRating: "Low", status: "Complete", createdDate: "10 Feb 2026", nextReview: "10 Feb 2027", alertCount: 1 },
-	{ caseRef: "SOW-2026-0402-291", name: "赵薇薇", nameEn: "Zhao Weiwei", riskRating: "High", status: "Pending EDD", createdDate: "02 Apr 2026", nextReview: "02 Oct 2026", alertCount: 5 },
-	{ caseRef: "SOW-2026-0315-744", name: "黄晓明", nameEn: "Huang Xiaoming", riskRating: "Low", status: "Complete", createdDate: "15 Mar 2026", nextReview: "15 Mar 2027", alertCount: 0 },
-	{ caseRef: "SOW-2026-0428-195", name: "林婉琪", nameEn: "Lin Wanqi", riskRating: "High", status: "Under Review", createdDate: "28 Apr 2026", nextReview: "28 Oct 2026", alertCount: 2 },
-	{ caseRef: "SOW-2026-0503-631", name: "周志强", nameEn: "Zhou Zhiqiang", riskRating: "Low", status: "Complete", createdDate: "03 May 2026", nextReview: "03 May 2027", alertCount: 0 },
-];
-
-interface MonitoringAlert {
-	id: string;
-	date: string;
-	type: string;
-	severity: "Critical" | "Warning" | "Info";
-	description: string;
-	status: "Open" | "Resolved" | "Under Review";
-	resolvedDate?: string;
-	source: string;
-}
-
-interface MonitoringEntry {
-	caseRef: string;
-	subjectName: string;
-	subjectNameCn: string;
-	riskRating: "Low" | "High";
-	riskScore: number;
-	caseStatus: "Complete" | "Under Review" | "Pending EDD";
-	screeningFrequency: "Weekly" | "Monthly" | "Quarterly";
-	lastScanDate: string;
-	nextReviewDate: string;
-	createdDate: string;
-	sourcesMonitored: number;
-	sourcesHealthy: number;
-	openAlerts: number;
-	lastAlertType?: string;
-	status: "Active" | "Paused" | "Overdue";
-	idNumber: string;
-	occupation: string;
-	employer: string;
-	city: string;
-	alerts: MonitoringAlert[];
-	sanctionsScreening: string;
-	adverseMediaMonitoring: string;
-	corporateRegistryRefresh: string;
-	taxComplianceCheck: string;
-	autoEscalation: string;
-}
-
-const MOCK_MONITORING: MonitoringEntry[] = [
-	{
-		caseRef: "SOW-2025-0918-087", subjectName: "Zhang Lihua", subjectNameCn: "张丽华", riskRating: "High", riskScore: 78, caseStatus: "Under Review",
-		screeningFrequency: "Weekly", lastScanDate: "2026-05-16", nextReviewDate: "2026-09-18", createdDate: "18 Sep 2025",
-		sourcesMonitored: 13, sourcesHealthy: 13, openAlerts: 3, lastAlertType: "Adverse Media", status: "Active",
-		idNumber: "4401**********2847", occupation: "Business Owner", employer: "Guangzhou Lihua Trading Co.", city: "Guangzhou",
-		sanctionsScreening: "Weekly (OFAC, EU, UN, PBOC)", adverseMediaMonitoring: "Weekly scan (Dow Jones, Caixin, Reuters)",
-		corporateRegistryRefresh: "Monthly SAMR registry refresh", taxComplianceCheck: "Quarterly STA cross-check", autoEscalation: "Enabled — auto-escalate Critical alerts to MLRO",
-		alerts: [
-			{ id: "a1", date: "2026-05-16", type: "Adverse Media", severity: "Critical", description: "Reuters article mentions subject in connection with regulatory investigation in Guangdong Province regarding import/export irregularities.", status: "Open", source: "Dow Jones" },
-			{ id: "a2", date: "2026-05-10", type: "Corporate Change", severity: "Warning", description: "Associated company Lihua Trading Co. had its business license suspended for 30-day review by Guangzhou MSA.", status: "Open", source: "SAMR" },
-			{ id: "a3", date: "2026-04-22", type: "Litigation", severity: "Warning", description: "New civil case filed: supplier contract dispute, amount in controversy ¥2.3M.", status: "Open", source: "Supreme Court" },
-			{ id: "a4", date: "2026-03-15", type: "Tax Filing", severity: "Info", description: "FY2025 individual income tax return filed. Declared income consistent with prior year (+4.2%).", status: "Resolved", resolvedDate: "2026-03-16", source: "STA" },
-			{ id: "a5", date: "2026-02-01", type: "Sanctions", severity: "Info", description: "Weekly sanctions screening — no matches found across OFAC, EU, UN, PBOC lists.", status: "Resolved", resolvedDate: "2026-02-01", source: "Sanctions DB" },
-		],
-	},
-	{
-		caseRef: "SOW-2026-0402-291", subjectName: "Zhao Weiwei", subjectNameCn: "赵薇薇", riskRating: "High", riskScore: 85, caseStatus: "Pending EDD",
-		screeningFrequency: "Weekly", lastScanDate: "2026-05-15", nextReviewDate: "2026-10-02", createdDate: "02 Apr 2026",
-		sourcesMonitored: 13, sourcesHealthy: 12, openAlerts: 5, lastAlertType: "Tax Discrepancy", status: "Active",
-		idNumber: "3101**********6621", occupation: "Investment Manager", employer: "Shanghai Hengda Capital", city: "Shanghai",
-		sanctionsScreening: "Weekly (OFAC, EU, UN, PBOC)", adverseMediaMonitoring: "Weekly scan (Dow Jones, Caixin, Reuters)",
-		corporateRegistryRefresh: "Weekly SAMR registry refresh", taxComplianceCheck: "Monthly STA cross-check", autoEscalation: "Enabled — auto-escalate Critical alerts to MLRO",
-		alerts: [
-			{ id: "a6", date: "2026-05-15", type: "Tax Discrepancy", severity: "Critical", description: "Year-over-year income variance of 340% detected in latest STA filing. Declared income ¥4.8M vs ¥1.1M prior year.", status: "Open", source: "STA" },
-			{ id: "a7", date: "2026-05-12", type: "Missing Document", severity: "Warning", description: "Source of funds documentation for offshore transfers not provided. Reminder sent to client.", status: "Open", source: "Internal" },
-			{ id: "a8", date: "2026-05-08", type: "Adverse Media", severity: "Warning", description: "Caixin article references Shanghai Hengda Capital in connection with structured finance products under regulatory scrutiny.", status: "Open", source: "Caixin" },
-			{ id: "a9", date: "2026-04-28", type: "PEP Screening", severity: "Warning", description: "Associated entity director matches partial name on provincial government official registry. Manual review pending.", status: "Open", source: "PEP DB" },
-			{ id: "a10", date: "2026-04-20", type: "Corporate Change", severity: "Warning", description: "New company registration: Shanghai Weiwei Investment Consulting Co. Subject listed as sole shareholder.", status: "Open", source: "SAMR" },
-		],
-	},
-	{
-		caseRef: "SOW-2026-0428-195", subjectName: "Lin Wanqi", subjectNameCn: "林婉琪", riskRating: "High", riskScore: 72, caseStatus: "Under Review",
-		screeningFrequency: "Weekly", lastScanDate: "2026-05-16", nextReviewDate: "2026-10-28", createdDate: "28 Apr 2026",
-		sourcesMonitored: 13, sourcesHealthy: 13, openAlerts: 2, lastAlertType: "Sanctions Match", status: "Active",
-		idNumber: "4403**********5519", occupation: "Import/Export Director", employer: "Shenzhen Hengda Import Co.", city: "Shenzhen",
-		sanctionsScreening: "Weekly (OFAC, EU, UN, PBOC)", adverseMediaMonitoring: "Weekly scan (Dow Jones, Caixin, Reuters)",
-		corporateRegistryRefresh: "Monthly SAMR registry refresh", taxComplianceCheck: "Quarterly STA cross-check", autoEscalation: "Enabled — auto-escalate Critical alerts to MLRO",
-		alerts: [
-			{ id: "a11", date: "2026-05-14", type: "Sanctions Match", severity: "Critical", description: "Possible partial match on OFAC SDN list for associated entity Shenzhen Hengda Import Co. Manual verification required.", status: "Open", source: "OFAC" },
-			{ id: "a12", date: "2026-05-02", type: "Overdue Review", severity: "Warning", description: "90-day interim review for high-risk case is 5 days overdue. 6 data sources scheduled for re-query.", status: "Open", source: "Internal" },
-			{ id: "a13", date: "2026-04-10", type: "Corporate Change", severity: "Info", description: "Annual filing submitted for Shenzhen Hengda Import Co. No material changes to directors or capital.", status: "Resolved", resolvedDate: "2026-04-11", source: "SAMR" },
-		],
-	},
-	{
-		caseRef: "SOW-2025-1203-412", subjectName: "Wang Jianguo", subjectNameCn: "王建国", riskRating: "Low", riskScore: 22, caseStatus: "Complete",
-		screeningFrequency: "Monthly", lastScanDate: "2026-05-01", nextReviewDate: "2026-12-03", createdDate: "03 Dec 2025",
-		sourcesMonitored: 11, sourcesHealthy: 11, openAlerts: 0, status: "Active",
-		idNumber: "1101**********4523", occupation: "Senior Engineer", employer: "China National Petroleum Corp.", city: "Beijing",
-		sanctionsScreening: "Monthly (OFAC, EU, UN, PBOC)", adverseMediaMonitoring: "Monthly scan (Dow Jones, Caixin)",
-		corporateRegistryRefresh: "Quarterly SAMR registry refresh", taxComplianceCheck: "Annual STA cross-check", autoEscalation: "Disabled — low-risk standard monitoring",
-		alerts: [
-			{ id: "a14", date: "2026-05-01", type: "Routine Scan", severity: "Info", description: "Monthly screening completed. No adverse findings across all 11 data sources.", status: "Resolved", resolvedDate: "2026-05-01", source: "System" },
-			{ id: "a15", date: "2026-04-01", type: "Routine Scan", severity: "Info", description: "Monthly screening completed. No adverse findings.", status: "Resolved", resolvedDate: "2026-04-01", source: "System" },
-		],
-	},
-	{
-		caseRef: "SOW-2026-0210-553", subjectName: "Li Minghui", subjectNameCn: "李明辉", riskRating: "Low", riskScore: 31, caseStatus: "Complete",
-		screeningFrequency: "Monthly", lastScanDate: "2026-05-01", nextReviewDate: "2027-02-10", createdDate: "10 Feb 2026",
-		sourcesMonitored: 11, sourcesHealthy: 11, openAlerts: 1, lastAlertType: "Corporate Filing", status: "Active",
-		idNumber: "3301**********7712", occupation: "Technology Consultant", employer: "Hangzhou Minghui Consulting Co.", city: "Hangzhou",
-		sanctionsScreening: "Monthly (OFAC, EU, UN, PBOC)", adverseMediaMonitoring: "Monthly scan (Dow Jones, Caixin)",
-		corporateRegistryRefresh: "Monthly SAMR registry refresh", taxComplianceCheck: "Annual STA cross-check", autoEscalation: "Disabled — low-risk standard monitoring",
-		alerts: [
-			{ id: "a16", date: "2026-05-01", type: "Corporate Filing", severity: "Info", description: "SAMR registry shows new company registration: Hangzhou Minghui Consulting Co. Subject listed as legal representative.", status: "Open", source: "SAMR" },
-			{ id: "a17", date: "2026-04-01", type: "Routine Scan", severity: "Info", description: "Monthly screening completed. No adverse findings.", status: "Resolved", resolvedDate: "2026-04-01", source: "System" },
-		],
-	},
-	{
-		caseRef: "SOW-2026-0315-744", subjectName: "Huang Xiaoming", subjectNameCn: "黄晓明", riskRating: "Low", riskScore: 18, caseStatus: "Complete",
-		screeningFrequency: "Quarterly", lastScanDate: "2026-04-15", nextReviewDate: "2027-03-15", createdDate: "15 Mar 2026",
-		sourcesMonitored: 11, sourcesHealthy: 11, openAlerts: 0, status: "Active",
-		idNumber: "5101**********3356", occupation: "University Professor", employer: "Sichuan University", city: "Chengdu",
-		sanctionsScreening: "Quarterly (OFAC, EU, UN, PBOC)", adverseMediaMonitoring: "Quarterly scan (Dow Jones)",
-		corporateRegistryRefresh: "Annual SAMR registry refresh", taxComplianceCheck: "Annual STA cross-check", autoEscalation: "Disabled — low-risk standard monitoring",
-		alerts: [
-			{ id: "a18", date: "2026-04-15", type: "Routine Scan", severity: "Info", description: "Quarterly screening completed. All 11 data sources re-queried. No material changes from prior assessment.", status: "Resolved", resolvedDate: "2026-04-15", source: "System" },
-		],
-	},
-	{
-		caseRef: "SOW-2026-0503-631", subjectName: "Zhou Zhiqiang", subjectNameCn: "周志强", riskRating: "Low", riskScore: 25, caseStatus: "Complete",
-		screeningFrequency: "Monthly", lastScanDate: "2026-05-03", nextReviewDate: "2027-05-03", createdDate: "03 May 2026",
-		sourcesMonitored: 11, sourcesHealthy: 10, openAlerts: 0, status: "Active",
-		idNumber: "4201**********8894", occupation: "Logistics Manager", employer: "Wuhan Zhonghe Logistics Co.", city: "Wuhan",
-		sanctionsScreening: "Monthly (OFAC, EU, UN, PBOC)", adverseMediaMonitoring: "Monthly scan (Dow Jones, Caixin)",
-		corporateRegistryRefresh: "Monthly SAMR registry refresh", taxComplianceCheck: "Annual STA cross-check", autoEscalation: "Disabled — low-risk standard monitoring",
-		alerts: [
-			{ id: "a19", date: "2026-05-03", type: "Data Source Error", severity: "Warning", description: "SAMR commercial registry query returned timeout. Manual retry scheduled.", status: "Resolved", resolvedDate: "2026-05-04", source: "SAMR" },
-			{ id: "a20", date: "2026-05-03", type: "Routine Scan", severity: "Info", description: "Monthly screening completed. 10 of 11 sources returned successfully.", status: "Resolved", resolvedDate: "2026-05-03", source: "System" },
-		],
-	},
-];
-
-const MOCK_NOTIFICATIONS: DashboardNotification[] = [
-	{ id: "n1", type: "alert", title: "New adverse media hit — 张丽华", detail: "Reuters article mentions subject in connection with a regulatory investigation in Guangdong Province.", time: "2 hours ago", caseRef: "SOW-2025-0918-087", read: false },
-	{ id: "n2", type: "review-due", title: "Periodic review due — 王建国", detail: "Annual SOW review is scheduled for 03 Dec 2026. Re-run assessment to update data sources.", time: "1 day ago", caseRef: "SOW-2025-1203-412", read: false },
-	{ id: "n3", type: "update", title: "Corporate filing update — 李明辉", detail: "SAMR registry shows new company registration: Hangzhou Minghui Consulting Co. Subject listed as legal representative.", time: "3 days ago", caseRef: "SOW-2026-0210-553", read: true },
-	{ id: "n4", type: "completed", title: "EDD interview scheduled — 赵薇薇", detail: "Enhanced due diligence interview confirmed for 20 May 2026, 14:00 CST. Documents pending.", time: "5 days ago", caseRef: "SOW-2026-0402-291", read: true },
-	{ id: "n5", type: "alert", title: "Tax discrepancy detected — 赵薇薇", detail: "Year-over-year income variance of 340% detected in latest STA filing. Flagged for manual review.", time: "1 week ago", caseRef: "SOW-2026-0402-291", read: true },
-	{ id: "n6", type: "alert", title: "Sanctions list match — 林婉琪", detail: "Possible partial match on OFAC SDN list for associated entity Shenzhen Hengda Import Co. Manual verification required.", time: "1 week ago", caseRef: "SOW-2026-0428-195", read: true },
-	{ id: "n7", type: "update", title: "Annual review completed — 黄晓明", detail: "All 11 data sources re-queried. No material changes from prior assessment. Risk rating unchanged at Low.", time: "2 weeks ago", caseRef: "SOW-2026-0315-744", read: true },
-	{ id: "n8", type: "review-due", title: "90-day check due — 林婉琪", detail: "High-risk case requires 90-day interim review per enhanced monitoring policy. 6 data sources scheduled for re-query.", time: "2 weeks ago", caseRef: "SOW-2026-0428-195", read: true },
-];
-
-function generateCaseRef(): string {
-	const d = new Date();
-	const pad = (n: number) => String(n).padStart(2, "0");
-	const seq = String(Math.floor(Math.random() * 900) + 100);
-	return `SOW-${d.getFullYear()}-${pad(d.getMonth() + 1)}${pad(d.getDate())}-${seq}`;
-}
+/* ═══════════════════════════════════════════════════════════════
+   Main Component
+   ═══════════════════════════════════════════════════════════════ */
 
 export default function SowDemo() {
 	const [phase, setPhase] = useState<Phase>("dashboard");
-	const [selectedCase, setSelectedCase] = useState<SowReport | null>(null);
-	const [caseRef, setCaseRef] = useState("");
-	const [formData, setFormData] = useState<Record<string, string>>({});
-	const [completedSources, setCompletedSources] = useState<SowDataSource[]>([]);
+	const [selectedCase, setSelectedCase] = useState<HnwReport | null>(null);
+	const [completedSources, setCompletedSources] = useState<DataSourceDef[]>([]);
 	const [currentSourceIndex, setCurrentSourceIndex] = useState(-1);
 	const [elapsedMs, setElapsedMs] = useState(0);
-	const [confirmedActions, setConfirmedActions] = useState<Set<string>>(new Set());
-	const [consentChecks, setConsentChecks] = useState({ dataProcessing: false, clientAuth: false, regulatoryDisclosure: false });
-	const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
-	const [selectedMonitoringEntry, setSelectedMonitoringEntry] = useState<MonitoringEntry | null>(null);
+	const [selectedMonitoringId, setSelectedMonitoringId] = useState<string | null>(null);
 	const cancelRef = useRef(false);
 	const reportRef = useRef<HTMLDivElement>(null);
 	const timerRef = useRef<ReturnType<typeof setInterval>>(undefined);
@@ -349,56 +106,23 @@ export default function SowDemo() {
 		if (timerRef.current) clearInterval(timerRef.current);
 		setPhase("dashboard");
 		setSelectedCase(null);
-		setSelectedMonitoringEntry(null);
-		setCaseRef("");
-		setFormData({});
+		setSelectedMonitoringId(null);
 		setCompletedSources([]);
 		setCurrentSourceIndex(-1);
 		setElapsedMs(0);
-		setConfirmedActions(new Set());
-		setConsentChecks({ dataProcessing: false, clientAuth: false, regulatoryDisclosure: false });
-		setUploadedFiles([]);
 	};
 
-	const selectDemoCase = (report: SowReport) => {
+	const selectSubject = (report: HnwReport) => {
 		setSelectedCase(report);
-		const p = report.profile;
-		setFormData({
-			nameCn: p.name,
-			nameEn: p.nameEn,
-			dob: p.dateOfBirth,
-			gender: p.gender,
-			idType: "Chinese Resident Identity Card",
-			idNumber: p.idNumber,
-			nationality: p.nationality,
-			occupation: p.occupation,
-			employer: p.employer,
-			city: p.city,
-			purpose: p.riskRating === "High" ? "Investment" : "Private Banking",
-			volume: p.riskRating === "High" ? "¥20M – ¥100M" : "¥5M – ¥20M",
-		});
-	};
-
-	const createCase = () => {
-		if (!selectedCase) return;
-		setCaseRef(generateCaseRef());
-		setPhase("consent");
-	};
-
-	const proceedFromConsent = () => {
-		setPhase("sources");
 	};
 
 	const beginAssessment = () => {
+		if (!selectedCase) return;
 		cancelRef.current = false;
 		setCompletedSources([]);
 		setCurrentSourceIndex(-1);
 		setElapsedMs(0);
 		setPhase("generating");
-	};
-
-	const confirmAction = (id: string) => {
-		setConfirmedActions((prev) => new Set(prev).add(id));
 	};
 
 	useEffect(() => {
@@ -434,83 +158,61 @@ export default function SowDemo() {
 	}, [phase, selectedCase]);
 
 	if (phase === "dashboard") {
-		return <Dashboard onNewCase={() => setPhase("intake")} onSelectEntry={(entry) => { setSelectedMonitoringEntry(entry); setPhase("profile"); }} />;
+		return (
+			<Dashboard
+				onNewAssessment={() => setPhase("select")}
+				onSelectMonitoring={(id) => {
+					setSelectedMonitoringId(id);
+					setPhase("profile");
+				}}
+			/>
+		);
 	}
 
-	if (phase === "profile" && selectedMonitoringEntry) {
-		return <CaseProfile entry={selectedMonitoringEntry} onBack={reset} />;
+	if (phase === "profile" && selectedMonitoringId) {
+		const entry = HNW_MONITORING.find((m) => m.id === selectedMonitoringId);
+		if (!entry) return null;
+		return <MonitoringProfile entry={entry} onBack={reset} />;
 	}
 
 	return (
 		<div className="space-y-6">
 			<StepIndicator current={phase} />
 
-			{phase === "intake" && (
-				<CaseIntake
+			{phase === "select" && (
+				<PersonSelector
 					selectedCase={selectedCase}
-					formData={formData}
-					onSelectCase={selectDemoCase}
-					onUpdateField={(k, v) => setFormData((prev) => ({ ...prev, [k]: v }))}
-					onCreateCase={createCase}
+					onSelectCase={selectSubject}
+					onBegin={beginAssessment}
 					onBack={() => setPhase("dashboard")}
 				/>
 			)}
 
-			{phase === "consent" && selectedCase && (
-				<ConsentPhase
-					report={selectedCase}
-					caseRef={caseRef}
-					consentChecks={consentChecks}
-					uploadedFiles={uploadedFiles}
-					onToggleConsent={(key) => setConsentChecks((prev) => ({ ...prev, [key]: !prev[key] }))}
-					onUploadFile={(name) => setUploadedFiles((prev) => [...prev, name])}
-					onProceed={proceedFromConsent}
-					onBack={() => setPhase("intake")}
-				/>
-			)}
-
-			{phase === "sources" && selectedCase && (
-				<DataSourceOverview
-					report={selectedCase}
-					caseRef={caseRef}
-					onBegin={beginAssessment}
-					onBack={() => setPhase("consent")}
-				/>
-			)}
-
 			{phase === "generating" && selectedCase && (
-				<>
-					<CaseBanner caseRef={caseRef} report={selectedCase} status="In Progress" />
-					<GeneratingView
-						report={selectedCase}
-						completedSources={completedSources}
-						currentSourceIndex={currentSourceIndex}
-						elapsedMs={elapsedMs}
-						onCancel={reset}
-					/>
-				</>
+				<GeneratingView
+					report={selectedCase}
+					completedSources={completedSources}
+					currentSourceIndex={currentSourceIndex}
+					elapsedMs={elapsedMs}
+					onCancel={reset}
+				/>
 			)}
 
 			{phase === "report" && selectedCase && (
 				<div ref={reportRef}>
-					<CaseBanner caseRef={caseRef} report={selectedCase} status="Complete" />
-					<ReportView
-						report={selectedCase}
-						caseRef={caseRef}
-						confirmedActions={confirmedActions}
-						onConfirmAction={confirmAction}
-						onReset={reset}
-					/>
+					<ReportView report={selectedCase} onReset={reset} />
 				</div>
 			)}
 		</div>
 	);
 }
 
-/* ─── Dashboard ─── */
+/* ═══════════════════════════════════════════════════════════════
+   Dashboard
+   ═══════════════════════════════════════════════════════════════ */
 
-function Dashboard({ onNewCase, onSelectEntry }: { onNewCase: () => void; onSelectEntry: (entry: MonitoringEntry) => void }) {
-	const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
+function Dashboard({ onNewAssessment, onSelectMonitoring }: { onNewAssessment: () => void; onSelectMonitoring: (id: string) => void }) {
+	const [notifications, setNotifications] = useState(HNW_NOTIFICATIONS);
 	const [lastRefresh, setLastRefresh] = useState(new Date());
 	const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -518,40 +220,34 @@ function Dashboard({ onNewCase, onSelectEntry }: { onNewCase: () => void; onSele
 		setNotifications((prev) => prev.map((n) => n.id === id ? { ...n, read: true } : n));
 	};
 
-	const refresh = () => {
-		setLastRefresh(new Date());
-	};
-
-	const casesByStatus = {
-		total: MOCK_EXISTING_CASES.length,
-		complete: MOCK_EXISTING_CASES.filter((c) => c.status === "Complete").length,
-		review: MOCK_EXISTING_CASES.filter((c) => c.status === "Under Review").length,
-		pending: MOCK_EXISTING_CASES.filter((c) => c.status === "Pending EDD").length,
-	};
-
-	const totalAlerts = MOCK_EXISTING_CASES.reduce((sum, c) => sum + c.alertCount, 0);
-	const highRiskCount = MOCK_EXISTING_CASES.filter((c) => c.riskRating === "High").length;
+	const monitoring = HNW_MONITORING;
+	const profilesMonitored = monitoring.length;
+	const underReview = monitoring.filter((m) => m.status === "Under Review" || m.status === "Flagged").length;
+	const highRisk = monitoring.filter((m) => m.riskRating === "High").length;
+	const totalAlerts = monitoring.reduce((sum, m) => sum + m.openAlerts, 0);
 
 	return (
 		<div className="space-y-6">
 			<div className="flex items-center justify-between">
 				<div>
-					<h2 className="text-xl font-heading font-semibold tracking-tight">Case Dashboard</h2>
-					<p className="text-sm text-muted-foreground mt-0.5">Overview of active SOW assessments and monitoring alerts</p>
+					<h2 className="text-xl font-heading font-semibold tracking-tight">HNW Wealth Intelligence</h2>
+					<p className="text-sm text-muted-foreground mt-0.5">Source of Wealth monitoring and assessment for high net worth individuals</p>
 				</div>
-				<Button onClick={onNewCase} className="gap-2 shadow-md shadow-primary/20 font-heading">
+				<Button onClick={onNewAssessment} className="gap-2 shadow-md shadow-primary/20 font-heading">
 					<PlusIcon className="size-4" />
-					New Case
+					New Assessment
 				</Button>
 			</div>
 
+			{/* Stats */}
 			<div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-				<StatCard label="Total Cases" value={casesByStatus.total} icon={FolderOpenIcon} />
-				<StatCard label="Completed" value={casesByStatus.complete} icon={CheckCircle2Icon} color="emerald" />
-				<StatCard label="Under Review" value={casesByStatus.review + casesByStatus.pending} icon={EyeIcon} color="amber" />
-				<StatCard label="Active Alerts" value={totalAlerts} icon={BellRingIcon} color="red" />
+				<StatCard label="Profiles Monitored" value={profilesMonitored} icon={UserIcon} />
+				<StatCard label="Under Review" value={underReview} icon={EyeIcon} color="amber" />
+				<StatCard label="High Risk" value={highRisk} icon={ShieldAlertIcon} color="red" />
+				<StatCard label="Open Alerts" value={totalAlerts} icon={BellRingIcon} color="red" />
 			</div>
 
+			{/* Compliance Summary */}
 			<div className="rounded-2xl border border-border bg-gradient-to-r from-muted/30 to-transparent p-5 shadow-sm">
 				<div className="flex items-center gap-2 mb-3">
 					<ShieldCheckIcon className="size-4 text-primary" />
@@ -559,46 +255,47 @@ function Dashboard({ onNewCase, onSelectEntry }: { onNewCase: () => void; onSele
 				</div>
 				<div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
 					<div>
-						<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Avg. Assessment Time</div>
-						<div className="mt-0.5 font-heading font-semibold">28.4s</div>
+						<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Avg. Confidence</div>
+						<div className="mt-0.5 font-heading font-semibold">62%</div>
 					</div>
 					<div>
-						<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">High Risk Rate</div>
-						<div className="mt-0.5 font-heading font-semibold">{((highRiskCount / casesByStatus.total) * 100).toFixed(0)}%</div>
+						<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Profiles Verified</div>
+						<div className="mt-0.5 font-heading font-semibold">5 / {profilesMonitored}</div>
 					</div>
 					<div>
-						<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Data Sources Active</div>
-						<div className="mt-0.5 font-heading font-semibold">13 / 13</div>
+						<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Data Sources</div>
+						<div className="mt-0.5 font-heading font-semibold">12 per subject</div>
 					</div>
 					<div>
-						<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">SLA Compliance</div>
-						<div className="mt-0.5 font-heading font-semibold text-emerald-700">100%</div>
+						<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Coverage</div>
+						<div className="mt-0.5 font-heading font-semibold text-emerald-700">Multi-jurisdictional</div>
 					</div>
 				</div>
 			</div>
 
-			{/* Ongoing Monitoring */}
-			<OngoingMonitoring entries={MOCK_MONITORING} onSelectEntry={onSelectEntry} />
+			{/* HNW Monitoring Table */}
+			<HnwMonitoringTable entries={monitoring} onSelect={onSelectMonitoring} />
+
+			{/* PEP / Sanctions Screening */}
+			<PepSanctionsSection entries={PEP_SCREENING} />
 
 			{/* Notifications */}
 			<div className="space-y-3">
 				<div className="flex items-center justify-between">
 					<div className="flex items-center gap-2">
 						<BellRingIcon className="size-4 text-amber-500" />
-						<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">
-							Notifications
-						</p>
+						<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Notifications</p>
 						{unreadCount > 0 && (
 							<span className="text-[9px] font-bold rounded-full px-1.5 py-0.5 bg-red-500 text-white min-w-[18px] text-center">{unreadCount}</span>
 						)}
 					</div>
-					<button onClick={refresh} className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded-md hover:bg-muted" title="Refresh">
+					<button onClick={() => setLastRefresh(new Date())} className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded-md hover:bg-muted" title="Refresh">
 						<RefreshCwIcon className="size-3.5" />
 					</button>
 				</div>
 				<div className="rounded-2xl border border-border overflow-hidden shadow-sm divide-y divide-border/60 bg-card">
 					{notifications.map((n) => (
-						<NotificationRow key={n.id} notification={n} onRead={() => markRead(n.id)} />
+						<HnwNotificationRow key={n.id} notification={n} onRead={() => markRead(n.id)} />
 					))}
 				</div>
 				<p className="text-[10px] text-muted-foreground/60 text-right tracking-wide">
@@ -609,7 +306,9 @@ function Dashboard({ onNewCase, onSelectEntry }: { onNewCase: () => void; onSele
 	);
 }
 
-function StatCard({ label, value, icon: Icon, color }: { label: string; value: number; icon: typeof FolderOpenIcon; color?: string }) {
+/* ─── Stat Card ─── */
+
+function StatCard({ label, value, icon: Icon, color }: { label: string; value: number; icon: typeof UserIcon; color?: string }) {
 	const colorMap: Record<string, string> = {
 		emerald: "text-emerald-600 bg-emerald-500/10",
 		amber: "text-amber-600 bg-amber-500/10",
@@ -629,16 +328,302 @@ function StatCard({ label, value, icon: Icon, color }: { label: string; value: n
 	);
 }
 
-function CaseStatusBadge({ status }: { status: "Complete" | "Under Review" | "Pending EDD" }) {
-	const styles: Record<string, string> = {
-		Complete: "bg-emerald-500/15 text-emerald-700 border-emerald-500/20",
-		"Under Review": "bg-amber-500/15 text-amber-700 border-amber-500/20",
-		"Pending EDD": "bg-red-500/15 text-red-700 border-red-500/20",
-	};
-	return <span className={`text-[10px] font-semibold rounded-md border px-1.5 py-0.5 whitespace-nowrap ${styles[status]}`}>{status}</span>;
+/* ─── HNW Monitoring Table ─── */
+
+function HnwMonitoringTable({ entries, onSelect }: { entries: HnwMonitoringEntry[]; onSelect: (id: string) => void }) {
+	return (
+		<div className="space-y-3">
+			<div className="flex items-center justify-between">
+				<div className="flex items-center gap-2">
+					<RadarIcon className="size-4 text-primary" />
+					<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">HNW Monitoring</p>
+					<span className="text-[9px] font-bold rounded-full px-1.5 py-0.5 bg-primary/15 text-primary min-w-[18px] text-center">
+						{entries.length} active
+					</span>
+				</div>
+				<div className="flex items-center gap-2 text-[10px]">
+					<span className="rounded-md border border-border bg-muted/50 text-muted-foreground px-1.5 py-0.5 font-semibold flex items-center gap-1">
+						<ScanIcon className="size-3" /> Last scan: {new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short" })}
+					</span>
+				</div>
+			</div>
+
+			<div className="rounded-2xl border border-border overflow-hidden shadow-sm bg-card">
+				<table className="w-full text-sm">
+					<thead className="bg-gradient-to-r from-muted/60 to-muted/30 text-muted-foreground">
+						<tr>
+							<th className="text-left px-4 py-3 font-medium text-xs tracking-wide">Name</th>
+							<th className="text-left px-4 py-3 font-medium text-xs tracking-wide hidden sm:table-cell">Industry</th>
+							<th className="text-right px-4 py-3 font-medium text-xs tracking-wide hidden sm:table-cell">Net Worth</th>
+							<th className="text-center px-4 py-3 font-medium text-xs tracking-wide">Risk</th>
+							<th className="text-center px-4 py-3 font-medium text-xs tracking-wide hidden sm:table-cell">Last Screened</th>
+							<th className="text-center px-4 py-3 font-medium text-xs tracking-wide">Alerts</th>
+							<th className="text-center px-4 py-3 font-medium text-xs tracking-wide hidden sm:table-cell">Status</th>
+						</tr>
+					</thead>
+					<tbody className="divide-y divide-border/60">
+						{entries.map((entry) => (
+							<tr key={entry.id} className="hover:bg-accent/30 transition-colors cursor-pointer" onClick={() => onSelect(entry.id)}>
+								<td className="px-4 py-3">
+									<div className="font-medium text-primary">{entry.name}</div>
+									{entry.nameCn && <div className="text-[10px] text-muted-foreground/60">{entry.nameCn}</div>}
+								</td>
+								<td className="px-4 py-3 text-xs text-muted-foreground hidden sm:table-cell">{entry.industry}</td>
+								<td className="px-4 py-3 text-right hidden sm:table-cell">
+									<span className="font-mono text-xs font-medium">{formatUSD(entry.estimatedNetWorthUSD)}</span>
+								</td>
+								<td className="px-4 py-3 text-center">
+									<RiskBadge rating={entry.riskRating} />
+								</td>
+								<td className="px-4 py-3 text-center hidden sm:table-cell">
+									<span className="text-xs text-muted-foreground">{entry.lastScreened}</span>
+								</td>
+								<td className="px-4 py-3 text-center">
+									{entry.openAlerts > 0 ? (
+										<span className="text-[10px] font-bold rounded-full px-2 py-0.5 bg-red-500/15 text-red-700">{entry.openAlerts}</span>
+									) : (
+										<span className="text-xs text-muted-foreground/40">—</span>
+									)}
+								</td>
+								<td className="px-4 py-3 text-center hidden sm:table-cell">
+									<MonitoringStatusBadge status={entry.status} />
+								</td>
+							</tr>
+						))}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	);
 }
 
-function NotificationRow({ notification: n, onRead }: { notification: DashboardNotification; onRead: () => void }) {
+/* ─── PEP/Sanctions Section ─── */
+
+function PepSanctionsSection({ entries }: { entries: PepScreeningEntry[] }) {
+	const totalPep = entries.reduce((s, e) => s + e.pepHits, 0);
+	const totalSanctions = entries.reduce((s, e) => s + e.sanctionsHits, 0);
+	const totalAdverse = entries.reduce((s, e) => s + e.adverseMedia, 0);
+	const flaggedCount = entries.filter((e) => e.overallStatus === "Flagged").length;
+	const reviewCount = entries.filter((e) => e.overallStatus === "Review Required").length;
+
+	return (
+		<div className="space-y-3">
+			<div className="flex items-center gap-2">
+				<ShieldAlertIcon className="size-4 text-amber-500" />
+				<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">PEP / Sanctions / Watchlist Screening</p>
+			</div>
+
+			<div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+				<div className="rounded-xl border border-border bg-card p-3 shadow-sm">
+					<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">PEP Hits</div>
+					<div className={`text-2xl font-heading font-bold mt-1 tabular-nums ${totalPep > 0 ? "text-amber-600" : "text-emerald-600"}`}>{totalPep}</div>
+				</div>
+				<div className="rounded-xl border border-border bg-card p-3 shadow-sm">
+					<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Sanctions Hits</div>
+					<div className={`text-2xl font-heading font-bold mt-1 tabular-nums ${totalSanctions > 0 ? "text-red-600" : "text-emerald-600"}`}>{totalSanctions}</div>
+				</div>
+				<div className="rounded-xl border border-border bg-card p-3 shadow-sm">
+					<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Adverse Media</div>
+					<div className={`text-2xl font-heading font-bold mt-1 tabular-nums ${totalAdverse > 0 ? "text-amber-600" : "text-emerald-600"}`}>{totalAdverse}</div>
+				</div>
+				<div className="rounded-xl border border-border bg-card p-3 shadow-sm">
+					<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Flagged</div>
+					<div className={`text-2xl font-heading font-bold mt-1 tabular-nums ${flaggedCount > 0 ? "text-red-600" : "text-emerald-600"}`}>{flaggedCount}</div>
+				</div>
+				<div className="rounded-xl border border-border bg-card p-3 shadow-sm">
+					<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Review Req.</div>
+					<div className={`text-2xl font-heading font-bold mt-1 tabular-nums ${reviewCount > 0 ? "text-amber-600" : "text-emerald-600"}`}>{reviewCount}</div>
+				</div>
+			</div>
+
+			<div className="rounded-2xl border border-border overflow-hidden shadow-sm bg-card">
+				<table className="w-full text-sm">
+					<thead className="bg-gradient-to-r from-muted/60 to-muted/30 text-muted-foreground">
+						<tr>
+							<th className="text-left px-4 py-3 font-medium text-xs tracking-wide">Subject</th>
+							<th className="text-center px-4 py-3 font-medium text-xs tracking-wide">Risk</th>
+							<th className="text-center px-4 py-3 font-medium text-xs tracking-wide hidden sm:table-cell">PEP</th>
+							<th className="text-center px-4 py-3 font-medium text-xs tracking-wide hidden sm:table-cell">Sanctions</th>
+							<th className="text-center px-4 py-3 font-medium text-xs tracking-wide hidden sm:table-cell">Adverse Media</th>
+							<th className="text-center px-4 py-3 font-medium text-xs tracking-wide">Status</th>
+							<th className="text-left px-4 py-3 font-medium text-xs tracking-wide hidden lg:table-cell">Last Screened</th>
+						</tr>
+					</thead>
+					<tbody className="divide-y divide-border/60">
+						{entries.map((entry, i) => {
+							const statusColor: Record<string, string> = {
+								Clear: "bg-emerald-500/15 text-emerald-700 border-emerald-500/20",
+								"Review Required": "bg-amber-500/15 text-amber-700 border-amber-500/20",
+								Flagged: "bg-red-500/15 text-red-700 border-red-500/20",
+							};
+							return (
+								<tr key={i} className="hover:bg-accent/20 transition-colors">
+									<td className="px-4 py-3">
+										<div className="font-medium">{entry.subjectName}</div>
+										{entry.subjectNameCn && <div className="text-[10px] text-muted-foreground/60">{entry.subjectNameCn}</div>}
+									</td>
+									<td className="px-4 py-3 text-center"><RiskBadge rating={entry.riskRating} /></td>
+									<td className="px-4 py-3 text-center hidden sm:table-cell">
+										<span className={`font-heading font-bold ${entry.pepHits > 0 ? "text-amber-600" : "text-muted-foreground/40"}`}>{entry.pepHits}</span>
+									</td>
+									<td className="px-4 py-3 text-center hidden sm:table-cell">
+										<span className={`font-heading font-bold ${entry.sanctionsHits > 0 ? "text-red-600" : "text-muted-foreground/40"}`}>{entry.sanctionsHits}</span>
+									</td>
+									<td className="px-4 py-3 text-center hidden sm:table-cell">
+										<span className={`font-heading font-bold ${entry.adverseMedia > 0 ? "text-amber-600" : "text-muted-foreground/40"}`}>{entry.adverseMedia}</span>
+									</td>
+									<td className="px-4 py-3 text-center">
+										<span className={`text-[10px] font-semibold rounded-md border px-1.5 py-0.5 whitespace-nowrap ${statusColor[entry.overallStatus]}`}>{entry.overallStatus}</span>
+									</td>
+									<td className="px-4 py-3 text-xs text-muted-foreground hidden lg:table-cell">{entry.lastScreened}</td>
+								</tr>
+							);
+						})}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	);
+}
+
+/* ─── Monitoring Profile ─── */
+
+function MonitoringProfile({ entry, onBack }: { entry: HnwMonitoringEntry; onBack: () => void }) {
+	const screening = PEP_SCREENING.find((p) => p.subjectName.includes(entry.name));
+
+	return (
+		<div className="space-y-6">
+			<div className="flex items-center gap-3">
+				<button onClick={onBack} className="text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-lg hover:bg-muted">
+					<ArrowRightIcon className="size-4 rotate-180" />
+				</button>
+				<div className="flex-1">
+					<div className="flex items-center gap-3">
+						<h2 className="text-xl font-heading font-semibold tracking-tight">{entry.name}</h2>
+						{entry.nameCn && <span className="text-lg text-muted-foreground font-heading">{entry.nameCn}</span>}
+						<RiskBadge rating={entry.riskRating} />
+						<MonitoringStatusBadge status={entry.status} />
+					</div>
+					<p className="text-sm text-muted-foreground mt-0.5">{entry.industry}</p>
+				</div>
+			</div>
+
+			<div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+				{/* Profile Info */}
+				<div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
+					<div className="flex items-center gap-2">
+						<UserIcon className="size-4 text-primary" />
+						<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Subject Profile</p>
+					</div>
+					<div className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
+						<div>
+							<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Est. Net Worth</div>
+							<div className="mt-0.5 font-heading font-bold text-lg">{formatUSD(entry.estimatedNetWorthUSD)}</div>
+						</div>
+						<div>
+							<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Risk Rating</div>
+							<div className={`mt-0.5 font-heading font-bold text-lg ${entry.riskRating === "High" ? "text-red-600" : entry.riskRating === "Medium" ? "text-amber-600" : "text-emerald-600"}`}>{entry.riskRating}</div>
+						</div>
+						<div>
+							<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Industry</div>
+							<div className="mt-0.5">{entry.industry}</div>
+						</div>
+						<div>
+							<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Screening Freq.</div>
+							<div className="mt-0.5 font-heading font-semibold text-primary">{entry.screeningFrequency}</div>
+						</div>
+					</div>
+				</div>
+
+				{/* Monitoring Config */}
+				<div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
+					<div className="flex items-center gap-2">
+						<RadarIcon className="size-4 text-primary" />
+						<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Monitoring Configuration</p>
+					</div>
+					<div className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
+						<div>
+							<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Last Screened</div>
+							<div className="mt-0.5">{entry.lastScreened}</div>
+						</div>
+						<div>
+							<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Frequency</div>
+							<div className="mt-0.5 font-heading font-semibold">{entry.screeningFrequency}</div>
+						</div>
+						<div>
+							<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Open Alerts</div>
+							<div className={`mt-0.5 font-heading font-bold ${entry.openAlerts > 0 ? "text-red-600" : "text-emerald-600"}`}>{entry.openAlerts}</div>
+						</div>
+						<div>
+							<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Status</div>
+							<div className="mt-0.5"><MonitoringStatusBadge status={entry.status} /></div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			{/* PEP Screening Details */}
+			{screening && (
+				<div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
+					<div className="flex items-center gap-2">
+						<ShieldCheckIcon className="size-4 text-primary" />
+						<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Screening Results</p>
+					</div>
+					<div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+						<div className="rounded-xl border border-border/60 bg-muted/20 p-3">
+							<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">PEP Hits</div>
+							<div className={`text-xl font-heading font-bold mt-1 ${screening.pepHits > 0 ? "text-amber-600" : "text-emerald-600"}`}>{screening.pepHits}</div>
+						</div>
+						<div className="rounded-xl border border-border/60 bg-muted/20 p-3">
+							<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Sanctions</div>
+							<div className={`text-xl font-heading font-bold mt-1 ${screening.sanctionsHits > 0 ? "text-red-600" : "text-emerald-600"}`}>{screening.sanctionsHits}</div>
+						</div>
+						<div className="rounded-xl border border-border/60 bg-muted/20 p-3">
+							<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Adverse Media</div>
+							<div className={`text-xl font-heading font-bold mt-1 ${screening.adverseMedia > 0 ? "text-amber-600" : "text-emerald-600"}`}>{screening.adverseMedia}</div>
+						</div>
+						<div className="rounded-xl border border-border/60 bg-muted/20 p-3">
+							<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Lists Checked</div>
+							<div className="text-xl font-heading font-bold mt-1">{screening.listsChecked.length}</div>
+						</div>
+					</div>
+					{screening.pepDetails && (
+						<div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
+							<div className="text-[9px] font-heading text-amber-700 uppercase tracking-widest mb-1">PEP Details</div>
+							<p className="text-sm text-amber-900/80 leading-relaxed">{screening.pepDetails}</p>
+						</div>
+					)}
+					{screening.adverseMediaDetails && (
+						<div className="rounded-xl border border-border/60 bg-muted/20 p-4">
+							<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest mb-1">Adverse Media Details</div>
+							<p className="text-sm text-muted-foreground leading-relaxed">{screening.adverseMediaDetails}</p>
+						</div>
+					)}
+				</div>
+			)}
+
+			{/* Related notifications */}
+			<div className="space-y-3">
+				<div className="flex items-center gap-2">
+					<BellRingIcon className="size-4 text-amber-500" />
+					<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Recent Activity</p>
+				</div>
+				<div className="rounded-2xl border border-border overflow-hidden shadow-sm divide-y divide-border/60 bg-card">
+					{HNW_NOTIFICATIONS.filter((n) => n.subjectName === entry.name).map((n) => (
+						<HnwNotificationRow key={n.id} notification={n} onRead={() => {}} />
+					))}
+					{HNW_NOTIFICATIONS.filter((n) => n.subjectName === entry.name).length === 0 && (
+						<div className="p-6 text-center text-sm text-muted-foreground">No recent notifications for this subject.</div>
+					)}
+				</div>
+			</div>
+		</div>
+	);
+}
+
+/* ─── Notification Row ─── */
+
+function HnwNotificationRow({ notification: n, onRead }: { notification: HnwNotification; onRead: () => void }) {
 	const iconMap: Record<string, { Icon: typeof BellRingIcon; color: string }> = {
 		alert: { Icon: AlertTriangleIcon, color: "text-red-500" },
 		"review-due": { Icon: CalendarClockIcon, color: "text-amber-500" },
@@ -648,10 +633,7 @@ function NotificationRow({ notification: n, onRead }: { notification: DashboardN
 	const { Icon, color } = iconMap[n.type] ?? iconMap.update;
 
 	return (
-		<button
-			onClick={onRead}
-			className={`w-full text-left px-4 py-3.5 hover:bg-accent/30 transition-colors ${!n.read ? "bg-primary/[0.03]" : ""}`}
-		>
+		<button onClick={onRead} className={`w-full text-left px-4 py-3.5 hover:bg-accent/30 transition-colors ${!n.read ? "bg-primary/[0.03]" : ""}`}>
 			<div className="flex items-start gap-2.5">
 				<div className={`mt-0.5 p-1 rounded-lg ${!n.read ? "bg-muted/80" : ""}`}>
 					<Icon className={`size-3.5 shrink-0 ${color}`} />
@@ -663,8 +645,6 @@ function NotificationRow({ notification: n, onRead }: { notification: DashboardN
 					</div>
 					<p className="text-[11px] text-muted-foreground leading-relaxed mt-0.5 line-clamp-2">{n.detail}</p>
 					<div className="flex items-center gap-2 mt-1.5">
-						<span className="font-mono text-[9px] text-muted-foreground/50 tracking-wide">{n.caseRef}</span>
-						<span className="text-[9px] text-muted-foreground/30">·</span>
 						<span className="text-[9px] text-muted-foreground/50">{n.time}</span>
 					</div>
 				</div>
@@ -673,355 +653,12 @@ function NotificationRow({ notification: n, onRead }: { notification: DashboardN
 	);
 }
 
-/* ─── Case Profile ─── */
-
-function CaseProfile({ entry, onBack }: { entry: MonitoringEntry; onBack: () => void }) {
-	const openAlerts = entry.alerts.filter((a) => a.status === "Open" || a.status === "Under Review");
-	const resolvedAlerts = entry.alerts.filter((a) => a.status === "Resolved");
-	const [showResolved, setShowResolved] = useState(false);
-
-	return (
-		<div className="space-y-6">
-			<div className="flex items-center gap-3">
-				<button onClick={onBack} className="text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-lg hover:bg-muted">
-					<ArrowRightIcon className="size-4 rotate-180" />
-				</button>
-				<div className="flex-1">
-					<div className="flex items-center gap-3">
-						<h2 className="text-xl font-heading font-semibold tracking-tight">{entry.subjectNameCn}</h2>
-						<span className="text-lg text-muted-foreground font-heading">{entry.subjectName}</span>
-						<RiskBadge rating={entry.riskRating} />
-						<CaseStatusBadge status={entry.caseStatus} />
-					</div>
-					<p className="text-sm text-muted-foreground mt-0.5 font-mono tracking-wide">{entry.caseRef}</p>
-				</div>
-			</div>
-
-			{/* Subject Info + Monitoring Config */}
-			<div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-				<div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
-					<div className="flex items-center gap-2">
-						<UserIcon className="size-4 text-primary" />
-						<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Subject Profile</p>
-					</div>
-					<div className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
-						<div>
-							<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">ID Number</div>
-							<div className="mt-0.5 font-mono text-xs">{entry.idNumber}</div>
-						</div>
-						<div>
-							<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Risk Score</div>
-							<div className={`mt-0.5 font-heading font-bold text-lg ${entry.riskScore >= 60 ? "text-red-600" : entry.riskScore >= 40 ? "text-amber-600" : "text-emerald-600"}`}>{entry.riskScore}/100</div>
-						</div>
-						<div>
-							<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Occupation</div>
-							<div className="mt-0.5">{entry.occupation}</div>
-						</div>
-						<div>
-							<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Employer</div>
-							<div className="mt-0.5">{entry.employer}</div>
-						</div>
-						<div>
-							<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">City</div>
-							<div className="mt-0.5">{entry.city}</div>
-						</div>
-						<div>
-							<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Case Created</div>
-							<div className="mt-0.5">{entry.createdDate}</div>
-						</div>
-					</div>
-				</div>
-
-				<div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
-					<div className="flex items-center gap-2">
-						<RadarIcon className="size-4 text-primary" />
-						<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Monitoring Configuration</p>
-					</div>
-					<div className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
-						<div>
-							<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Screening Frequency</div>
-							<div className="mt-0.5 font-heading font-semibold text-primary">{entry.screeningFrequency}</div>
-						</div>
-						<div>
-							<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Next Review</div>
-							<div className="mt-0.5 font-heading font-semibold">{entry.nextReviewDate}</div>
-						</div>
-						<div>
-							<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Sources Monitored</div>
-							<div className="mt-0.5 flex items-center gap-1.5">
-								<DatabaseIcon className={`size-3.5 ${entry.sourcesHealthy === entry.sourcesMonitored ? "text-emerald-500" : "text-amber-500"}`} />
-								<span className="font-heading font-semibold">{entry.sourcesHealthy}/{entry.sourcesMonitored}</span>
-								<span className="text-[10px] text-muted-foreground">{entry.sourcesHealthy === entry.sourcesMonitored ? "all healthy" : `${entry.sourcesMonitored - entry.sourcesHealthy} degraded`}</span>
-							</div>
-						</div>
-						<div>
-							<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Last Scan</div>
-							<div className="mt-0.5">{entry.lastScanDate}</div>
-						</div>
-					</div>
-				</div>
-			</div>
-
-			{/* Screening Coverage */}
-			<div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
-				<div className="flex items-center gap-2">
-					<ShieldCheckIcon className="size-4 text-primary" />
-					<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Screening Coverage</p>
-				</div>
-				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-					{[
-						{ label: "Sanctions Screening", value: entry.sanctionsScreening, icon: ShieldAlertIcon },
-						{ label: "Adverse Media", value: entry.adverseMediaMonitoring, icon: SearchIcon },
-						{ label: "Corporate Registry", value: entry.corporateRegistryRefresh, icon: BuildingIcon },
-						{ label: "Tax Compliance", value: entry.taxComplianceCheck, icon: FileTextIcon },
-						{ label: "Auto-Escalation", value: entry.autoEscalation, icon: AlertTriangleIcon },
-					].map((item) => (
-						<div key={item.label} className="rounded-xl border border-border/60 bg-muted/20 p-3">
-							<div className="flex items-center gap-1.5 mb-1.5">
-								<item.icon className="size-3.5 text-muted-foreground" />
-								<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">{item.label}</div>
-							</div>
-							<div className="text-sm font-medium">{item.value}</div>
-						</div>
-					))}
-				</div>
-			</div>
-
-			{/* Open Alerts */}
-			<div className="space-y-3">
-				<div className="flex items-center justify-between">
-					<div className="flex items-center gap-2">
-						<CircleAlertIcon className="size-4 text-red-500" />
-						<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">
-							Open Alerts
-						</p>
-						{openAlerts.length > 0 && (
-							<span className="text-[9px] font-bold rounded-full px-1.5 py-0.5 bg-red-500 text-white min-w-[18px] text-center">{openAlerts.length}</span>
-						)}
-					</div>
-				</div>
-				{openAlerts.length === 0 ? (
-					<div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.03] p-6 text-center">
-						<CheckCircle2Icon className="size-6 text-emerald-500 mx-auto mb-2" />
-						<p className="text-sm font-medium text-emerald-700">No open alerts</p>
-						<p className="text-xs text-muted-foreground mt-0.5">All screening results are clear</p>
-					</div>
-				) : (
-					<div className="rounded-2xl border border-red-500/20 bg-gradient-to-br from-red-500/[0.03] to-transparent overflow-hidden shadow-sm">
-						<div className="divide-y divide-border/50">
-							{openAlerts.map((alert) => {
-								const sevStyle: Record<string, { bg: string; icon: string }> = {
-									Critical: { bg: "bg-red-500/15 text-red-700 border-red-500/20", icon: "text-red-500" },
-									Warning: { bg: "bg-amber-500/15 text-amber-700 border-amber-500/20", icon: "text-amber-500" },
-									Info: { bg: "bg-sky-500/15 text-sky-700 border-sky-500/20", icon: "text-sky-500" },
-								};
-								const s = sevStyle[alert.severity] ?? sevStyle.Info;
-								return (
-									<div key={alert.id} className="flex items-start gap-3 px-5 py-4 hover:bg-accent/20 transition-colors">
-										<div className="mt-0.5">
-											<AlertTriangleIcon className={`size-4 ${s.icon}`} />
-										</div>
-										<div className="flex-1 min-w-0">
-											<div className="flex items-center gap-2 flex-wrap">
-												<span className="text-sm font-medium">{alert.type}</span>
-												<span className="text-[10px] text-muted-foreground/60">{alert.date}</span>
-											</div>
-											<p className="text-[12px] text-muted-foreground leading-relaxed mt-1">{alert.description}</p>
-											<div className="flex items-center gap-2 mt-2">
-												<span className={`text-[9px] font-semibold rounded-md border px-1.5 py-0.5 ${s.bg}`}>
-													{alert.severity}
-												</span>
-												<span className="text-[9px] font-semibold rounded-md border border-border px-1.5 py-0.5 bg-muted/50 text-muted-foreground">
-													{alert.status}
-												</span>
-												<span className="text-[10px] text-muted-foreground/60">
-													Source: {alert.source}
-												</span>
-											</div>
-										</div>
-									</div>
-								);
-							})}
-						</div>
-					</div>
-				)}
-			</div>
-
-			{/* Resolved Alerts */}
-			{resolvedAlerts.length > 0 && (
-				<div className="space-y-3">
-					<button
-						onClick={() => setShowResolved(!showResolved)}
-						className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-					>
-						<HistoryIcon className="size-4" />
-						<p className="text-[10px] font-heading font-semibold uppercase tracking-widest">
-							Resolved Alerts
-						</p>
-						<span className="text-[9px] font-bold rounded-full px-1.5 py-0.5 bg-muted text-muted-foreground min-w-[18px] text-center">{resolvedAlerts.length}</span>
-						<ChevronDownIcon className={`size-3.5 transition-transform ${showResolved ? "rotate-180" : ""}`} />
-					</button>
-					{showResolved && (
-						<div className="rounded-2xl border border-border overflow-hidden shadow-sm bg-card">
-							<div className="divide-y divide-border/50">
-								{resolvedAlerts.map((alert) => (
-									<div key={alert.id} className="flex items-start gap-3 px-5 py-3.5 opacity-60">
-										<div className="mt-0.5">
-											<CheckCircle2Icon className="size-4 text-emerald-500" />
-										</div>
-										<div className="flex-1 min-w-0">
-											<div className="flex items-center gap-2 flex-wrap">
-												<span className="text-sm font-medium">{alert.type}</span>
-												<span className="text-[10px] text-muted-foreground/60">{alert.date}</span>
-												{alert.resolvedDate && (
-													<span className="text-[10px] text-emerald-600">Resolved {alert.resolvedDate}</span>
-												)}
-											</div>
-											<p className="text-[12px] text-muted-foreground leading-relaxed mt-0.5">{alert.description}</p>
-										</div>
-									</div>
-								))}
-							</div>
-						</div>
-					)}
-				</div>
-			)}
-		</div>
-	);
-}
-
-/* ─── Ongoing Monitoring ─── */
-
-function OngoingMonitoring({ entries, onSelectEntry }: { entries: MonitoringEntry[]; onSelectEntry?: (entry: MonitoringEntry) => void }) {
-	const activeCount = entries.filter((e) => e.status === "Active").length;
-	const totalAlerts = entries.reduce((sum, e) => sum + e.openAlerts, 0);
-	const totalSources = entries.reduce((sum, e) => sum + e.sourcesMonitored, 0);
-	const healthySources = entries.reduce((sum, e) => sum + e.sourcesHealthy, 0);
-	const highRiskActive = entries.filter((e) => e.riskRating === "High").length;
-
-	return (
-		<div className="space-y-3">
-			<div className="flex items-center justify-between">
-				<div className="flex items-center gap-2">
-					<RadarIcon className="size-4 text-primary" />
-					<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">
-						Ongoing Monitoring
-					</p>
-					<span className="text-[9px] font-bold rounded-full px-1.5 py-0.5 bg-primary/15 text-primary min-w-[18px] text-center">
-						{activeCount} active
-					</span>
-				</div>
-				<div className="flex items-center gap-2 text-[10px]">
-					<span className="rounded-md border border-border bg-muted/50 text-muted-foreground px-1.5 py-0.5 font-semibold flex items-center gap-1">
-						<ScanIcon className="size-3" /> Last scan: {new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short" })}
-					</span>
-				</div>
-			</div>
-
-			<div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-				<div className="rounded-xl border border-border bg-card p-3 shadow-sm">
-					<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Subjects Monitored</div>
-					<div className="text-2xl font-heading font-bold mt-1 tabular-nums">{activeCount}</div>
-					<div className="text-[10px] text-muted-foreground mt-0.5">{highRiskActive} high-risk</div>
-				</div>
-				<div className="rounded-xl border border-border bg-card p-3 shadow-sm">
-					<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Open Alerts</div>
-					<div className={`text-2xl font-heading font-bold mt-1 tabular-nums ${totalAlerts > 0 ? "text-red-600" : "text-emerald-600"}`}>{totalAlerts}</div>
-					<div className="text-[10px] text-muted-foreground mt-0.5">across all subjects</div>
-				</div>
-				<div className="rounded-xl border border-border bg-card p-3 shadow-sm">
-					<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Data Sources</div>
-					<div className="text-2xl font-heading font-bold mt-1 tabular-nums">{totalSources}</div>
-					<div className="text-[10px] text-muted-foreground mt-0.5">
-						<span className={healthySources === totalSources ? "text-emerald-600" : "text-amber-600"}>{healthySources} healthy</span>
-					</div>
-				</div>
-				<div className="rounded-xl border border-border bg-card p-3 shadow-sm">
-					<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Source Health</div>
-					<div className={`text-2xl font-heading font-bold mt-1 tabular-nums ${healthySources === totalSources ? "text-emerald-600" : "text-amber-600"}`}>
-						{((healthySources / totalSources) * 100).toFixed(1)}%
-					</div>
-					<div className="text-[10px] text-muted-foreground mt-0.5">{totalSources - healthySources} degraded</div>
-				</div>
-			</div>
-
-			<div className="rounded-2xl border border-border overflow-hidden shadow-sm bg-card">
-				<table className="w-full text-sm">
-					<thead className="bg-gradient-to-r from-muted/60 to-muted/30 text-muted-foreground">
-						<tr>
-							<th className="text-left px-4 py-3 font-medium text-xs tracking-wide">Subject</th>
-							<th className="text-center px-4 py-3 font-medium text-xs tracking-wide hidden sm:table-cell">Risk</th>
-							<th className="text-center px-4 py-3 font-medium text-xs tracking-wide">Frequency</th>
-							<th className="text-center px-4 py-3 font-medium text-xs tracking-wide hidden sm:table-cell">Last Scan</th>
-							<th className="text-center px-4 py-3 font-medium text-xs tracking-wide hidden sm:table-cell">Sources</th>
-							<th className="text-center px-4 py-3 font-medium text-xs tracking-wide">Alerts</th>
-							<th className="text-center px-4 py-3 font-medium text-xs tracking-wide hidden sm:table-cell">Status</th>
-						</tr>
-					</thead>
-					<tbody className="divide-y divide-border/60">
-						{entries.map((entry) => {
-							const freqColor: Record<string, string> = {
-								Weekly: "bg-red-500/10 text-red-700 border-red-500/15",
-								Monthly: "bg-amber-500/10 text-amber-700 border-amber-500/15",
-								Quarterly: "bg-sky-500/10 text-sky-700 border-sky-500/15",
-							};
-							return (
-								<tr key={entry.caseRef} className="hover:bg-accent/30 transition-colors cursor-pointer" onClick={() => onSelectEntry?.(entry)}>
-									<td className="px-4 py-3">
-										<div className="font-medium text-primary">{entry.subjectName}</div>
-										<div className="font-mono text-[9px] text-muted-foreground/50 tracking-wide">{entry.caseRef}</div>
-									</td>
-									<td className="px-4 py-3 text-center hidden sm:table-cell">
-										<RiskBadge rating={entry.riskRating} />
-									</td>
-									<td className="px-4 py-3 text-center">
-										<span className={`text-[10px] font-semibold rounded-md border px-1.5 py-0.5 ${freqColor[entry.screeningFrequency]}`}>
-											{entry.screeningFrequency}
-										</span>
-									</td>
-									<td className="px-4 py-3 text-center hidden sm:table-cell">
-										<span className="text-xs text-muted-foreground">{entry.lastScanDate}</span>
-									</td>
-									<td className="px-4 py-3 text-center hidden sm:table-cell">
-										<div className="flex items-center justify-center gap-1">
-											<DatabaseIcon className={`size-3 ${entry.sourcesHealthy === entry.sourcesMonitored ? "text-emerald-500" : "text-amber-500"}`} />
-											<span className="text-xs">
-												{entry.sourcesHealthy}/{entry.sourcesMonitored}
-											</span>
-										</div>
-									</td>
-									<td className="px-4 py-3 text-center">
-										{entry.openAlerts > 0 ? (
-											<div>
-												<span className="text-[10px] font-bold rounded-full px-2 py-0.5 bg-red-500/15 text-red-700">{entry.openAlerts}</span>
-												{entry.lastAlertType && (
-													<div className="text-[9px] text-muted-foreground/60 mt-0.5">{entry.lastAlertType}</div>
-												)}
-											</div>
-										) : (
-											<span className="text-xs text-muted-foreground/40">—</span>
-										)}
-									</td>
-									<td className="px-4 py-3 text-center hidden sm:table-cell">
-										<span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700">
-											<ShieldIcon className="size-3" />
-											{entry.status}
-										</span>
-									</td>
-								</tr>
-							);
-						})}
-					</tbody>
-				</table>
-			</div>
-		</div>
-	);
-}
-
-/* ─── Step Indicator ─── */
+/* ═══════════════════════════════════════════════════════════════
+   Step Indicator
+   ═══════════════════════════════════════════════════════════════ */
 
 function StepIndicator({ current }: { current: Phase }) {
-	if (current === "dashboard") return null;
+	if (current === "dashboard" || current === "profile") return null;
 	const currentIdx = STEPS.findIndex((s) => s.key === current);
 	return (
 		<div className="flex items-center justify-center gap-0 py-3">
@@ -1061,57 +698,14 @@ function StepIndicator({ current }: { current: Phase }) {
 	);
 }
 
-/* ─── Case Banner ─── */
+/* ═══════════════════════════════════════════════════════════════
+   Person Selector
+   ═══════════════════════════════════════════════════════════════ */
 
-function CaseBanner({
-	caseRef,
-	report,
-	status,
-}: {
-	caseRef: string;
-	report: SowReport;
-	status: "In Progress" | "Complete";
-}) {
-	const p = report.profile;
-	const statusColor =
-		status === "Complete"
-			? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/20"
-			: "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/20";
-	return (
-		<div className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-xl border border-border bg-gradient-to-r from-muted/40 to-transparent px-5 py-3 text-sm mb-5 shadow-sm">
-			<div className="flex items-center gap-1.5 text-muted-foreground">
-				<HashIcon className="size-3.5" />
-				<span className="font-mono text-xs tracking-wide">{caseRef}</span>
-			</div>
-			<span className="text-muted-foreground/30 hidden sm:inline">|</span>
-			<span className="font-heading font-semibold">{p.name} ({p.nameEn})</span>
-			<span className="text-muted-foreground/30 hidden sm:inline">|</span>
-			<span className={`text-[10px] font-semibold rounded-md border px-2 py-0.5 ${statusColor}`}>
-				{status}
-			</span>
-			<span className="text-muted-foreground/30 hidden sm:inline">|</span>
-			<span className="text-xs text-muted-foreground">
-				{new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
-			</span>
-		</div>
-	);
-}
-
-/* ─── Phase 1: Case Intake ─── */
-
-function CaseIntake({
-	selectedCase,
-	formData,
-	onSelectCase,
-	onUpdateField,
-	onCreateCase,
-	onBack,
-}: {
-	selectedCase: SowReport | null;
-	formData: Record<string, string>;
-	onSelectCase: (r: SowReport) => void;
-	onUpdateField: (key: string, value: string) => void;
-	onCreateCase: () => void;
+function PersonSelector({ selectedCase, onSelectCase, onBegin, onBack }: {
+	selectedCase: HnwReport | null;
+	onSelectCase: (r: HnwReport) => void;
+	onBegin: () => void;
 	onBack: () => void;
 }) {
 	return (
@@ -1119,19 +713,28 @@ function CaseIntake({
 			<div className="flex items-center justify-between">
 				<div>
 					<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest mb-1">
-						Select Demo Profile
+						Select Subject for Assessment
 					</p>
 					<p className="text-sm text-muted-foreground">
-						Choose a pre-built client profile to populate the intake form, or enter details manually.
+						Choose a high net worth individual to run a comprehensive Source of Wealth assessment with career-traced wealth analysis.
 					</p>
 				</div>
 				<Button variant="outline" size="sm" onClick={onBack} className="font-heading">Back to Dashboard</Button>
 			</div>
 			<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-				{SOW_CASES.map((report) => {
+				{HNW_CASES.map((report) => {
 					const p = report.profile;
 					const isSelected = selectedCase?.profile.id === p.id;
-					const isHigh = p.riskRating === "High";
+					const riskColors: Record<string, string> = {
+						Low: "bg-emerald-500/10",
+						Medium: "bg-amber-500/10",
+						High: "bg-red-500/10",
+					};
+					const riskIconColors: Record<string, string> = {
+						Low: "text-emerald-600",
+						Medium: "text-amber-600",
+						High: "text-red-600",
+					};
 					return (
 						<button
 							key={p.id}
@@ -1144,12 +747,12 @@ function CaseIntake({
 						>
 							<div className="flex items-center justify-between mb-3">
 								<div className="flex items-center gap-3">
-									<div className={`h-11 w-11 rounded-xl flex items-center justify-center ${isHigh ? "bg-red-500/10" : "bg-emerald-500/10"}`}>
-										<UserIcon className={`size-5 ${isHigh ? "text-red-600" : "text-emerald-600"}`} />
+									<div className={`h-11 w-11 rounded-xl flex items-center justify-center ${riskColors[p.riskRating]}`}>
+										<UserIcon className={`size-5 ${riskIconColors[p.riskRating]}`} />
 									</div>
 									<div>
 										<div className="font-heading font-semibold">{p.name}</div>
-										<div className="text-xs text-muted-foreground">{p.nameEn}</div>
+										{p.nameCn && <div className="text-xs text-muted-foreground">{p.nameCn}</div>}
 									</div>
 								</div>
 								<div className="flex items-center gap-2">
@@ -1161,10 +764,28 @@ function CaseIntake({
 									)}
 								</div>
 							</div>
-							<div className="text-xs text-muted-foreground">
-								{p.age}, {p.gender} · {p.occupation} · {p.city}
+
+							<div className="flex items-center gap-4 text-xs text-muted-foreground mb-2">
+								<span className="flex items-center gap-1"><MapPinIcon className="size-3" />{p.residences[0]}</span>
+								<span className="flex items-center gap-1"><BriefcaseIcon className="size-3" />{p.primaryIndustry}</span>
 							</div>
-							<p className="text-[11px] text-muted-foreground/70 mt-2 leading-relaxed line-clamp-2">
+
+							<div className="flex items-center gap-3 mb-3">
+								<div className="rounded-lg bg-muted/60 px-2.5 py-1">
+									<div className="text-[9px] text-muted-foreground uppercase tracking-widest">Net Worth</div>
+									<div className="font-heading font-bold text-sm">{formatUSD(p.estimatedNetWorthUSD)}</div>
+								</div>
+								<div className="rounded-lg bg-muted/60 px-2.5 py-1">
+									<div className="text-[9px] text-muted-foreground uppercase tracking-widest">Confidence</div>
+									<div className="font-heading font-bold text-sm">{report.overallConfidence}%</div>
+								</div>
+								<div className="rounded-lg bg-muted/60 px-2.5 py-1">
+									<div className="text-[9px] text-muted-foreground uppercase tracking-widest">Risk Score</div>
+									<div className="font-heading font-bold text-sm">{p.riskScore}/100</div>
+								</div>
+							</div>
+
+							<p className="text-[11px] text-muted-foreground/70 leading-relaxed line-clamp-2">
 								{p.profileSummary}
 							</p>
 						</button>
@@ -1173,370 +794,21 @@ function CaseIntake({
 			</div>
 
 			{selectedCase && (
-				<div className="space-y-5 rounded-2xl border border-border bg-card p-6 shadow-sm">
-					<FormSection title="Client Information">
-						<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-							<FormField label="Full Name (Chinese)" required value={formData.nameCn ?? ""} onChange={(v) => onUpdateField("nameCn", v)} />
-							<FormField label="Full Name (English)" required value={formData.nameEn ?? ""} onChange={(v) => onUpdateField("nameEn", v)} />
-							<FormField label="Date of Birth" required value={formData.dob ?? ""} onChange={(v) => onUpdateField("dob", v)} placeholder="YYYY-MM-DD" />
-							<FormSelect
-								label="Gender"
-								required
-								value={formData.gender ?? ""}
-								onChange={(v) => onUpdateField("gender", v)}
-								options={["Male", "Female"]}
-							/>
-							<FormSelect
-								label="ID Type"
-								required
-								value={formData.idType ?? ""}
-								onChange={(v) => onUpdateField("idType", v)}
-								options={["Chinese Resident Identity Card", "Passport", "HK Identity Card"]}
-							/>
-							<FormField label="ID Number" required value={formData.idNumber ?? ""} onChange={(v) => onUpdateField("idNumber", v)} />
-							<FormField label="Nationality" required value={formData.nationality ?? ""} onChange={(v) => onUpdateField("nationality", v)} />
-						</div>
-					</FormSection>
-
-					<FormSection title="Employment & Residence">
-						<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-							<FormField label="Occupation" required value={formData.occupation ?? ""} onChange={(v) => onUpdateField("occupation", v)} />
-							<FormField label="Employer / Company" value={formData.employer ?? ""} onChange={(v) => onUpdateField("employer", v)} />
-							<FormField label="City of Residence" required value={formData.city ?? ""} onChange={(v) => onUpdateField("city", v)} />
-						</div>
-					</FormSection>
-
-					<FormSection title="Account Details">
-						<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-							<FormSelect
-								label="Purpose of Relationship"
-								value={formData.purpose ?? ""}
-								onChange={(v) => onUpdateField("purpose", v)}
-								options={["Private Banking", "Business Banking", "Investment", "Trading Account", "Wealth Management"]}
-							/>
-							<FormSelect
-								label="Expected Annual Volume"
-								value={formData.volume ?? ""}
-								onChange={(v) => onUpdateField("volume", v)}
-								options={["< ¥1M", "¥1M – ¥5M", "¥5M – ¥20M", "¥20M – ¥100M", "> ¥100M"]}
-							/>
-						</div>
-					</FormSection>
-
-					<Button onClick={onCreateCase} className="w-full gap-2 shadow-md shadow-primary/20 font-heading text-[15px]" size="lg">
-						Create Case & Proceed
-						<ArrowRightIcon className="size-4" />
-					</Button>
-				</div>
+				<Button onClick={onBegin} className="w-full gap-2 shadow-md shadow-primary/20 font-heading text-[15px]" size="lg">
+					Begin Assessment — {selectedCase.profile.name}
+					<ArrowRightIcon className="size-4" />
+				</Button>
 			)}
 		</div>
 	);
 }
 
-function FormSection({ title, children }: { title: string; children: React.ReactNode }) {
-	return (
-		<div className="space-y-3">
-			<h4 className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">{title}</h4>
-			{children}
-		</div>
-	);
-}
-
-function FormField({
-	label, value, onChange, required, placeholder,
-}: {
-	label: string; value: string; onChange: (v: string) => void; required?: boolean; placeholder?: string;
-}) {
-	return (
-		<div className="space-y-1.5">
-			<label className="text-sm font-medium font-heading">
-				{label}
-				{required && <span className="ml-0.5 text-destructive">*</span>}
-			</label>
-			<Input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className="rounded-lg" />
-		</div>
-	);
-}
-
-function FormSelect({
-	label, value, onChange, required, options,
-}: {
-	label: string; value: string; onChange: (v: string) => void; required?: boolean; options: string[];
-}) {
-	return (
-		<div className="space-y-1.5">
-			<label className="text-sm font-medium font-heading">
-				{label}
-				{required && <span className="ml-0.5 text-destructive">*</span>}
-			</label>
-			<Select value={value} onValueChange={(v) => onChange(v ?? "")}>
-				<SelectTrigger className="w-full rounded-lg">
-					<SelectValue />
-				</SelectTrigger>
-				<SelectContent>
-					{options.map((opt) => (
-						<SelectItem key={opt} value={opt}>{opt}</SelectItem>
-					))}
-				</SelectContent>
-			</Select>
-		</div>
-	);
-}
-
-/* ─── Phase 2: Consent & Document Upload ─── */
-
-function ConsentPhase({
-	report, caseRef, consentChecks, uploadedFiles, onToggleConsent, onUploadFile, onProceed, onBack,
-}: {
-	report: SowReport; caseRef: string;
-	consentChecks: { dataProcessing: boolean; clientAuth: boolean; regulatoryDisclosure: boolean };
-	uploadedFiles: string[];
-	onToggleConsent: (key: "dataProcessing" | "clientAuth" | "regulatoryDisclosure") => void;
-	onUploadFile: (name: string) => void; onProceed: () => void; onBack: () => void;
-}) {
-	const allChecked = consentChecks.dataProcessing && consentChecks.clientAuth && consentChecks.regulatoryDisclosure;
-
-	return (
-		<div className="space-y-5">
-			<CaseBanner caseRef={caseRef} report={report} status="In Progress" />
-
-			<div>
-				<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest mb-1">
-					Consent & Authorization
-				</p>
-				<p className="text-sm text-muted-foreground">
-					Before querying government and financial data sources, the following consent confirmations and supporting documents are required.
-					Under the PRC Personal Information Protection Law (PIPL), explicit informed consent must be obtained from the data subject
-					prior to processing sensitive personal information including identity records, financial data, and corporate affiliations.
-				</p>
-			</div>
-
-			<div className="rounded-2xl border border-border bg-card p-6 shadow-sm space-y-5">
-				<h4 className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Required Confirmations</h4>
-
-				<ConsentCheckbox
-					checked={consentChecks.dataProcessing}
-					onChange={() => onToggleConsent("dataProcessing")}
-					title="Data Processing Consent"
-					description="I confirm that the client has been informed of and consents to the processing of their personal data for the purpose of Source of Wealth verification, in compliance with applicable data protection regulations including the PRC Personal Information Protection Law (PIPL)."
-				/>
-				<ConsentCheckbox
-					checked={consentChecks.clientAuth}
-					onChange={() => onToggleConsent("clientAuth")}
-					title="Client Authorization"
-					description="I confirm that a signed client authorization form has been obtained, granting permission to query government registries, financial databases, and third-party data providers for the purpose of enhanced due diligence."
-				/>
-				<ConsentCheckbox
-					checked={consentChecks.regulatoryDisclosure}
-					onChange={() => onToggleConsent("regulatoryDisclosure")}
-					title="Regulatory Disclosure"
-					description="I acknowledge that assessment results may be shared with regulatory authorities in accordance with applicable anti-money laundering legislation, and that the client has been informed of this obligation."
-				/>
-			</div>
-
-			<div className="rounded-2xl border border-border bg-card p-6 shadow-sm space-y-4">
-				<h4 className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Supporting Documents</h4>
-				<p className="text-xs text-muted-foreground">
-					Upload signed consent forms and any supporting documentation. Accepted formats: PDF, JPG, PNG (max 10MB each).
-				</p>
-
-				<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-					<UploadSlot label="Signed Consent Form" uploaded={uploadedFiles.includes("Signed Consent Form")} onUpload={() => onUploadFile("Signed Consent Form")} required />
-					<UploadSlot label="Client ID Document" uploaded={uploadedFiles.includes("Client ID Document")} onUpload={() => onUploadFile("Client ID Document")} required />
-					<UploadSlot label="Authorization Letter" uploaded={uploadedFiles.includes("Authorization Letter")} onUpload={() => onUploadFile("Authorization Letter")} />
-					<UploadSlot label="Additional Evidence" uploaded={uploadedFiles.includes("Additional Evidence")} onUpload={() => onUploadFile("Additional Evidence")} />
-				</div>
-			</div>
-
-			<div className="flex items-center justify-between rounded-xl border border-border bg-gradient-to-r from-muted/40 to-transparent px-5 py-3.5 shadow-sm">
-				<div className="flex items-center gap-2 text-sm">
-					{allChecked ? (
-						<>
-							<CheckCircle2Icon className="size-4 text-emerald-600" />
-							<span className="text-emerald-700 font-heading font-medium">All confirmations received</span>
-						</>
-					) : (
-						<>
-							<AlertTriangleIcon className="size-4 text-amber-600" />
-							<span className="text-amber-700 font-heading font-medium">
-								{3 - [consentChecks.dataProcessing, consentChecks.clientAuth, consentChecks.regulatoryDisclosure].filter(Boolean).length} confirmation{3 - [consentChecks.dataProcessing, consentChecks.clientAuth, consentChecks.regulatoryDisclosure].filter(Boolean).length !== 1 ? "s" : ""} remaining
-							</span>
-						</>
-					)}
-				</div>
-				<div className="flex items-center gap-2">
-					<Button variant="outline" size="sm" onClick={onBack} className="font-heading">Back</Button>
-					<Button size="sm" onClick={onProceed} disabled={!allChecked} className="gap-1.5 font-heading shadow-md shadow-primary/20">
-						Proceed to Data Sources
-						<ArrowRightIcon className="size-3.5" />
-					</Button>
-				</div>
-			</div>
-		</div>
-	);
-}
-
-function ConsentCheckbox({ checked, onChange, title, description }: { checked: boolean; onChange: () => void; title: string; description: string }) {
-	return (
-		<button onClick={onChange} className="w-full text-left flex items-start gap-3 group">
-			<div className={`mt-0.5 h-5 w-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all ${
-				checked ? "bg-primary border-primary shadow-sm shadow-primary/30" : "border-border group-hover:border-primary/50"
-			}`}>
-				{checked && <CheckIcon className="size-3 text-primary-foreground" />}
-			</div>
-			<div>
-				<div className="text-sm font-heading font-medium">{title}</div>
-				<p className="text-xs text-muted-foreground leading-relaxed mt-0.5">{description}</p>
-			</div>
-		</button>
-	);
-}
-
-function UploadSlot({ label, uploaded, onUpload, required }: { label: string; uploaded: boolean; onUpload: () => void; required?: boolean }) {
-	return (
-		<button
-			onClick={onUpload}
-			disabled={uploaded}
-			className={`flex items-center gap-3 rounded-xl border-2 border-dashed p-4 transition-all ${
-				uploaded ? "border-emerald-500/30 bg-emerald-500/5" : "border-border hover:border-primary/40 hover:bg-primary/[0.02]"
-			}`}
-		>
-			{uploaded ? (
-				<FileCheckIcon className="size-5 text-emerald-600 shrink-0" />
-			) : (
-				<UploadIcon className="size-5 text-muted-foreground shrink-0" />
-			)}
-			<div className="text-left flex-1">
-				<div className="text-sm font-heading font-medium flex items-center gap-1">
-					{label}
-					{required && !uploaded && <span className="text-destructive text-xs">*</span>}
-				</div>
-				<div className="text-[11px] text-muted-foreground">
-					{uploaded ? "Uploaded successfully" : "Click to upload"}
-				</div>
-			</div>
-		</button>
-	);
-}
-
-/* ─── Phase 3: Data Source Overview ─── */
-
-function DataSourceOverview({ report, caseRef, onBegin, onBack }: { report: SowReport; caseRef: string; onBegin: () => void; onBack: () => void }) {
-	const [infoOpen, setInfoOpen] = useState<string | null>(null);
-	const sources = report.dataSources;
-	const categories = ["Identity", "Banking", "Risk", "Corporate", "Income", "Tax"] as const;
-	const grouped = categories.map((cat) => ({ category: cat, items: sources.filter((s) => s.category === cat) })).filter((g) => g.items.length > 0);
-	const totalDelay = sources.reduce((sum, s) => sum + s.delayMs, 0);
-
-	return (
-		<div className="space-y-5">
-			<CaseBanner caseRef={caseRef} report={report} status="In Progress" />
-
-			<div>
-				<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest mb-1">
-					Data Sources to Query
-				</p>
-				<p className="text-sm text-muted-foreground">
-					The following {sources.length} government and financial data sources will be queried to build the Source of Wealth assessment for {report.profile.name}. Click the <span className="inline-flex items-center"><InfoIcon className="size-3 mx-0.5 text-primary inline" /></span> icon on each category to learn more about the data source authority and legal basis.
-				</p>
-			</div>
-
-			<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-				{grouped.map((group) => {
-					const meta = CATEGORY_META[group.category];
-					const CatIcon = meta?.Icon ?? SearchIcon;
-					const isInfoOpen = infoOpen === group.category;
-					return (
-						<div key={group.category} className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-							<div className="p-5">
-								<div className="flex items-center justify-between mb-3">
-									<div className="flex items-center gap-3">
-										<div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center">
-											<CatIcon className="size-4 text-primary" />
-										</div>
-										<div>
-											<h4 className="text-sm font-heading font-semibold">{group.category}</h4>
-											<span className="text-[10px] text-muted-foreground">
-												{group.items.length} check{group.items.length !== 1 ? "s" : ""}
-											</span>
-										</div>
-									</div>
-									<button
-										onClick={() => setInfoOpen(isInfoOpen ? null : group.category)}
-										className={`h-7 w-7 rounded-lg flex items-center justify-center transition-all ${
-											isInfoOpen ? "bg-primary/10 text-primary shadow-sm" : "text-muted-foreground hover:bg-muted hover:text-foreground"
-										}`}
-										title="Data source information"
-									>
-										<InfoIcon className="size-3.5" />
-									</button>
-								</div>
-								<p className="text-xs text-muted-foreground leading-relaxed mb-3">
-									{meta?.description}
-								</p>
-								<div className="space-y-2">
-									{group.items.map((source) => (
-										<div key={source.id} className="flex items-start gap-2">
-											<CheckCircle2Icon className="size-3.5 text-primary mt-0.5 shrink-0" />
-											<div>
-												<div className="text-xs font-heading font-medium">{source.name}</div>
-												<div className="text-[11px] text-muted-foreground">
-													{SOURCE_PURPOSES[source.id] ?? source.provider}
-												</div>
-											</div>
-										</div>
-									))}
-								</div>
-							</div>
-
-							{isInfoOpen && meta && (
-								<div className="border-t border-border bg-gradient-to-b from-muted/30 to-muted/10 px-5 py-4 space-y-3">
-									<div>
-										<div className="text-[9px] font-heading font-semibold text-muted-foreground uppercase tracking-widest mb-0.5">Governing Authority</div>
-										<p className="text-xs font-medium">{meta.authority}</p>
-									</div>
-									<div>
-										<div className="text-[9px] font-heading font-semibold text-muted-foreground uppercase tracking-widest mb-0.5">Legal Basis</div>
-										<p className="text-[11px] text-muted-foreground leading-relaxed">{meta.legalBasis}</p>
-									</div>
-									<div>
-										<div className="text-[9px] font-heading font-semibold text-muted-foreground uppercase tracking-widest mb-0.5">Data Retrieved</div>
-										<p className="text-[11px] text-muted-foreground leading-relaxed">{meta.dataType}</p>
-									</div>
-								</div>
-							)}
-						</div>
-					);
-				})}
-			</div>
-
-			<div className="flex items-center justify-between rounded-xl border border-border bg-gradient-to-r from-muted/40 to-transparent px-5 py-3.5 shadow-sm">
-				<div className="flex items-center gap-4 text-sm text-muted-foreground">
-					<span className="flex items-center gap-1.5">
-						<SearchIcon className="size-3.5" />
-						{sources.length} data sources
-					</span>
-					<span className="flex items-center gap-1.5">
-						<ClockIcon className="size-3.5" />
-						Est. ~{Math.round(totalDelay / 1000)}s
-					</span>
-				</div>
-				<div className="flex items-center gap-2">
-					<Button variant="outline" size="sm" onClick={onBack} className="font-heading">Back</Button>
-					<Button size="sm" onClick={onBegin} className="gap-1.5 font-heading shadow-md shadow-primary/20">
-						Begin Assessment
-						<ArrowRightIcon className="size-3.5" />
-					</Button>
-				</div>
-			</div>
-		</div>
-	);
-}
-
-/* ─── Phase 4: Generating ─── */
+/* ═══════════════════════════════════════════════════════════════
+   Generating View
+   ═══════════════════════════════════════════════════════════════ */
 
 function GeneratingView({ report, completedSources, currentSourceIndex, elapsedMs, onCancel }: {
-	report: SowReport; completedSources: SowDataSource[]; currentSourceIndex: number; elapsedMs: number; onCancel: () => void;
+	report: HnwReport; completedSources: DataSourceDef[]; currentSourceIndex: number; elapsedMs: number; onCancel: () => void;
 }) {
 	const sources = report.dataSources;
 	const progress = completedSources.length / sources.length;
@@ -1545,10 +817,10 @@ function GeneratingView({ report, completedSources, currentSourceIndex, elapsedM
 			<div className="flex items-center justify-between">
 				<div>
 					<h3 className="text-base font-heading font-semibold">
-						Running SOW assessment for {report.profile.name}
+						Running wealth assessment for {report.profile.name}
 					</h3>
 					<p className="text-sm text-muted-foreground">
-						{report.profile.nameEn} · querying {sources.length} data sources
+						Querying {sources.length} international data sources across multiple jurisdictions
 					</p>
 				</div>
 				<div className="flex items-center gap-3">
@@ -1565,21 +837,21 @@ function GeneratingView({ report, completedSources, currentSourceIndex, elapsedM
 
 			<div className="rounded-2xl border border-border overflow-hidden shadow-sm bg-card">
 				{sources.map((source, i) => {
-					const completed = completedSources.find((s) => s.id === source.id);
-					const isCurrent = i === currentSourceIndex && !completed;
+					const isCompleted = completedSources.some((s) => s.id === source.id);
+					const isCurrent = i === currentSourceIndex && !isCompleted;
 					const isPending = i > currentSourceIndex;
 					return (
 						<div
 							key={source.id}
 							className={`flex items-center gap-3 px-5 py-3 border-b last:border-b-0 border-border/50 transition-colors ${
-								isCurrent ? "bg-primary/5" : completed ? "bg-muted/20" : "bg-transparent"
+								isCurrent ? "bg-primary/5" : isCompleted ? "bg-muted/20" : "bg-transparent"
 							}`}
 						>
 							<div className="w-5 flex justify-center shrink-0">
 								{isCurrent ? (
 									<LoaderIcon className="size-4 text-primary animate-spin" />
-								) : completed ? (
-									<SourceStatusIcon status={completed.status} />
+								) : isCompleted ? (
+									<CheckCircle2Icon className="size-4 text-emerald-600" />
 								) : (
 									<div className={`h-1.5 w-1.5 rounded-full ${isPending ? "bg-muted-foreground/20" : "bg-muted-foreground"}`} />
 								)}
@@ -1591,8 +863,10 @@ function GeneratingView({ report, completedSources, currentSourceIndex, elapsedM
 							<div className="shrink-0">
 								{isCurrent ? (
 									<span className="text-xs text-primary font-heading font-medium">Querying...</span>
-								) : completed ? (
-									<SourceStatusBadge status={completed.status} label={completed.statusLabel} />
+								) : isCompleted ? (
+									<span className="text-[10px] font-semibold rounded-md border px-1.5 py-0.5 bg-emerald-500/15 text-emerald-700 border-emerald-500/20">
+										{source.category}
+									</span>
 								) : null}
 							</div>
 						</div>
@@ -1603,11 +877,11 @@ function GeneratingView({ report, completedSources, currentSourceIndex, elapsedM
 	);
 }
 
-/* ─── Phase 5: Report ─── */
+/* ═══════════════════════════════════════════════════════════════
+   Report View
+   ═══════════════════════════════════════════════════════════════ */
 
-function ReportView({ report, caseRef, confirmedActions, onConfirmAction, onReset }: {
-	report: SowReport; caseRef: string; confirmedActions: Set<string>; onConfirmAction: (id: string) => void; onReset: () => void;
-}) {
+function ReportView({ report, onReset }: { report: HnwReport; onReset: () => void }) {
 	const p = report.profile;
 
 	return (
@@ -1615,43 +889,40 @@ function ReportView({ report, caseRef, confirmedActions, onConfirmAction, onRese
 			<div className="flex items-center justify-between">
 				<div>
 					<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">
-						SOW Assessment Complete
+						Wealth Intelligence Report
 					</p>
 					<h3 className="text-xl font-heading font-semibold mt-0.5 tracking-tight">
-						{p.name} ({p.nameEn})
+						{p.name} {p.nameCn && `(${p.nameCn})`}
 					</h3>
 				</div>
 				<div className="flex items-center gap-2">
 					<DownloadReportButton report={report} />
-					<Button variant="outline" onClick={onReset} className="font-heading">New Case</Button>
+					<Button variant="outline" onClick={onReset} className="font-heading">New Assessment</Button>
 				</div>
 			</div>
 
-			<ProfileCard profile={p} />
+			<HnwProfileCard profile={p} />
 			<RiskScoreGauge profile={p} />
 			<KeyParameters params={report.keyParameters} />
-			<RiskAssessment profile={p} />
-			<WealthDonutChart items={report.wealthBreakdown} totalWealth={report.totalEstimatedWealthRMB} totalIncome={report.totalEstimatedAnnualIncomeRMB} />
-			<WealthBreakdown items={report.wealthBreakdown} totalWealth={report.totalEstimatedWealthRMB} totalIncome={report.totalEstimatedAnnualIncomeRMB} />
-			<CompanyNetworkGraph report={report} />
-			<DataSourceFindings sources={report.dataSources} />
+			<CareerTimeline phases={report.careerTimeline} />
+			<WealthAccumulationChart phases={report.careerTimeline} />
+			<WealthDonutChart wealthByCategory={report.wealthByCategory} totalWealth={report.totalEstimatedWealthUSD} overallConfidence={report.overallConfidence} />
+			<CareerPhaseCards phases={report.careerTimeline} />
+			<CompanyNetworkGraph nodes={report.companyNodes} profileName={p.name} />
 			<NarrativeSection narrative={report.narrative} />
-			<AssessmentMethodology />
-			<RegulatoryContext riskRating={p.riskRating} />
-			<DocumentEvidenceSection documents={report.documentEvidence} />
-			<AuditTrailSection entries={report.auditTrail} />
-			<AnalystNotes riskRating={p.riskRating} />
-			<PerpetualScreening alerts={report.screeningAlerts} nextReviewDate={report.nextReviewDate} riskRating={p.riskRating} />
-			<RemediationSection items={report.remediationItems} riskRating={p.riskRating} />
-			<PerpetualKycSetup riskRating={p.riskRating} nextReviewDate={report.nextReviewDate} />
-			<FollowUpActions riskRating={p.riskRating} confirmedActions={confirmedActions} onConfirm={onConfirmAction} />
+			<SourceCitationsAggregate phases={report.careerTimeline} />
+			<FollowUpActions riskRating={p.riskRating} />
 		</div>
 	);
 }
 
-/* ─── Report Sub-Components ─── */
+/* ═══════════════════════════════════════════════════════════════
+   Report Sub-Components
+   ═══════════════════════════════════════════════════════════════ */
 
-function ProfileCard({ profile: p }: { profile: SowReport["profile"] }) {
+/* ─── HNW Profile Card ─── */
+
+function HnwProfileCard({ profile: p }: { profile: HnwProfile }) {
 	return (
 		<div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
 			<div className="flex items-start justify-between mb-5">
@@ -1661,19 +932,20 @@ function ProfileCard({ profile: p }: { profile: SowReport["profile"] }) {
 					</div>
 					<div>
 						<div className="text-xl font-heading font-semibold tracking-tight">{p.name}</div>
-						<div className="text-sm text-muted-foreground">{p.nameEn}</div>
+						{p.nameCn && <div className="text-sm text-muted-foreground">{p.nameCn}</div>}
 					</div>
 				</div>
 				<RiskBadge rating={p.riskRating} size="lg" />
 			</div>
 			<div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
 				<InfoField label="Date of Birth" value={p.dateOfBirth} />
-				<InfoField label="Gender / Age" value={`${p.gender}, ${p.age}`} />
-				<InfoField label="ID Number" value={p.idNumber} mono />
+				<InfoField label="Age" value={String(p.age)} />
 				<InfoField label="Nationality" value={p.nationality} />
-				<InfoField label="Occupation" value={p.occupation} />
-				<InfoField label="Employer" value={p.employer} />
-				<InfoField label="City" value={p.city} />
+				<InfoField label="Primary Industry" value={p.primaryIndustry} />
+				<InfoField label="Residences" value={p.residences.join(", ")} />
+				<InfoField label="Est. Net Worth" value={formatUSD(p.estimatedNetWorthUSD)} mono />
+				<InfoField label="Net Worth Source" value={p.netWorthSource} />
+				<InfoField label="Risk Score" value={`${p.riskScore}/100`} />
 			</div>
 		</div>
 	);
@@ -1690,20 +962,18 @@ function InfoField({ label, value, mono }: { label: string; value: string; mono?
 
 /* ─── Risk Score Gauge ─── */
 
-function RiskScoreGauge({ profile: p }: { profile: SowReport["profile"] }) {
-	const isHigh = p.riskRating === "High";
-	const score = isHigh ? 78 : 22;
+function RiskScoreGauge({ profile: p }: { profile: HnwProfile }) {
+	const score = p.riskScore;
 	const angle = (score / 100) * 180;
-	const color = isHigh ? "#ef4444" : "#10b981";
-	const bgColor = isHigh ? "from-red-500/5 to-red-500/[0.02]" : "from-emerald-500/5 to-emerald-500/[0.02]";
+	const color = score >= 60 ? "#ef4444" : score >= 40 ? "#f59e0b" : "#10b981";
+	const riskLabel = score >= 60 ? "High" : score >= 40 ? "Medium" : "Low";
+	const bgColor = score >= 60 ? "from-red-500/5 to-red-500/[0.02]" : score >= 40 ? "from-amber-500/5 to-amber-500/[0.02]" : "from-emerald-500/5 to-emerald-500/[0.02]";
 
 	return (
 		<div className={`rounded-2xl border border-border bg-gradient-to-br ${bgColor} p-6 shadow-sm`}>
 			<div className="flex items-center gap-2 mb-4">
 				<GaugeIcon className="size-4 text-muted-foreground" />
-				<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">
-					Composite Risk Score
-				</p>
+				<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Composite Risk Score</p>
 			</div>
 			<div className="flex items-center gap-8">
 				<div className="shrink-0">
@@ -1727,17 +997,16 @@ function RiskScoreGauge({ profile: p }: { profile: SowReport["profile"] }) {
 						<text x="80" y="72" textAnchor="middle" className="font-heading" style={{ fontSize: "28px", fontWeight: 700, fill: color }}>{score}</text>
 						<text x="80" y="88" textAnchor="middle" style={{ fontSize: "10px", fill: "#9ca3af" }}>/ 100</text>
 						<text x="15" y="88" textAnchor="start" style={{ fontSize: "8px", fill: "#10b981" }}>LOW</text>
+						<text x="80" y="88" textAnchor="middle" style={{ fontSize: "8px", fill: "#f59e0b" }}></text>
 						<text x="145" y="88" textAnchor="end" style={{ fontSize: "8px", fill: "#ef4444" }}>HIGH</text>
 					</svg>
 				</div>
 				<div className="flex-1 space-y-2">
 					<div className="text-sm font-heading font-semibold" style={{ color }}>
-						{isHigh ? "Elevated Risk — Enhanced Due Diligence Required" : "Low Risk — Standard Onboarding Eligible"}
+						{riskLabel} Risk — {score >= 60 ? "Enhanced Due Diligence Required" : score >= 40 ? "Heightened Monitoring Recommended" : "Standard Onboarding Eligible"}
 					</div>
 					<p className="text-xs text-muted-foreground leading-relaxed">
-						{isHigh
-							? "Score reflects unexplained wealth gaps, active regulatory investigations, tax discrepancies, and ongoing litigation. EDD interview recommended before proceeding."
-							: "All data sources return consistent results. Income sources are verifiable and proportionate to declared wealth. No adverse indicators detected."}
+						{p.profileSummary}
 					</p>
 				</div>
 			</div>
@@ -1745,21 +1014,248 @@ function RiskScoreGauge({ profile: p }: { profile: SowReport["profile"] }) {
 	);
 }
 
+/* ─── Key Parameters ─── */
+
+function KeyParameters({ params }: { params: KeyParameter[] }) {
+	const statusStyle = {
+		normal: "border-emerald-500/20 bg-emerald-500/5",
+		warning: "border-amber-500/20 bg-amber-500/5",
+		critical: "border-red-500/20 bg-red-500/5",
+	};
+	const dotStyle = { normal: "bg-emerald-500", warning: "bg-amber-500", critical: "bg-red-500" };
+	return (
+		<div className="space-y-3">
+			<div className="flex items-center gap-2">
+				<GaugeIcon className="size-4 text-muted-foreground" />
+				<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Key Risk Parameters</p>
+			</div>
+			<div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+				{params.map((param, i) => (
+					<div key={i} className={`rounded-xl border p-3.5 ${statusStyle[param.status]}`}>
+						<div className="flex items-center gap-1.5 mb-1.5">
+							<div className={`h-1.5 w-1.5 rounded-full ${dotStyle[param.status]}`} />
+							<span className="text-[9px] font-heading font-semibold text-muted-foreground uppercase tracking-widest truncate">{param.label}</span>
+						</div>
+						<div className="text-sm font-heading font-semibold truncate" title={param.value}>{param.value}</div>
+					</div>
+				))}
+			</div>
+		</div>
+	);
+}
+
+/* ─── Career Timeline (horizontal SVG) ─── */
+
+function CareerTimeline({ phases }: { phases: CareerPhase[] }) {
+	const svgWidth = 700;
+	const svgHeight = 160;
+	const marginX = 40;
+	const nodeY = 60;
+	const nodeRadius = 16;
+	const lineY = nodeY;
+	const usableWidth = svgWidth - marginX * 2;
+	const spacing = phases.length > 1 ? usableWidth / (phases.length - 1) : 0;
+
+	return (
+		<div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+			<div className="flex items-center gap-2 mb-5">
+				<BriefcaseIcon className="size-4 text-muted-foreground" />
+				<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Career Timeline</p>
+			</div>
+			<div className="overflow-x-auto">
+				<svg width={svgWidth} height={svgHeight} viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="w-full max-w-[700px] mx-auto">
+					{/* Connection line */}
+					<line x1={marginX} y1={lineY} x2={marginX + (phases.length - 1) * spacing} y2={lineY} stroke="#e5e7eb" strokeWidth="2" />
+
+					{phases.map((phase, i) => {
+						const x = marginX + i * spacing;
+						const wealthColor = phase.phaseWealthUSD < 0 ? "#ef4444" : phase.phaseWealthUSD > 1_000_000_000 ? "#0d9488" : phase.phaseWealthUSD > 1_000_000 ? "#0891b2" : "#6b7280";
+						return (
+							<g key={phase.id}>
+								{/* Filled progress line */}
+								{i > 0 && (
+									<line
+										x1={marginX + (i - 1) * spacing}
+										y1={lineY}
+										x2={x}
+										y2={lineY}
+										stroke="#3b82f6"
+										strokeWidth="2"
+									/>
+								)}
+
+								{/* Node */}
+								<circle cx={x} cy={nodeY} r={nodeRadius} fill="white" stroke="#3b82f6" strokeWidth="2.5" />
+								<text x={x} y={nodeY + 5} textAnchor="middle" className="font-heading" style={{ fontSize: "11px", fontWeight: 700, fill: "#3b82f6" }}>
+									{i + 1}
+								</text>
+
+								{/* Year range */}
+								<text x={x} y={nodeY - 24} textAnchor="middle" style={{ fontSize: "9px", fill: "#6b7280" }}>
+									{phase.startYear}–{phase.endYear ?? "Now"}
+								</text>
+
+								{/* Title */}
+								<text x={x} y={nodeY + 38} textAnchor="middle" className="font-heading" style={{ fontSize: "9px", fontWeight: 600, fill: "#1f2937" }}>
+									{phase.title.length > 18 ? phase.title.slice(0, 18) + "..." : phase.title}
+								</text>
+
+								{/* Wealth at this phase */}
+								<text x={x} y={nodeY + 52} textAnchor="middle" style={{ fontSize: "9px", fontWeight: 600, fill: wealthColor }}>
+									{formatUSD(phase.cumulativeWealthUSD)}
+								</text>
+
+								{/* Location */}
+								<text x={x} y={nodeY + 65} textAnchor="middle" style={{ fontSize: "7px", fill: "#9ca3af" }}>
+									{phase.location.length > 20 ? phase.location.slice(0, 20) + "..." : phase.location}
+								</text>
+							</g>
+						);
+					})}
+				</svg>
+			</div>
+		</div>
+	);
+}
+
+/* ─── Wealth Accumulation Chart (stacked bar) ─── */
+
+function WealthAccumulationChart({ phases }: { phases: CareerPhase[] }) {
+	const categories: WealthCategory[] = ["income", "companies", "investments", "alternatives", "crypto"];
+	const maxWealth = Math.max(...phases.map((p) => p.cumulativeWealthUSD), 1);
+
+	const svgWidth = 700;
+	const svgHeight = 280;
+	const marginLeft = 70;
+	const marginRight = 20;
+	const marginTop = 20;
+	const marginBottom = 60;
+	const chartWidth = svgWidth - marginLeft - marginRight;
+	const chartHeight = svgHeight - marginTop - marginBottom;
+	const barWidth = Math.min(60, (chartWidth / phases.length) * 0.7);
+	const barSpacing = chartWidth / phases.length;
+
+	return (
+		<div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+			<div className="flex items-center gap-2 mb-2">
+				<BarChart3Icon className="size-4 text-muted-foreground" />
+				<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Wealth Accumulation by Career Phase</p>
+			</div>
+
+			{/* Legend */}
+			<div className="flex flex-wrap gap-3 mb-4">
+				{categories.map((cat) => (
+					<div key={cat} className="flex items-center gap-1.5">
+						<div className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: CATEGORY_COLORS[cat] }} />
+						<span className="text-[10px] text-muted-foreground">{CATEGORY_LABELS[cat]}</span>
+					</div>
+				))}
+			</div>
+
+			<div className="overflow-x-auto">
+				<svg width={svgWidth} height={svgHeight} viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="w-full max-w-[700px] mx-auto">
+					{/* Y-axis labels */}
+					{[0, 0.25, 0.5, 0.75, 1].map((frac) => {
+						const y = marginTop + chartHeight * (1 - frac);
+						const val = maxWealth * frac;
+						return (
+							<g key={frac}>
+								<line x1={marginLeft} y1={y} x2={marginLeft + chartWidth} y2={y} stroke="#e5e7eb" strokeWidth="1" strokeDasharray="4 2" />
+								<text x={marginLeft - 8} y={y + 4} textAnchor="end" style={{ fontSize: "9px", fill: "#9ca3af" }}>
+									{formatUSD(val)}
+								</text>
+							</g>
+						);
+					})}
+
+					{/* Bars */}
+					{phases.map((phase, phaseIdx) => {
+						const barX = marginLeft + phaseIdx * barSpacing + (barSpacing - barWidth) / 2;
+						let yOffset = 0;
+
+						// Get category totals from the last phase's wealth perspective (cumulative)
+						const catTotals: Record<WealthCategory, number> = { income: 0, companies: 0, investments: 0, alternatives: 0, crypto: 0 };
+						for (const cat of phase.categories) {
+							catTotals[cat.category] += cat.subtotalUSD;
+						}
+						const phaseTotal = Object.values(catTotals).reduce((s, v) => s + v, 0);
+
+						return (
+							<g key={phase.id}>
+								{categories.map((cat) => {
+									const val = catTotals[cat];
+									if (val <= 0) return null;
+									const barHeight = (val / maxWealth) * chartHeight;
+									const y = marginTop + chartHeight - yOffset - barHeight;
+									yOffset += barHeight;
+									return (
+										<rect
+											key={cat}
+											x={barX}
+											y={y}
+											width={barWidth}
+											height={barHeight}
+											fill={CATEGORY_COLORS[cat]}
+											rx="2"
+											opacity="0.85"
+										/>
+									);
+								})}
+
+								{/* Phase label */}
+								<text
+									x={barX + barWidth / 2}
+									y={marginTop + chartHeight + 16}
+									textAnchor="middle"
+									className="font-heading"
+									style={{ fontSize: "8px", fontWeight: 600, fill: "#374151" }}
+								>
+									{phase.title.length > 12 ? phase.title.slice(0, 12) + "..." : phase.title}
+								</text>
+								<text
+									x={barX + barWidth / 2}
+									y={marginTop + chartHeight + 28}
+									textAnchor="middle"
+									style={{ fontSize: "7px", fill: "#9ca3af" }}
+								>
+									{phase.startYear}–{phase.endYear ?? "Now"}
+								</text>
+
+								{/* Value on top */}
+								<text
+									x={barX + barWidth / 2}
+									y={marginTop + chartHeight - yOffset - 4}
+									textAnchor="middle"
+									style={{ fontSize: "8px", fontWeight: 600, fill: "#374151" }}
+								>
+									{formatUSD(phaseTotal)}
+								</text>
+							</g>
+						);
+					})}
+				</svg>
+			</div>
+		</div>
+	);
+}
+
 /* ─── Wealth Donut Chart ─── */
 
-function WealthDonutChart({ items, totalWealth, totalIncome }: { items: SowWealthItem[]; totalWealth: number; totalIncome: number }) {
-	const colors = ["#0891b2", "#0e7490", "#155e75", "#164e63", "#1e3a5f", "#0f172a"];
-	const valueItems = items.filter((i) => (i.estimatedTotalRMB ?? 0) > 0 || (i.estimatedAnnualRMB ?? 0) > 0);
-	const total = valueItems.reduce((sum, i) => sum + (i.estimatedTotalRMB ?? (i.estimatedAnnualRMB ?? 0) * 10), 0);
+function WealthDonutChart({ wealthByCategory, totalWealth, overallConfidence }: {
+	wealthByCategory: { category: WealthCategory; totalUSD: number; percentage: number; avgConfidence: number }[];
+	totalWealth: number;
+	overallConfidence: number;
+}) {
+	const valueItems = wealthByCategory.filter((w) => w.totalUSD > 0);
+	const total = valueItems.reduce((sum, w) => sum + w.totalUSD, 0);
 
 	let cumulativeAngle = 0;
-	const segments = valueItems.map((item, i) => {
-		const value = item.estimatedTotalRMB ?? (item.estimatedAnnualRMB ?? 0) * 10;
-		const percentage = total > 0 ? value / total : 0;
+	const segments = valueItems.map((item) => {
+		const percentage = total > 0 ? item.totalUSD / total : 0;
 		const startAngle = cumulativeAngle;
 		const sweep = percentage * 360;
 		cumulativeAngle += sweep;
-		return { ...item, percentage, startAngle, sweep, color: colors[i % colors.length] };
+		return { ...item, percentage, startAngle, sweep, color: CATEGORY_COLORS[item.category] };
 	});
 
 	const r = 55;
@@ -1781,9 +1277,7 @@ function WealthDonutChart({ items, totalWealth, totalIncome }: { items: SowWealt
 		<div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
 			<div className="flex items-center gap-2 mb-5">
 				<TrendingUpIcon className="size-4 text-muted-foreground" />
-				<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">
-					Wealth Composition
-				</p>
+				<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Wealth Composition</p>
 			</div>
 			<div className="flex items-center gap-8">
 				<div className="shrink-0">
@@ -1798,20 +1292,32 @@ function WealthDonutChart({ items, totalWealth, totalIncome }: { items: SowWealt
 								strokeLinecap="butt"
 							/>
 						))}
-						<text x={cx} y={cy - 4} textAnchor="middle" className="font-heading" style={{ fontSize: "16px", fontWeight: 700, fill: "currentColor" }}>
-							¥{formatRMB(totalWealth)}
+						<text x="70" y="66" textAnchor="middle" className="font-heading" style={{ fontSize: "16px", fontWeight: 700, fill: "currentColor" }}>
+							{formatUSD(totalWealth)}
 						</text>
-						<text x={cx} y={cy + 12} textAnchor="middle" style={{ fontSize: "9px", fill: "#9ca3af" }}>
-							Total Wealth
+						<text x="70" y="82" textAnchor="middle" style={{ fontSize: "9px", fill: "#9ca3af" }}>
+							{overallConfidence}% confidence
 						</text>
 					</svg>
 				</div>
+
 				<div className="flex-1 space-y-2">
-					{segments.map((seg, i) => (
-						<div key={i} className="flex items-center gap-2.5">
+					{segments.map((seg) => (
+						<div key={seg.category} className="flex items-center gap-3">
 							<div className="h-3 w-3 rounded-sm shrink-0" style={{ backgroundColor: seg.color }} />
-							<span className="text-xs flex-1 truncate">{seg.category}</span>
-							<span className="text-xs font-mono text-muted-foreground tabular-nums">{(seg.percentage * 100).toFixed(0)}%</span>
+							<div className="flex-1 min-w-0">
+								<div className="flex items-center justify-between">
+									<span className="text-sm font-heading font-medium truncate">{CATEGORY_LABELS[seg.category]}</span>
+									<span className="text-sm font-heading font-bold tabular-nums ml-2">{formatUSD(seg.totalUSD)}</span>
+								</div>
+								<div className="flex items-center gap-2 mt-0.5">
+									<div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
+										<div className="h-full rounded-full" style={{ width: `${seg.percentage}%`, backgroundColor: seg.color }} />
+									</div>
+									<span className="text-[10px] text-muted-foreground tabular-nums w-10 text-right">{seg.percentage.toFixed(1)}%</span>
+									<span className="text-[10px] text-muted-foreground tabular-nums w-12 text-right">{seg.avgConfidence}% conf</span>
+								</div>
+							</div>
 						</div>
 					))}
 				</div>
@@ -1820,41 +1326,191 @@ function WealthDonutChart({ items, totalWealth, totalIncome }: { items: SowWealt
 	);
 }
 
+/* ─── Career Phase Cards ─── */
+
+function CareerPhaseCards({ phases }: { phases: CareerPhase[] }) {
+	const [expandedId, setExpandedId] = useState<string | null>(null);
+
+	return (
+		<div className="space-y-3">
+			<div className="flex items-center gap-2">
+				<BookOpenIcon className="size-4 text-muted-foreground" />
+				<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Career Phase Detail</p>
+			</div>
+			<div className="space-y-3">
+				{phases.map((phase, idx) => {
+					const isExpanded = expandedId === phase.id;
+					return (
+						<div key={phase.id} className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+							<button
+								onClick={() => setExpandedId(isExpanded ? null : phase.id)}
+								className="w-full text-left px-5 py-4 flex items-center gap-4 hover:bg-accent/20 transition-colors"
+							>
+								<div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+									<span className="text-sm font-heading font-bold text-primary">{idx + 1}</span>
+								</div>
+								<div className="flex-1 min-w-0">
+									<div className="flex items-center gap-2 flex-wrap">
+										<span className="font-heading font-semibold">{phase.title}</span>
+										{phase.organization && <span className="text-xs text-muted-foreground">— {phase.organization}</span>}
+									</div>
+									<div className="flex items-center gap-3 text-[11px] text-muted-foreground mt-0.5">
+										<span>{phase.startYear}–{phase.endYear ?? "Present"}</span>
+										<span>·</span>
+										<span>{phase.location}</span>
+										<span>·</span>
+										<span className="font-heading font-semibold text-foreground">{formatUSD(phase.cumulativeWealthUSD)} cumulative</span>
+									</div>
+								</div>
+								<ChevronDownIcon className={`size-4 text-muted-foreground transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+							</button>
+
+							{isExpanded && (
+								<div className="px-5 pb-5 space-y-4 border-t border-border/50 pt-4">
+									<p className="text-sm text-muted-foreground leading-relaxed">{phase.description}</p>
+
+									{/* Key Events */}
+									{phase.keyEvents.length > 0 && (
+										<div>
+											<div className="text-[9px] font-heading font-semibold text-muted-foreground uppercase tracking-widest mb-2">Key Events</div>
+											<div className="space-y-1">
+												{phase.keyEvents.map((event, i) => (
+													<div key={i} className="flex items-start gap-2 text-xs">
+														<CircleDotIcon className="size-3 text-primary mt-0.5 shrink-0" />
+														<span>{event}</span>
+													</div>
+												))}
+											</div>
+										</div>
+									)}
+
+									{/* Wealth Claims by Category */}
+									{phase.categories.map((cat) => (
+										<div key={cat.category} className="rounded-xl border border-border/60 bg-muted/10 p-4 space-y-2">
+											<div className="flex items-center justify-between">
+												<div className="flex items-center gap-2">
+													<div className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: CATEGORY_COLORS[cat.category] }} />
+													<span className="text-xs font-heading font-semibold">{CATEGORY_LABELS[cat.category]}</span>
+												</div>
+												<div className="flex items-center gap-3">
+													<span className="text-xs font-heading font-bold">{formatUSD(cat.subtotalUSD)}</span>
+													<ConfidenceBar value={cat.avgConfidence} />
+												</div>
+											</div>
+											<div className="space-y-2 ml-4">
+												{cat.claims.map((claim) => (
+													<WealthClaimRow key={claim.id} claim={claim} />
+												))}
+											</div>
+										</div>
+									))}
+								</div>
+							)}
+						</div>
+					);
+				})}
+			</div>
+		</div>
+	);
+}
+
+/* ─── Wealth Claim Row ─── */
+
+function WealthClaimRow({ claim }: { claim: WealthClaim }) {
+	return (
+		<div className="rounded-lg border border-border/40 bg-card p-3 space-y-1.5">
+			<div className="flex items-start justify-between gap-2">
+				<p className="text-xs text-foreground leading-relaxed flex-1">{claim.description}</p>
+				<span className="text-xs font-heading font-bold tabular-nums shrink-0 text-right">{formatUSD(claim.estimatedValueUSD)}</span>
+			</div>
+			<div className="flex items-center gap-3">
+				<ConfidenceBar value={claim.confidence} />
+				<div className="flex items-center gap-1.5 flex-wrap">
+					{claim.sources.map((src) => (
+						<SourceBadge key={src.id} source={src} />
+					))}
+				</div>
+			</div>
+		</div>
+	);
+}
+
+/* ─── Confidence Bar ─── */
+
+function ConfidenceBar({ value }: { value: number }) {
+	const color = value >= 70 ? "#10b981" : value >= 40 ? "#f59e0b" : "#ef4444";
+	return (
+		<div className="flex items-center gap-1.5 shrink-0">
+			<div className="w-16 h-1.5 rounded-full bg-muted overflow-hidden">
+				<div className="h-full rounded-full transition-all" style={{ width: `${value}%`, backgroundColor: color }} />
+			</div>
+			<span className="text-[10px] font-heading font-semibold tabular-nums" style={{ color }}>{value}%</span>
+		</div>
+	);
+}
+
+/* ─── Source Badge ─── */
+
+function SourceBadge({ source }: { source: SourceCitation }) {
+	const typeColors: Record<string, string> = {
+		filing: "bg-blue-500/15 text-blue-700 border-blue-500/20",
+		news: "bg-purple-500/15 text-purple-700 border-purple-500/20",
+		registry: "bg-teal-500/15 text-teal-700 border-teal-500/20",
+		"market-data": "bg-cyan-500/15 text-cyan-700 border-cyan-500/20",
+		"public-record": "bg-emerald-500/15 text-emerald-700 border-emerald-500/20",
+		estimate: "bg-amber-500/15 text-amber-700 border-amber-500/20",
+	};
+	const typeIcons: Record<string, typeof FileTextIcon> = {
+		filing: FileTextIcon,
+		news: ExternalLinkIcon,
+		registry: BuildingIcon,
+		"market-data": TrendingUpIcon,
+		"public-record": ShieldCheckIcon,
+		estimate: SparklesIcon,
+	};
+	const Icon = typeIcons[source.type] ?? FileTextIcon;
+	const colorClass = typeColors[source.type] ?? typeColors.estimate;
+
+	return (
+		<span className={`inline-flex items-center gap-1 text-[9px] font-semibold rounded-md border px-1.5 py-0.5 ${colorClass}`} title={source.label}>
+			<Icon className="size-2.5" />
+			{source.label.length > 30 ? source.label.slice(0, 30) + "..." : source.label}
+		</span>
+	);
+}
+
 /* ─── Company Network Graph ─── */
 
-function CompanyNetworkGraph({ report }: { report: SowReport }) {
-	const p = report.profile;
-	const isHigh = p.riskRating === "High";
-
-	const companies = isHigh
-		? [
-			{ name: "Shanghai Yuwei\nConsulting", role: "100% Owner & Director", status: "active", x: 80, y: 20 },
-			{ name: "Shanghai Meihe\nTrading", role: "60% Shareholder & Director", status: "investigation", x: 380, y: 20 },
-			{ name: "Hangzhou Qianhe\nReal Estate", role: "Fmr. 40% Shareholder", status: "dissolved", x: 230, y: 220 },
-		]
-		: [
-			{ name: "Shenzhen Yunchuang\nTechnology", role: "35% Shareholder & Director", status: "active", x: 80, y: 20 },
-			{ name: "Guangdong Xinhe\nSoftware", role: "8% Shareholder", status: "active", x: 380, y: 20 },
-		];
-
-	const personX = 250;
-	const personY = isHigh ? 130 : 130;
-
+function CompanyNetworkGraph({ nodes, profileName }: { nodes: CompanyNode[]; profileName: string }) {
 	const statusColor: Record<string, { fill: string; stroke: string; text: string; badge: string }> = {
 		active: { fill: "#f0fdf4", stroke: "#86efac", text: "#166534", badge: "Active" },
-		investigation: { fill: "#fef3c7", stroke: "#fcd34d", text: "#92400e", badge: "Under Investigation" },
-		dissolved: { fill: "#fef2f2", stroke: "#fca5a5", text: "#991b1b", badge: "Dissolved" },
+		ipo: { fill: "#eff6ff", stroke: "#93c5fd", text: "#1e40af", badge: "IPO" },
+		exited: { fill: "#fefce8", stroke: "#fde047", text: "#854d0e", badge: "Exited" },
+		restructured: { fill: "#fef3c7", stroke: "#fcd34d", text: "#92400e", badge: "Restructured" },
+		delisted: { fill: "#fef2f2", stroke: "#fca5a5", text: "#991b1b", badge: "Delisted" },
 	};
 
-	const svgH = isHigh ? 290 : 200;
+	const personX = 250;
+	const personY = nodes.length > 3 ? 140 : 100;
+	const svgH = nodes.length > 3 ? 320 : 230;
+
+	// Position nodes in a circle around the person
+	const nodePositions = nodes.map((_, i) => {
+		const angleStep = (2 * Math.PI) / nodes.length;
+		const angle = angleStep * i - Math.PI / 2;
+		const rx = 170;
+		const ry = nodes.length > 3 ? 110 : 80;
+		return {
+			x: personX + rx * Math.cos(angle) - 60,
+			y: personY + ry * Math.sin(angle) - 20,
+		};
+	});
 
 	return (
 		<div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
 			<div className="flex items-center gap-2 mb-5">
 				<NetworkIcon className="size-4 text-muted-foreground" />
-				<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">
-					Related Entity Network
-				</p>
+				<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Related Entity Network</p>
 			</div>
 			<div className="overflow-x-auto">
 				<svg width="500" height={svgH} viewBox={`0 0 500 ${svgH}`} className="w-full max-w-[500px] mx-auto">
@@ -1864,27 +1520,27 @@ function CompanyNetworkGraph({ report }: { report: SowReport }) {
 						</filter>
 					</defs>
 
-					{companies.map((c, i) => {
-						const midX = (personX + c.x + 60) / 2;
-						const midY = (personY + c.y + 20) / 2;
-						const sc = statusColor[c.status];
+					{nodes.map((node, i) => {
+						const pos = nodePositions[i];
+						const sc = statusColor[node.status] ?? statusColor.active;
+						const midX = (personX + pos.x + 60) / 2;
+						const midY = (personY + pos.y + 20) / 2;
+
 						return (
 							<g key={i}>
+								{/* Connection line */}
 								<line
 									x1={personX} y1={personY}
-									x2={c.x + 60} y2={c.y + 20}
+									x2={pos.x + 60} y2={pos.y + 20}
 									stroke={sc.stroke}
 									strokeWidth="2"
-									strokeDasharray={c.status === "dissolved" ? "6 4" : "none"}
+									strokeDasharray={node.status === "exited" || node.status === "delisted" ? "6 4" : "none"}
 									opacity="0.6"
 								/>
-								<rect
-									x={midX - 45} y={midY - 8}
-									width="90" height="16" rx="8"
-									fill="white" stroke={sc.stroke} strokeWidth="1"
-								/>
-								<text x={midX} y={midY + 4} textAnchor="middle" style={{ fontSize: "7px", fill: "#6b7280" }}>
-									{c.role}
+								{/* Role label on line */}
+								<rect x={midX - 40} y={midY - 8} width="80" height="16" rx="8" fill="white" stroke={sc.stroke} strokeWidth="1" />
+								<text x={midX} y={midY + 4} textAnchor="middle" style={{ fontSize: "6px", fill: "#6b7280" }}>
+									{node.role.length > 25 ? node.role.slice(0, 25) + "..." : node.role}
 								</text>
 							</g>
 						);
@@ -1895,43 +1551,29 @@ function CompanyNetworkGraph({ report }: { report: SowReport }) {
 					<circle cx={personX} cy={personY - 6} r="6" fill="none" stroke="#3b82f6" strokeWidth="1.5" />
 					<path d={`M ${personX - 10} ${personY + 10} Q ${personX} ${personY + 2} ${personX + 10} ${personY + 10}`} fill="none" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round" />
 					<text x={personX} y={personY + 36} textAnchor="middle" className="font-heading" style={{ fontSize: "10px", fontWeight: 600, fill: "#1e40af" }}>
-						{p.name}
-					</text>
-					<text x={personX} y={personY + 47} textAnchor="middle" style={{ fontSize: "8px", fill: "#6b7280" }}>
-						{p.nameEn}
+						{profileName}
 					</text>
 
-					{companies.map((c, i) => {
-						const sc = statusColor[c.status];
-						const lines = c.name.split("\n");
+					{/* Company nodes */}
+					{nodes.map((node, i) => {
+						const pos = nodePositions[i];
+						const sc = statusColor[node.status] ?? statusColor.active;
+						const lines = node.name.split(/(?<=\s)/);
+						const displayName = node.name.length > 22 ? node.name.slice(0, 22) + "..." : node.name;
+
 						return (
 							<g key={`node-${i}`}>
-								<rect
-									x={c.x} y={c.y}
-									width="120" height="50" rx="10"
-									fill={sc.fill} stroke={sc.stroke} strokeWidth="1.5"
-									filter="url(#nodeShadow)"
-								/>
-								{lines.map((line, li) => (
-									<text
-										key={li}
-										x={c.x + 60} y={c.y + 18 + li * 12}
-										textAnchor="middle"
-										style={{ fontSize: "9px", fontWeight: 600, fill: sc.text }}
-									>
-										{line}
+								<rect x={pos.x} y={pos.y} width="120" height="50" rx="10" fill={sc.fill} stroke={sc.stroke} strokeWidth="1.5" filter="url(#nodeShadow)" />
+								<text x={pos.x + 60} y={pos.y + 20} textAnchor="middle" style={{ fontSize: "8px", fontWeight: 600, fill: sc.text }}>
+									{displayName}
+								</text>
+								{node.ownership && (
+									<text x={pos.x + 60} y={pos.y + 31} textAnchor="middle" style={{ fontSize: "7px", fill: "#6b7280" }}>
+										{node.ownership}
 									</text>
-								))}
-								<rect
-									x={c.x + 20} y={c.y + 38}
-									width="80" height="14" rx="7"
-									fill={sc.stroke} opacity="0.3"
-								/>
-								<text
-									x={c.x + 60} y={c.y + 48}
-									textAnchor="middle"
-									style={{ fontSize: "7px", fontWeight: 600, fill: sc.text }}
-								>
+								)}
+								<rect x={pos.x + 20} y={pos.y + 37} width="80" height="14" rx="7" fill={sc.stroke} opacity="0.3" />
+								<text x={pos.x + 60} y={pos.y + 47} textAnchor="middle" style={{ fontSize: "7px", fontWeight: 600, fill: sc.text }}>
 									{sc.badge}
 								</text>
 							</g>
@@ -1943,817 +1585,137 @@ function CompanyNetworkGraph({ report }: { report: SowReport }) {
 	);
 }
 
-function KeyParameters({ params }: { params: SowReport["keyParameters"] }) {
-	const statusStyle = {
-		normal: "border-emerald-500/20 bg-emerald-500/5",
-		warning: "border-amber-500/20 bg-amber-500/5",
-		critical: "border-red-500/20 bg-red-500/5",
-	};
-	const dotStyle = { normal: "bg-emerald-500", warning: "bg-amber-500", critical: "bg-red-500" };
-	return (
-		<div className="space-y-3">
-			<div className="flex items-center gap-2">
-				<GaugeIcon className="size-4 text-muted-foreground" />
-				<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">
-					Key Risk Parameters
-				</p>
-			</div>
-			<div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-				{params.map((param, i) => (
-					<div key={i} className={`rounded-xl border p-3.5 ${statusStyle[param.status]}`}>
-						<div className="flex items-center gap-1.5 mb-1.5">
-							<div className={`h-1.5 w-1.5 rounded-full ${dotStyle[param.status]}`} />
-							<span className="text-[9px] font-heading font-semibold text-muted-foreground uppercase tracking-widest truncate">
-								{param.label}
-							</span>
-						</div>
-						<div className="text-sm font-heading font-semibold truncate" title={param.value}>
-							{param.value}
-						</div>
-					</div>
-				))}
-			</div>
-		</div>
-	);
-}
-
-function RiskAssessment({ profile: p }: { profile: SowReport["profile"] }) {
-	const isHigh = p.riskRating === "High";
-	return (
-		<div className={`rounded-2xl border p-6 shadow-sm ${isHigh ? "border-red-500/30 bg-gradient-to-br from-red-500/5 to-red-500/[0.02]" : "border-emerald-500/30 bg-gradient-to-br from-emerald-500/5 to-emerald-500/[0.02]"}`}>
-			<div className="flex items-center gap-3 mb-4">
-				<ShieldAlertIcon className={`size-5 ${isHigh ? "text-red-600" : "text-emerald-600"}`} />
-				<span className="font-heading font-semibold text-base">Risk Assessment: {p.riskRating}</span>
-			</div>
-			<ul className="space-y-2">
-				{p.riskReasoningPoints.map((point, i) => (
-					<li key={i} className="flex items-start gap-2.5 text-sm">
-						<span className={`mt-1.5 h-1.5 w-1.5 rounded-full shrink-0 ${isHigh ? "bg-red-500" : "bg-emerald-500"}`} />
-						{point}
-					</li>
-				))}
-			</ul>
-		</div>
-	);
-}
-
-function WealthBreakdown({ items, totalWealth, totalIncome }: { items: SowWealthItem[]; totalWealth: number; totalIncome: number }) {
-	return (
-		<div className="space-y-3">
-			<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Wealth Breakdown</p>
-			<div className="grid grid-cols-2 gap-3">
-				<div className="rounded-xl border border-border bg-gradient-to-br from-card to-muted/20 p-5 shadow-sm">
-					<div className="text-[9px] uppercase tracking-widest text-muted-foreground font-heading">Total Estimated Wealth</div>
-					<div className="text-3xl font-heading font-bold mt-1.5 tabular-nums tracking-tight">¥{formatRMB(totalWealth)}</div>
-				</div>
-				<div className="rounded-xl border border-border bg-gradient-to-br from-card to-muted/20 p-5 shadow-sm">
-					<div className="text-[9px] uppercase tracking-widest text-muted-foreground font-heading">Est. Annual Income</div>
-					<div className="text-3xl font-heading font-bold mt-1.5 tabular-nums tracking-tight">¥{formatRMB(totalIncome)}</div>
-				</div>
-			</div>
-			<div className="rounded-2xl border border-border overflow-hidden shadow-sm bg-card">
-				<table className="w-full text-sm">
-					<thead className="bg-gradient-to-r from-muted/60 to-muted/30 text-muted-foreground">
-						<tr>
-							<th className="text-left px-4 py-3 font-medium text-xs font-heading tracking-wide">Category</th>
-							<th className="text-right px-4 py-3 font-medium text-xs font-heading tracking-wide w-32">Annual (¥)</th>
-							<th className="text-right px-4 py-3 font-medium text-xs font-heading tracking-wide w-32">Total Value (¥)</th>
-							<th className="text-center px-4 py-3 font-medium text-xs font-heading tracking-wide w-24">Confidence</th>
-						</tr>
-					</thead>
-					<tbody className="divide-y divide-border/60">
-						{items.map((item, i) => <WealthRow key={i} item={item} />)}
-					</tbody>
-				</table>
-			</div>
-		</div>
-	);
-}
-
-function WealthRow({ item }: { item: SowWealthItem }) {
-	const [open, setOpen] = useState(false);
-	const confColor = {
-		High: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/20",
-		Medium: "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/20",
-		Low: "bg-red-500/15 text-red-700 dark:text-red-400 border-red-500/20",
-	}[item.confidence];
-	return (
-		<>
-			<tr className="hover:bg-accent/30 cursor-pointer transition-colors" onClick={() => setOpen((v) => !v)}>
-				<td className="px-4 py-3 font-medium">
-					<div className="flex items-center gap-1.5">
-						<ChevronDownIcon className={`size-3.5 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
-						{item.category}
-					</div>
-				</td>
-				<td className="px-4 py-3 text-right tabular-nums font-mono text-xs">{item.estimatedAnnualRMB ? formatRMB(item.estimatedAnnualRMB) : "—"}</td>
-				<td className="px-4 py-3 text-right tabular-nums font-mono text-xs">{item.estimatedTotalRMB !== null ? formatRMB(item.estimatedTotalRMB) : "—"}</td>
-				<td className="px-4 py-3 text-center">
-					<span className={`text-[10px] font-semibold rounded-md border px-1.5 py-0.5 ${confColor}`}>{item.confidence}</span>
-				</td>
-			</tr>
-			{open && (
-				<tr><td colSpan={4} className="px-4 py-3 bg-muted/10"><p className="text-xs text-muted-foreground leading-relaxed pl-5">{item.description}</p></td></tr>
-			)}
-		</>
-	);
-}
-
-function DataSourceFindings({ sources }: { sources: SowDataSource[] }) {
-	const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
-	const toggle = (id: string) => setExpandedIds((prev) => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next; });
-	const categories = ["Identity", "Banking", "Risk", "Corporate", "Income", "Tax"] as const;
-	const grouped = categories.map((cat) => ({ category: cat, items: sources.filter((s) => s.category === cat) })).filter((g) => g.items.length > 0);
-
-	return (
-		<div className="space-y-3">
-			<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">
-				Data Source Findings — {sources.length} sources queried
-			</p>
-			<div className="space-y-3">
-				{grouped.map((group) => (
-					<div key={group.category} className="rounded-2xl border border-border overflow-hidden shadow-sm bg-card">
-						<div className="px-5 py-2.5 bg-gradient-to-r from-muted/50 to-muted/20 border-b border-border/60">
-							<span className="text-[10px] font-heading font-semibold uppercase tracking-widest text-muted-foreground">{group.category}</span>
-						</div>
-						<div className="divide-y divide-border/50">
-							{group.items.map((source) => {
-								const isOpen = expandedIds.has(source.id);
-								return (
-									<div key={source.id}>
-										<button onClick={() => toggle(source.id)} className="w-full flex items-center gap-3 px-5 py-3 text-left hover:bg-accent/30 transition-colors">
-											<SourceStatusIcon status={source.status} />
-											<div className="flex-1 min-w-0">
-												<div className="text-sm">{source.name}</div>
-												<div className="text-[11px] text-muted-foreground">{source.provider}</div>
-											</div>
-											<SourceStatusBadge status={source.status} label={source.statusLabel} />
-											<ChevronDownIcon className={`size-3.5 text-muted-foreground transition-transform ${isOpen ? "rotate-180" : ""}`} />
-										</button>
-										{isOpen && (
-											<div className="px-5 pb-3 pl-12">
-												<p className="text-xs text-muted-foreground leading-relaxed">{source.findings}</p>
-											</div>
-										)}
-									</div>
-								);
-							})}
-						</div>
-					</div>
-				))}
-			</div>
-		</div>
-	);
-}
+/* ─── Narrative Section ─── */
 
 function NarrativeSection({ narrative }: { narrative: string }) {
-	return (
-		<div className="space-y-3">
-			<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">SOW Narrative — AI-Generated Summary</p>
-			<div className="rounded-2xl border border-border bg-card p-6 shadow-sm space-y-4">
-				<div>
-					{narrative.split("\n\n").map((para, i) => (
-						<p key={i} className="text-sm leading-[1.8] mb-3 last:mb-0">{para}</p>
-					))}
-				</div>
-				<div className="rounded-lg bg-muted/30 border border-border/60 px-4 py-3 flex items-start gap-2.5">
-					<InfoIcon className="size-3.5 text-muted-foreground mt-0.5 shrink-0" />
-					<p className="text-[11px] text-muted-foreground leading-relaxed">
-						This narrative was generated by an AI model synthesizing findings from {narrative.length > 2000 ? "13" : "11"} verified data sources.
-						All factual claims are traceable to the source query results in Section 5 above. This summary is intended as an
-						analytical aid for compliance officers and should not be used as a standalone decision document. Final risk determination
-						must be made by a qualified compliance professional in accordance with institutional policies.
-					</p>
-				</div>
-			</div>
-		</div>
-	);
-}
-
-function AssessmentMethodology() {
-	const factors = [
-		{ name: "Identity Consistency", weight: "15%", desc: "Cross-validation of identity documents, mobile attribution, and residence claims across government databases." },
-		{ name: "Income Plausibility", weight: "20%", desc: "Comparison of declared income against social insurance contributions, tax filings, and employer verification." },
-		{ name: "Wealth-to-Income Ratio", weight: "20%", desc: "Assessment of whether accumulated assets are proportionate to verified income trajectory over career span." },
-		{ name: "Corporate Exposure", weight: "15%", desc: "Evaluation of associated entities including registration status, regulatory standing, and beneficial ownership structures." },
-		{ name: "Litigation & Enforcement", weight: "10%", desc: "Review of civil and criminal court records, enforcement actions, and dishonest debtor listings." },
-		{ name: "Financial Behaviour", weight: "10%", desc: "Analysis of multi-platform borrowing patterns, cross-provincial account activity, and fraud risk indicators." },
-		{ name: "Tax Compliance", weight: "10%", desc: "Year-over-year consistency of tax filings and alignment with other declared income sources." },
-	];
+	const [expanded, setExpanded] = useState(false);
+	const paragraphs = narrative.split("\n\n");
+	const preview = paragraphs.slice(0, 2);
 
 	return (
-		<div className="space-y-3">
-			<div className="flex items-center gap-2">
+		<div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+			<div className="flex items-center gap-2 mb-4">
 				<FileTextIcon className="size-4 text-muted-foreground" />
-				<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Assessment Methodology</p>
+				<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Wealth Narrative</p>
 			</div>
-			<div className="rounded-2xl border border-border bg-card p-6 shadow-sm space-y-4">
-				<p className="text-xs text-muted-foreground leading-relaxed">
-					The composite risk score is calculated using a weighted multi-factor model. Each factor is independently assessed against verified data from government and financial sources, then combined into an overall score from 0 (lowest risk) to 100 (highest risk). Scores above 60 trigger enhanced due diligence requirements.
-				</p>
-				<div className="rounded-xl border border-border overflow-hidden">
-					<table className="w-full text-sm">
-						<thead className="bg-gradient-to-r from-muted/60 to-muted/30 text-muted-foreground">
-							<tr>
-								<th className="text-left px-4 py-2.5 font-medium text-xs font-heading tracking-wide">Factor</th>
-								<th className="text-center px-4 py-2.5 font-medium text-xs font-heading tracking-wide w-20">Weight</th>
-								<th className="text-left px-4 py-2.5 font-medium text-xs font-heading tracking-wide hidden sm:table-cell">Description</th>
-							</tr>
-						</thead>
-						<tbody className="divide-y divide-border/60">
-							{factors.map((f) => (
-								<tr key={f.name} className="hover:bg-accent/30 transition-colors">
-									<td className="px-4 py-2.5 text-xs font-heading font-medium">{f.name}</td>
-									<td className="px-4 py-2.5 text-xs font-mono text-center text-primary font-semibold">{f.weight}</td>
-									<td className="px-4 py-2.5 text-[11px] text-muted-foreground hidden sm:table-cell">{f.desc}</td>
-								</tr>
-							))}
-						</tbody>
-					</table>
-				</div>
+			<div className="space-y-3">
+				{(expanded ? paragraphs : preview).map((para, i) => (
+					<p key={i} className="text-sm text-muted-foreground leading-relaxed">{para}</p>
+				))}
 			</div>
-		</div>
-	);
-}
-
-function RegulatoryContext({ riskRating }: { riskRating: "Low" | "High" }) {
-	const isHigh = riskRating === "High";
-	return (
-		<div className="space-y-3">
-			<div className="flex items-center gap-2">
-				<LandmarkIcon className="size-4 text-muted-foreground" />
-				<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Regulatory Context & Obligations</p>
-			</div>
-			<div className="rounded-2xl border border-border bg-card p-6 shadow-sm space-y-4">
-				<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-					<div className="space-y-2">
-						<h5 className="text-xs font-heading font-semibold">Applicable Regulations</h5>
-						<ul className="space-y-1.5 text-[11px] text-muted-foreground">
-							<li className="flex items-start gap-2">
-								<span className="mt-1.5 h-1 w-1 rounded-full bg-primary shrink-0" />
-								PRC Anti-Money Laundering Law (2006, amended 2025)
-							</li>
-							<li className="flex items-start gap-2">
-								<span className="mt-1.5 h-1 w-1 rounded-full bg-primary shrink-0" />
-								PBOC Customer Due Diligence Measures for Financial Institutions
-							</li>
-							<li className="flex items-start gap-2">
-								<span className="mt-1.5 h-1 w-1 rounded-full bg-primary shrink-0" />
-								FATF Recommendations 10, 11, 12 (CDD / Record Keeping / PEPs)
-							</li>
-							<li className="flex items-start gap-2">
-								<span className="mt-1.5 h-1 w-1 rounded-full bg-primary shrink-0" />
-								PRC Personal Information Protection Law (PIPL) — data processing consent
-							</li>
-						</ul>
-					</div>
-					<div className="space-y-2">
-						<h5 className="text-xs font-heading font-semibold">Required Actions</h5>
-						<ul className="space-y-1.5 text-[11px] text-muted-foreground">
-							{isHigh ? (
-								<>
-									<li className="flex items-start gap-2">
-										<span className="mt-1.5 h-1 w-1 rounded-full bg-red-500 shrink-0" />
-										File Suspicious Transaction Report (STR) if funds cannot be explained within 30 days
-									</li>
-									<li className="flex items-start gap-2">
-										<span className="mt-1.5 h-1 w-1 rounded-full bg-red-500 shrink-0" />
-										Conduct enhanced due diligence interview per PBOC Directive 2024-003
-									</li>
-									<li className="flex items-start gap-2">
-										<span className="mt-1.5 h-1 w-1 rounded-full bg-amber-500 shrink-0" />
-										Escalate to MLRO for independent review before account activation
-									</li>
-									<li className="flex items-start gap-2">
-										<span className="mt-1.5 h-1 w-1 rounded-full bg-amber-500 shrink-0" />
-										Set 6-month accelerated review cycle with automated monitoring
-									</li>
-								</>
-							) : (
-								<>
-									<li className="flex items-start gap-2">
-										<span className="mt-1.5 h-1 w-1 rounded-full bg-emerald-500 shrink-0" />
-										Standard CDD complete — no enhanced measures required
-									</li>
-									<li className="flex items-start gap-2">
-										<span className="mt-1.5 h-1 w-1 rounded-full bg-emerald-500 shrink-0" />
-										Retain assessment records for minimum 5 years per AML regulations
-									</li>
-									<li className="flex items-start gap-2">
-										<span className="mt-1.5 h-1 w-1 rounded-full bg-primary shrink-0" />
-										Schedule annual periodic review with automated data source refresh
-									</li>
-									<li className="flex items-start gap-2">
-										<span className="mt-1.5 h-1 w-1 rounded-full bg-primary shrink-0" />
-										Maintain ongoing screening against sanctions and PEP databases
-									</li>
-								</>
-							)}
-						</ul>
-					</div>
-				</div>
-				<div className="rounded-lg bg-muted/30 border border-border/60 px-4 py-3">
-					<p className="text-[11px] text-muted-foreground leading-relaxed">
-						<span className="font-heading font-semibold text-foreground">Data Retention: </span>
-						All assessment data, source query results, and supporting documents will be retained for a minimum of 5 years from the date of the business relationship termination, in compliance with PRC AML record-keeping requirements. Data is stored in AES-256 encrypted format with audit trail logging.
-					</p>
-				</div>
-			</div>
-		</div>
-	);
-}
-
-function PerpetualScreening({ alerts, nextReviewDate, riskRating }: { alerts: ScreeningAlert[]; nextReviewDate: string; riskRating: "Low" | "High" }) {
-	const isHigh = riskRating === "High";
-	return (
-		<div className="space-y-4">
-			<div className="flex items-center justify-between">
-				<div className="flex items-center gap-2">
-					<BellRingIcon className="size-4 text-muted-foreground" />
-					<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Perpetual Screening & Ongoing Monitoring</p>
-				</div>
-				<div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-					<CalendarIcon className="size-3.5" />
-					Next review: {nextReviewDate}
-				</div>
-			</div>
-			<p className="text-xs text-muted-foreground leading-relaxed">
-				Continuous monitoring is active for this subject across all original data sources. Alerts are generated automatically when
-				changes are detected in court records, corporate registries, sanctions lists, adverse media, or tax filings. Monitoring
-				frequency is adjusted based on risk rating: standard cases are checked monthly, high-risk cases are checked weekly.
-			</p>
-			<div className={`rounded-xl border p-4 flex items-center justify-between ${isHigh ? "border-amber-500/30 bg-amber-500/5" : "border-emerald-500/30 bg-emerald-500/5"}`}>
-				<div className="flex items-center gap-2.5">
-					<ActivityIcon className={`size-4 ${isHigh ? "text-amber-600" : "text-emerald-600"}`} />
-					<span className="text-sm font-heading font-medium">{isHigh ? "Active Monitoring — Weekly Scans" : "Active Monitoring — Monthly Scans"}</span>
-				</div>
-				<span className={`text-[10px] font-semibold rounded-md border px-2 py-0.5 ${isHigh ? "bg-amber-500/15 text-amber-700 border-amber-500/20" : "bg-emerald-500/15 text-emerald-700 border-emerald-500/20"}`}>
-					{alerts.length} alert{alerts.length !== 1 ? "s" : ""}
-				</span>
-			</div>
-			<div className="rounded-2xl border border-border overflow-hidden shadow-sm bg-card">
-				{alerts.map((alert, i) => <AlertRow key={i} alert={alert} isLast={i === alerts.length - 1} />)}
-			</div>
-		</div>
-	);
-}
-
-function AlertRow({ alert, isLast }: { alert: ScreeningAlert; isLast: boolean }) {
-	const [open, setOpen] = useState(false);
-	const severityBadge = { Critical: "bg-red-500/15 text-red-700 border-red-500/20", Warning: "bg-amber-500/15 text-amber-700 border-amber-500/20", Info: "bg-sky-500/15 text-sky-700 border-sky-500/20" }[alert.severity];
-	const severityDot = { Critical: "bg-red-500", Warning: "bg-amber-500", Info: "bg-sky-500" }[alert.severity];
-	return (
-		<div className={!isLast ? "border-b border-border/50" : ""}>
-			<button onClick={() => setOpen((v) => !v)} className="w-full flex items-center gap-3 px-5 py-3.5 text-left hover:bg-accent/30 transition-colors">
-				<div className="flex flex-col items-center gap-1 shrink-0 w-16">
-					<span className="text-[10px] text-muted-foreground font-mono tracking-wide">{alert.date}</span>
-					<div className={`h-2 w-2 rounded-full ${severityDot}`} />
-				</div>
-				<div className="flex-1 min-w-0"><div className="text-sm font-medium truncate">{alert.title}</div></div>
-				<div className="flex items-center gap-2 shrink-0">
-					<span className="text-[10px] font-semibold rounded-md border border-border px-1.5 py-0.5 bg-muted/50 text-muted-foreground">{alert.type}</span>
-					<span className={`text-[10px] font-semibold rounded-md border px-1.5 py-0.5 ${severityBadge}`}>{alert.severity}</span>
-					<ChevronDownIcon className={`size-3.5 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
-				</div>
-			</button>
-			{open && (
-				<div className="px-5 pb-3 pl-[5.5rem]"><p className="text-xs text-muted-foreground leading-relaxed">{alert.detail}</p></div>
+			{paragraphs.length > 2 && (
+				<button onClick={() => setExpanded(!expanded)} className="mt-3 text-xs text-primary font-heading font-medium flex items-center gap-1 hover:underline">
+					{expanded ? "Show less" : `Show more (${paragraphs.length - 2} more paragraphs)`}
+					<ChevronDownIcon className={`size-3 transition-transform ${expanded ? "rotate-180" : ""}`} />
+				</button>
 			)}
 		</div>
 	);
 }
 
-/* ─── Document Evidence ─── */
+/* ─── Source Citations Aggregate ─── */
 
-function DocumentEvidenceSection({ documents }: { documents: DocumentEvidence[] }) {
-	const typeLabel: Record<string, string> = { consent: "Consent", identity: "Identity", financial: "Financial", corporate: "Corporate", correspondence: "Correspondence" };
-	const typeColor: Record<string, string> = {
-		consent: "bg-violet-500/15 text-violet-700 border-violet-500/20",
-		identity: "bg-sky-500/15 text-sky-700 border-sky-500/20",
-		financial: "bg-emerald-500/15 text-emerald-700 border-emerald-500/20",
-		corporate: "bg-amber-500/15 text-amber-700 border-amber-500/20",
-		correspondence: "bg-slate-500/15 text-slate-700 border-slate-500/20",
+function SourceCitationsAggregate({ phases }: { phases: CareerPhase[] }) {
+	const allSources = new Map<string, SourceCitation>();
+	for (const phase of phases) {
+		for (const cat of phase.categories) {
+			for (const claim of cat.claims) {
+				for (const src of claim.sources) {
+					allSources.set(src.id, src);
+				}
+			}
+		}
+	}
+	const sources = Array.from(allSources.values());
+
+	const typeLabels: Record<string, string> = {
+		filing: "Regulatory Filing",
+		news: "News Report",
+		registry: "Corporate Registry",
+		"market-data": "Market Data",
+		"public-record": "Public Record",
+		estimate: "Estimate / Analysis",
 	};
 
 	return (
-		<div className="space-y-3">
-			<div className="flex items-center gap-2">
-				<FileBadgeIcon className="size-4 text-muted-foreground" />
+		<div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+			<div className="flex items-center gap-2 mb-4">
+				<LinkIcon className="size-4 text-muted-foreground" />
 				<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">
-					Document Evidence — {documents.length} files
+					Source Citations ({sources.length})
 				</p>
-			</div>
-			<div className="rounded-2xl border border-border overflow-hidden shadow-sm bg-card">
-				<table className="w-full text-sm">
-					<thead className="bg-gradient-to-r from-muted/60 to-muted/30 text-muted-foreground">
-						<tr>
-							<th className="text-left px-4 py-2.5 font-medium text-xs font-heading tracking-wide">Document</th>
-							<th className="text-center px-4 py-2.5 font-medium text-xs font-heading tracking-wide w-24">Type</th>
-							<th className="text-center px-4 py-2.5 font-medium text-xs font-heading tracking-wide w-20 hidden sm:table-cell">Format</th>
-							<th className="text-left px-4 py-2.5 font-medium text-xs font-heading tracking-wide hidden sm:table-cell">Uploaded By</th>
-							<th className="text-center px-4 py-2.5 font-medium text-xs font-heading tracking-wide w-24">Verified</th>
-						</tr>
-					</thead>
-					<tbody className="divide-y divide-border/60">
-						{documents.map((doc) => (
-							<DocumentRow key={doc.id} doc={doc} typeLabel={typeLabel} typeColor={typeColor} />
-						))}
-					</tbody>
-				</table>
-			</div>
-		</div>
-	);
-}
-
-function DocumentRow({ doc, typeLabel, typeColor }: { doc: DocumentEvidence; typeLabel: Record<string, string>; typeColor: Record<string, string> }) {
-	const [open, setOpen] = useState(false);
-	return (
-		<>
-			<tr className="hover:bg-accent/30 cursor-pointer transition-colors" onClick={() => setOpen((v) => !v)}>
-				<td className="px-4 py-3">
-					<div className="flex items-center gap-2">
-						<FileTextIcon className="size-3.5 text-muted-foreground shrink-0" />
-						<span className="text-xs font-medium truncate">{doc.name}</span>
-					</div>
-				</td>
-				<td className="px-4 py-3 text-center">
-					<span className={`text-[9px] font-semibold rounded-md border px-1.5 py-0.5 ${typeColor[doc.type]}`}>
-						{typeLabel[doc.type]}
-					</span>
-				</td>
-				<td className="px-4 py-3 text-center hidden sm:table-cell">
-					<span className="text-[10px] font-mono text-muted-foreground">{doc.format}</span>
-				</td>
-				<td className="px-4 py-3 text-xs text-muted-foreground hidden sm:table-cell">{doc.uploadedBy}</td>
-				<td className="px-4 py-3 text-center">
-					{doc.verified ? (
-						<BadgeCheckIcon className="size-4 text-emerald-600 mx-auto" />
-					) : (
-						<ClockIcon className="size-4 text-amber-500 mx-auto" />
-					)}
-				</td>
-			</tr>
-			{open && (
-				<tr>
-					<td colSpan={5} className="px-4 py-3 bg-muted/10">
-						<div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-[11px] pl-5">
-							<div>
-								<span className="text-muted-foreground">Size:</span>{" "}
-								<span className="font-medium">{doc.sizeKB < 1000 ? `${doc.sizeKB} KB` : `${(doc.sizeKB / 1024).toFixed(1)} MB`}</span>
-							</div>
-							<div>
-								<span className="text-muted-foreground">Uploaded:</span>{" "}
-								<span className="font-medium">{doc.uploadedDate}</span>
-							</div>
-							{doc.verified && doc.verifiedBy && (
-								<div>
-									<span className="text-muted-foreground">Verified by:</span>{" "}
-									<span className="font-medium">{doc.verifiedBy}</span>
-								</div>
-							)}
-							{doc.verified && doc.verifiedDate && (
-								<div>
-									<span className="text-muted-foreground">Verified:</span>{" "}
-									<span className="font-medium">{doc.verifiedDate}</span>
-								</div>
-							)}
-						</div>
-						{doc.notes && (
-							<p className="text-[11px] text-muted-foreground mt-2 pl-5 leading-relaxed">{doc.notes}</p>
-						)}
-					</td>
-				</tr>
-			)}
-		</>
-	);
-}
-
-/* ─── Audit Trail ─── */
-
-function AuditTrailSection({ entries }: { entries: AuditTrailEntry[] }) {
-	const [showAll, setShowAll] = useState(false);
-	const displayed = showAll ? entries : entries.slice(0, 6);
-
-	const categoryIcon: Record<string, { Icon: typeof CheckIcon; color: string }> = {
-		system: { Icon: HistoryIcon, color: "text-sky-500" },
-		analyst: { Icon: UserCheckIcon, color: "text-violet-500" },
-		approval: { Icon: BadgeCheckIcon, color: "text-emerald-500" },
-		data: { Icon: SearchIcon, color: "text-cyan-500" },
-		escalation: { Icon: ArrowUpRightIcon, color: "text-red-500" },
-	};
-
-	return (
-		<div className="space-y-3">
-			<div className="flex items-center gap-2">
-				<ClipboardListIcon className="size-4 text-muted-foreground" />
-				<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">
-					Audit Trail — {entries.length} events
-				</p>
-			</div>
-			<div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
-				<div className="divide-y divide-border/50">
-					{displayed.map((entry) => {
-						const cat = categoryIcon[entry.category] ?? categoryIcon.system;
-						return (
-							<div key={entry.id} className="flex items-start gap-3 px-5 py-3 hover:bg-accent/20 transition-colors">
-								<div className="flex flex-col items-center gap-1 shrink-0 w-20 pt-0.5">
-									<span className="text-[10px] font-mono text-muted-foreground tracking-wide">
-										{entry.timestamp.split(" ")[1]?.slice(0, 5)}
-									</span>
-									<cat.Icon className={`size-3.5 ${cat.color}`} />
-								</div>
-								<div className="flex-1 min-w-0">
-									<div className="flex items-center gap-2">
-										<span className="text-sm font-medium">{entry.action}</span>
-									</div>
-									<div className="flex items-center gap-2 mt-0.5">
-										<span className="text-[11px] text-muted-foreground">{entry.actor}</span>
-										<span className="text-[9px] text-muted-foreground/40">·</span>
-										<span className="text-[10px] text-muted-foreground/60">{entry.actorRole}</span>
-									</div>
-									{entry.detail && (
-										<p className="text-[11px] text-muted-foreground/70 mt-1 leading-relaxed">{entry.detail}</p>
-									)}
-								</div>
-							</div>
-						);
-					})}
-				</div>
-				{entries.length > 6 && (
-					<button
-						onClick={() => setShowAll((v) => !v)}
-						className="w-full px-5 py-2.5 text-center text-xs font-heading font-medium text-primary hover:bg-primary/5 transition-colors border-t border-border/50"
-					>
-						{showAll ? "Show less" : `Show all ${entries.length} events`}
-					</button>
-				)}
-			</div>
-		</div>
-	);
-}
-
-/* ─── Analyst Notes ─── */
-
-function AnalystNotes({ riskRating }: { riskRating: "Low" | "High" }) {
-	const isHigh = riskRating === "High";
-	const [notes, setNotes] = useState(
-		isHigh
-			? "Client's email explanation for property source of funds (claims family gift) requires documentary corroboration. Requested gift deed and donor bank statement — no response as of 17 May 2026.\n\nMeihe Trading investigation: preliminary findings issued by Shanghai MSB. Company ordered to produce 3 years of financial records. Recommend monitoring for outcome before proceeding.\n\nPriority: clarify property SOF before EDD interview on 24 May 2026."
-			: "Standard onboarding case. All data sources returned consistent results with no anomalies. Wealth profile is coherent and proportionate to career trajectory.\n\nNo further action required. Approved for standard onboarding."
-	);
-	const [saved, setSaved] = useState(true);
-
-	const handleChange = (value: string) => {
-		setNotes(value);
-		setSaved(false);
-	};
-
-	const handleSave = () => {
-		setSaved(true);
-	};
-
-	return (
-		<div className="space-y-3">
-			<div className="flex items-center justify-between">
-				<div className="flex items-center gap-2">
-					<StickyNoteIcon className="size-4 text-muted-foreground" />
-					<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">
-						Analyst Notes & Manual Findings
-					</p>
-				</div>
-				<div className="flex items-center gap-2">
-					{!saved && <span className="text-[10px] text-amber-600 font-heading">Unsaved changes</span>}
-					<Button
-						variant="outline"
-						size="sm"
-						onClick={handleSave}
-						disabled={saved}
-						className="font-heading text-xs gap-1"
-					>
-						<CheckIcon className="size-3" />
-						Save
-					</Button>
-				</div>
-			</div>
-			<div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
-				<textarea
-					value={notes}
-					onChange={(e) => handleChange(e.target.value)}
-					className="w-full min-h-[120px] bg-transparent text-sm leading-relaxed resize-y outline-none placeholder:text-muted-foreground/40"
-					placeholder="Add analyst observations, manual findings, or notes for the case file..."
-				/>
-				<div className="flex items-center justify-between pt-3 border-t border-border/50 mt-2">
-					<span className="text-[10px] text-muted-foreground/50">
-						Last edited: 17 May 2026, 15:00 by {isHigh ? "Senior Analyst Li" : "Analyst Wang"}
-					</span>
-					<span className="text-[10px] text-muted-foreground/50">
-						{notes.length} characters
-					</span>
-				</div>
-			</div>
-		</div>
-	);
-}
-
-/* ─── Remediation Section ─── */
-
-function RemediationSection({ items, riskRating }: { items: RemediationItem[]; riskRating: "Low" | "High" }) {
-	const priorityStyle: Record<string, string> = {
-		Critical: "bg-red-500/15 text-red-700 border-red-500/20",
-		High: "bg-amber-500/15 text-amber-700 border-amber-500/20",
-		Medium: "bg-sky-500/15 text-sky-700 border-sky-500/20",
-		Low: "bg-slate-500/15 text-slate-700 border-slate-500/20",
-	};
-	const statusStyle: Record<string, string> = {
-		Open: "bg-red-500/15 text-red-700 border-red-500/20",
-		"In Progress": "bg-amber-500/15 text-amber-700 border-amber-500/20",
-		Resolved: "bg-emerald-500/15 text-emerald-700 border-emerald-500/20",
-		Overdue: "bg-red-600/20 text-red-800 border-red-600/20",
-	};
-
-	const open = items.filter((i) => i.status !== "Resolved").length;
-	const resolved = items.filter((i) => i.status === "Resolved").length;
-
-	return (
-		<div className="space-y-3">
-			<div className="flex items-center justify-between">
-				<div className="flex items-center gap-2">
-					<ListTodoIcon className="size-4 text-muted-foreground" />
-					<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">
-						Remediation Tasks — {open} open, {resolved} resolved
-					</p>
-				</div>
 			</div>
 			<div className="space-y-2">
-				{items.map((item) => (
-					<div key={item.id} className={`rounded-xl border p-4 transition-all ${item.status === "Resolved" ? "border-border bg-muted/20 opacity-70" : "border-border bg-card shadow-sm"}`}>
-						<div className="flex items-start justify-between gap-3">
-							<div className="flex items-start gap-3 flex-1 min-w-0">
-								<div className="mt-0.5">
-									{item.status === "Resolved" ? (
-										<SquareCheckIcon className="size-4 text-emerald-600" />
-									) : (
-										<TargetIcon className={`size-4 ${item.priority === "Critical" ? "text-red-500" : "text-amber-500"}`} />
-									)}
-								</div>
-								<div className="flex-1 min-w-0">
-									<div className="text-sm font-heading font-medium">{item.title}</div>
-									<p className="text-[11px] text-muted-foreground leading-relaxed mt-0.5">{item.description}</p>
-									<div className="flex items-center flex-wrap gap-2 mt-2">
-										<span className={`text-[9px] font-semibold rounded-md border px-1.5 py-0.5 ${priorityStyle[item.priority]}`}>
-											{item.priority}
-										</span>
-										<span className={`text-[9px] font-semibold rounded-md border px-1.5 py-0.5 ${statusStyle[item.status]}`}>
-											{item.status}
-										</span>
-										<span className="text-[10px] text-muted-foreground/60">
-											Assignee: {item.assignee}
-										</span>
-										<span className="text-[10px] text-muted-foreground/60">
-											Due: {item.dueDate}
-										</span>
-										{item.resolvedDate && (
-											<span className="text-[10px] text-emerald-600/80">
-												Resolved: {item.resolvedDate}
-											</span>
-										)}
-									</div>
-								</div>
-							</div>
+				{sources.map((src, i) => (
+					<div key={src.id} className="flex items-start gap-3 text-xs">
+						<span className="text-muted-foreground/40 font-mono tabular-nums shrink-0 w-5 text-right">{i + 1}.</span>
+						<div className="flex-1 min-w-0">
+							<span className="font-medium">{src.label}</span>
+							{src.date && <span className="text-muted-foreground ml-2">({src.date})</span>}
+							<span className="ml-2 text-[9px] font-semibold rounded-md border px-1 py-0.5 bg-muted/50 text-muted-foreground border-border/60">
+								{typeLabels[src.type] ?? src.type}
+							</span>
+							{src.url && (
+								<a href={src.url} target="_blank" rel="noopener noreferrer" className="ml-2 text-primary hover:underline inline-flex items-center gap-0.5">
+									<ExternalLinkIcon className="size-2.5" />
+									Link
+								</a>
+							)}
 						</div>
 					</div>
 				))}
 			</div>
-		</div>
-	);
-}
-
-/* ─── Perpetual KYC Setup ─── */
-
-function PerpetualKycSetup({ riskRating, nextReviewDate }: { riskRating: "Low" | "High"; nextReviewDate: string }) {
-	const isHigh = riskRating === "High";
-
-	const config = isHigh
-		? {
-			reviewCycle: "6 months",
-			screeningFreq: "Weekly",
-			dataSources: "All 13 sources",
-			autoEscalation: "Enabled — auto-escalate Critical alerts to MLRO",
-			sanctionsScreening: "Weekly (OFAC, EU, UN, PBOC)",
-			adverseMedia: "Weekly scan (Dow Jones, Caixin, Reuters)",
-			corporateRegistry: "Monthly SAMR registry refresh",
-			taxCompliance: "Quarterly STA cross-check",
-		}
-		: {
-			reviewCycle: "12 months",
-			screeningFreq: "Monthly",
-			dataSources: "11 core sources",
-			autoEscalation: "Enabled — auto-escalate Critical alerts to Senior Analyst",
-			sanctionsScreening: "Quarterly (OFAC, EU, UN, PBOC)",
-			adverseMedia: "Monthly scan (Dow Jones, Caixin)",
-			corporateRegistry: "Quarterly SAMR registry refresh",
-			taxCompliance: "Annual STA cross-check",
-		};
-
-	return (
-		<div className="space-y-3">
-			<div className="flex items-center gap-2">
-				<WrenchIcon className="size-4 text-muted-foreground" />
-				<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">
-					Perpetual KYC Configuration
-				</p>
-			</div>
-			<div className="rounded-2xl border border-border bg-card p-6 shadow-sm space-y-4">
-				<p className="text-xs text-muted-foreground leading-relaxed">
-					Automated perpetual KYC monitoring is configured for this subject. The system continuously monitors data sources
-					for material changes and generates alerts for compliance review. Configuration is based on the subject&apos;s risk
-					rating and can be adjusted by authorized analysts.
-				</p>
-
-				<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-					<KycConfigRow label="Review Cycle" value={config.reviewCycle} highlight={isHigh} />
-					<KycConfigRow label="Next Scheduled Review" value={nextReviewDate} />
-					<KycConfigRow label="Screening Frequency" value={config.screeningFreq} highlight={isHigh} />
-					<KycConfigRow label="Data Sources Monitored" value={config.dataSources} />
-					<KycConfigRow label="Sanctions Screening" value={config.sanctionsScreening} />
-					<KycConfigRow label="Adverse Media Monitoring" value={config.adverseMedia} />
-					<KycConfigRow label="Corporate Registry Refresh" value={config.corporateRegistry} />
-					<KycConfigRow label="Tax Compliance Check" value={config.taxCompliance} />
-				</div>
-
-				<div className={`rounded-lg px-4 py-3 border ${isHigh ? "bg-amber-500/5 border-amber-500/20" : "bg-emerald-500/5 border-emerald-500/20"}`}>
-					<div className="flex items-center gap-2 mb-1">
-						<ShieldCheckIcon className={`size-3.5 ${isHigh ? "text-amber-600" : "text-emerald-600"}`} />
-						<span className="text-xs font-heading font-semibold">Auto-Escalation</span>
-					</div>
-					<p className="text-[11px] text-muted-foreground leading-relaxed">{config.autoEscalation}</p>
-				</div>
-			</div>
-		</div>
-	);
-}
-
-function KycConfigRow({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
-	return (
-		<div className="rounded-lg border border-border/60 bg-muted/10 px-3.5 py-2.5">
-			<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">{label}</div>
-			<div className={`text-sm font-heading font-medium mt-0.5 ${highlight ? "text-amber-700" : ""}`}>{value}</div>
 		</div>
 	);
 }
 
 /* ─── Follow-Up Actions ─── */
 
-interface ActionDef { id: string; label: string; description: string; Icon: typeof CheckIcon; color: string; bgColor: string; }
+function FollowUpActions({ riskRating }: { riskRating: "Low" | "Medium" | "High" }) {
+	const actions = riskRating === "High"
+		? [
+			{ id: "edd", label: "Enhanced Due Diligence Review", description: "Requires senior compliance officer review before onboarding" },
+			{ id: "verify", label: "Verify Crypto Holdings On-chain", description: "Cross-reference declared token holdings with blockchain explorer data" },
+			{ id: "monitor", label: "Set Weekly Monitoring", description: "Enable weekly screening for price movements, adverse media, and regulatory changes" },
+		]
+		: riskRating === "Medium"
+		? [
+			{ id: "monitor", label: "Set Monthly Monitoring", description: "Enable monthly screening for adverse media and regulatory changes" },
+			{ id: "review", label: "Schedule Periodic Review", description: "Set next review date per enhanced monitoring policy" },
+			{ id: "docs", label: "Request Supporting Documents", description: "Obtain additional documentation for lower-confidence wealth claims" },
+		]
+		: [
+			{ id: "approve", label: "Approve for Onboarding", description: "All checks passed — eligible for standard onboarding" },
+			{ id: "monitor", label: "Set Quarterly Monitoring", description: "Enable quarterly screening per standard monitoring policy" },
+		];
 
-const LOW_RISK_ACTIONS: ActionDef[] = [
-	{ id: "approve", label: "Approve — Standard Onboarding", description: "Client meets all SOW requirements. Proceed with standard account opening and KYC clearance.", Icon: CircleCheckBigIcon, color: "text-emerald-700 dark:text-emerald-400", bgColor: "bg-emerald-500/10 border-emerald-500/20 hover:bg-emerald-500/15" },
-	{ id: "schedule-review", label: "Schedule Periodic Review — 12 Months", description: "Set standard annual review cycle. Client will be re-assessed on the next review date.", Icon: CalendarClockIcon, color: "text-sky-700 dark:text-sky-400", bgColor: "bg-sky-500/10 border-sky-500/20 hover:bg-sky-500/15" },
-];
+	const [confirmed, setConfirmed] = useState<Set<string>>(new Set());
 
-const HIGH_RISK_ACTIONS: ActionDef[] = [
-	{ id: "request-edd", label: "Request EDD Interview", description: "Schedule an enhanced due diligence interview with the client to clarify source of funds for property acquisitions.", Icon: MessageSquareIcon, color: "text-amber-700 dark:text-amber-400", bgColor: "bg-amber-500/10 border-amber-500/20 hover:bg-amber-500/15" },
-	{ id: "escalate-mlro", label: "Escalate to MLRO", description: "Refer case to the Money Laundering Reporting Officer for review of unexplained wealth gap and regulatory flags.", Icon: ArrowUpRightIcon, color: "text-red-700 dark:text-red-400", bgColor: "bg-red-500/10 border-red-500/20 hover:bg-red-500/15" },
-	{ id: "hold", label: "Place On Hold — Pending Review", description: "Suspend onboarding process pending resolution of outstanding regulatory investigation and litigation.", Icon: PauseCircleIcon, color: "text-amber-700 dark:text-amber-400", bgColor: "bg-amber-500/10 border-amber-500/20 hover:bg-amber-500/15" },
-	{ id: "reject", label: "Reject Application", description: "Decline client onboarding based on unacceptable risk profile and unverifiable source of wealth.", Icon: XCircleIcon, color: "text-red-700 dark:text-red-400", bgColor: "bg-red-500/10 border-red-500/20 hover:bg-red-500/15" },
-	{ id: "schedule-review", label: "Schedule Enhanced Review — 6 Months", description: "Set accelerated review cycle due to elevated risk profile. Client will be re-assessed in 6 months.", Icon: CalendarClockIcon, color: "text-sky-700 dark:text-sky-400", bgColor: "bg-sky-500/10 border-sky-500/20 hover:bg-sky-500/15" },
-];
-
-function FollowUpActions({ riskRating, confirmedActions, onConfirm }: { riskRating: "Low" | "High"; confirmedActions: Set<string>; onConfirm: (id: string) => void }) {
-	const actions = riskRating === "High" ? HIGH_RISK_ACTIONS : LOW_RISK_ACTIONS;
 	return (
-		<div className="space-y-4">
-			<div>
-				<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest mb-1">Recommended Actions</p>
-				<p className="text-sm text-muted-foreground">
-					{riskRating === "High"
-						? "This case requires immediate attention. Select the appropriate follow-up action based on the assessment findings."
-						: "Assessment is clean. Proceed with standard onboarding workflow."}
-				</p>
+		<div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+			<div className="flex items-center gap-2 mb-4">
+				<CheckCircle2Icon className="size-4 text-muted-foreground" />
+				<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Recommended Actions</p>
 			</div>
-			<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+			<div className="space-y-3">
 				{actions.map((action) => {
-					const isConfirmed = confirmedActions.has(action.id);
+					const done = confirmed.has(action.id);
 					return (
-						<button
-							key={action.id}
-							onClick={() => onConfirm(action.id)}
-							disabled={isConfirmed}
-							className={`text-left rounded-2xl border p-5 transition-all ${
-								isConfirmed ? "border-primary/30 bg-primary/5 opacity-80" : action.bgColor
-							}`}
-						>
-							<div className="flex items-center justify-between mb-2">
-								<div className="flex items-center gap-2">
-									<action.Icon className={`size-4 ${isConfirmed ? "text-primary" : action.color}`} />
-									<span className="text-sm font-heading font-semibold">{action.label}</span>
-								</div>
-								{isConfirmed && (
-									<span className="text-[10px] font-semibold rounded-md border border-primary/20 px-1.5 py-0.5 bg-primary/15 text-primary">Queued</span>
-								)}
+						<div key={action.id} className={`flex items-center gap-4 rounded-xl border p-4 transition-all ${done ? "border-emerald-500/30 bg-emerald-500/5" : "border-border"}`}>
+							<button
+								onClick={() => setConfirmed((prev) => new Set(prev).add(action.id))}
+								disabled={done}
+								className={`h-6 w-6 rounded-lg border-2 flex items-center justify-center shrink-0 transition-all ${
+									done ? "bg-emerald-500 border-emerald-500" : "border-border hover:border-primary/50"
+								}`}
+							>
+								{done && <CheckIcon className="size-3.5 text-white" />}
+							</button>
+							<div>
+								<div className={`text-sm font-heading font-medium ${done ? "line-through text-muted-foreground" : ""}`}>{action.label}</div>
+								<p className="text-xs text-muted-foreground mt-0.5">{action.description}</p>
 							</div>
-							<p className="text-xs text-muted-foreground leading-relaxed">{action.description}</p>
-						</button>
+						</div>
 					);
 				})}
 			</div>
@@ -2761,14 +1723,13 @@ function FollowUpActions({ riskRating, confirmedActions, onConfirm }: { riskRati
 	);
 }
 
-/* ─── Download Report ─── */
+/* ─── Download Report Button ─── */
 
-function DownloadReportButton({ report }: { report: SowReport }) {
+function DownloadReportButton({ report }: { report: HnwReport }) {
 	const download = () => {
 		const p = report.profile;
-		const isHigh = p.riskRating === "High";
-		const riskColor = isHigh ? "#dc2626" : "#16a34a";
-		const riskBg = isHigh ? "#fef2f2" : "#f0fdf4";
+		const riskColor = p.riskScore >= 60 ? "#dc2626" : p.riskScore >= 40 ? "#d97706" : "#16a34a";
+		const riskBg = p.riskScore >= 60 ? "#fef2f2" : p.riskScore >= 40 ? "#fefce8" : "#f0fdf4";
 		const now = new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" });
 
 		const paramRows = report.keyParameters.map((param) => {
@@ -2776,43 +1737,34 @@ function DownloadReportButton({ report }: { report: SowReport }) {
 			return `<tr><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;">${param.label}</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;font-weight:600;color:${color}">${param.value}</td></tr>`;
 		}).join("");
 
-		const wealthRows = report.wealthBreakdown.map((item) => {
-			const confColor = item.confidence === "High" ? "#16a34a" : item.confidence === "Medium" ? "#d97706" : "#dc2626";
-			return `<tr><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;">${item.category}</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;text-align:right;font-family:monospace;">${item.estimatedAnnualRMB ? "¥" + formatRMB(item.estimatedAnnualRMB) : "—"}</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;text-align:right;font-family:monospace;">${item.estimatedTotalRMB !== null ? "¥" + formatRMB(item.estimatedTotalRMB) : "—"}</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;text-align:center;color:${confColor};font-weight:600;">${item.confidence}</td></tr>`;
+		const wealthRows = report.wealthByCategory.filter((w) => w.totalUSD > 0).map((w) => {
+			const confColor = w.avgConfidence >= 70 ? "#16a34a" : w.avgConfidence >= 40 ? "#d97706" : "#dc2626";
+			return `<tr><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;">${CATEGORY_LABELS[w.category]}</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;text-align:right;font-family:monospace;">${formatUSD(w.totalUSD)}</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;text-align:right;">${w.percentage.toFixed(1)}%</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;text-align:center;color:${confColor};font-weight:600;">${w.avgConfidence}%</td></tr>`;
 		}).join("");
 
-		const sourceRows = report.dataSources.map((s) => {
-			const c = s.status === "confirmed" || s.status === "clear" ? "#16a34a" : s.status === "found" ? "#0284c7" : s.status === "flagged" ? "#d97706" : "#dc2626";
-			return `<tr><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;font-size:12px;">${s.name}</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;font-size:12px;">${s.provider}</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;font-size:12px;color:${c};font-weight:600;">${s.statusLabel}</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;font-size:11px;color:#6b7280;">${s.findings}</td></tr>`;
-		}).join("");
-
-		const screeningRows = report.screeningAlerts.map((a) => {
-			const c = a.severity === "Critical" ? "#dc2626" : a.severity === "Warning" ? "#d97706" : "#0284c7";
-			return `<tr><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;font-size:12px;font-family:monospace;">${a.date}</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;font-size:12px;">${a.type}</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;font-size:12px;color:${c};font-weight:600;">${a.severity}</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;font-size:12px;">${a.title}</td></tr>`;
+		const timelineRows = report.careerTimeline.map((phase) => {
+			return `<tr><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;font-size:12px;">${phase.startYear}-${phase.endYear ?? "Present"}</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;font-size:12px;font-weight:600;">${phase.title}</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;font-size:12px;">${phase.organization ?? ""}</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;font-size:12px;">${phase.location}</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;font-size:12px;text-align:right;font-family:monospace;">${formatUSD(phase.cumulativeWealthUSD)}</td></tr>`;
 		}).join("");
 
 		const narrativeHtml = report.narrative.split("\n\n").map((para) => `<p style="margin:0 0 12px 0;font-size:13px;line-height:1.7;color:#374151;">${para}</p>`).join("");
 
-		const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>SOW Report — ${p.nameEn}</title><style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=DM+Sans:wght@400;500&family=JetBrains+Mono:wght@400&display=swap');@media print{body{margin:0}.page-break{page-break-before:always}}body{font-family:'DM Sans','Inter',-apple-system,BlinkMacSystemFont,sans-serif;color:#1f2937;max-width:800px;margin:0 auto;padding:40px 32px}table{width:100%;border-collapse:collapse}th{text-align:left;padding:8px 12px;background:#f3f4f6;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#6b7280;border-bottom:2px solid #d1d5db;font-family:'Inter',sans-serif}h1{font-size:22px;margin:0;font-family:'Inter',sans-serif}h2{font-size:16px;margin:32px 0 12px;padding-bottom:6px;border-bottom:2px solid #e5e7eb;color:#111827;text-transform:uppercase;letter-spacing:.04em;font-family:'Inter',sans-serif}</style></head><body>
-<div style="border-bottom:3px solid #1e3a5f;padding-bottom:16px;margin-bottom:24px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.15em;color:#6b7280;margin-bottom:4px">Confidential — Enhanced Due Diligence</div><h1>Source of Wealth Assessment Report</h1><div style="font-size:13px;color:#6b7280;margin-top:6px">Subject: ${p.name} (${p.nameEn}) | Generated: ${now}</div></div>
-<div style="display:flex;gap:16px;margin-bottom:24px"><div style="flex:1;padding:12px 16px;border-radius:8px;background:${riskBg};border:1px solid ${riskColor}33"><div style="font-size:10px;text-transform:uppercase;color:#6b7280">Risk Rating</div><div style="font-size:18px;font-weight:700;color:${riskColor};margin-top:2px">${p.riskRating.toUpperCase()}</div></div><div style="flex:1;padding:12px 16px;border-radius:8px;background:#f3f4f6"><div style="font-size:10px;text-transform:uppercase;color:#6b7280">Total Estimated Wealth</div><div style="font-size:18px;font-weight:700;margin-top:2px">¥${formatRMB(report.totalEstimatedWealthRMB)}</div></div><div style="flex:1;padding:12px 16px;border-radius:8px;background:#f3f4f6"><div style="font-size:10px;text-transform:uppercase;color:#6b7280">Est. Annual Income</div><div style="font-size:18px;font-weight:700;margin-top:2px">¥${formatRMB(report.totalEstimatedAnnualIncomeRMB)}</div></div></div>
-<h2>1. Subject Profile</h2><table><tr><td style="padding:4px 0;font-size:13px;color:#6b7280;width:140px">Full Name</td><td style="padding:4px 0;font-size:13px">${p.name} (${p.nameEn})</td></tr><tr><td style="padding:4px 0;font-size:13px;color:#6b7280">Date of Birth</td><td style="padding:4px 0;font-size:13px">${p.dateOfBirth} (Age ${p.age})</td></tr><tr><td style="padding:4px 0;font-size:13px;color:#6b7280">Gender</td><td style="padding:4px 0;font-size:13px">${p.gender}</td></tr><tr><td style="padding:4px 0;font-size:13px;color:#6b7280">ID Number</td><td style="padding:4px 0;font-size:13px;font-family:'JetBrains Mono',monospace">${p.idNumber}</td></tr><tr><td style="padding:4px 0;font-size:13px;color:#6b7280">Nationality</td><td style="padding:4px 0;font-size:13px">${p.nationality}</td></tr><tr><td style="padding:4px 0;font-size:13px;color:#6b7280">Occupation</td><td style="padding:4px 0;font-size:13px">${p.occupation}</td></tr><tr><td style="padding:4px 0;font-size:13px;color:#6b7280">Employer</td><td style="padding:4px 0;font-size:13px">${p.employer}</td></tr><tr><td style="padding:4px 0;font-size:13px;color:#6b7280">Location</td><td style="padding:4px 0;font-size:13px">${p.city}</td></tr></table>
+		const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>HNW Wealth Report - ${p.name}</title><style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=DM+Sans:wght@400;500&family=JetBrains+Mono:wght@400&display=swap');@media print{body{margin:0}.page-break{page-break-before:always}}body{font-family:'DM Sans','Inter',-apple-system,BlinkMacSystemFont,sans-serif;color:#1f2937;max-width:800px;margin:0 auto;padding:40px 32px}table{width:100%;border-collapse:collapse}th{text-align:left;padding:8px 12px;background:#f3f4f6;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#6b7280;border-bottom:2px solid #d1d5db;font-family:'Inter',sans-serif}h1{font-size:22px;margin:0;font-family:'Inter',sans-serif}h2{font-size:16px;margin:32px 0 12px;padding-bottom:6px;border-bottom:2px solid #e5e7eb;color:#111827;text-transform:uppercase;letter-spacing:.04em;font-family:'Inter',sans-serif}</style></head><body>
+<div style="border-bottom:3px solid #1e3a5f;padding-bottom:16px;margin-bottom:24px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.15em;color:#6b7280;margin-bottom:4px">Confidential — HNW Wealth Intelligence</div><h1>Source of Wealth Assessment Report</h1><div style="font-size:13px;color:#6b7280;margin-top:6px">Subject: ${p.name}${p.nameCn ? ` (${p.nameCn})` : ""} | Generated: ${now}</div></div>
+<div style="display:flex;gap:16px;margin-bottom:24px"><div style="flex:1;padding:12px 16px;border-radius:8px;background:${riskBg};border:1px solid ${riskColor}33"><div style="font-size:10px;text-transform:uppercase;color:#6b7280">Risk Rating</div><div style="font-size:18px;font-weight:700;color:${riskColor};margin-top:2px">${p.riskRating} (${p.riskScore}/100)</div></div><div style="flex:1;padding:12px 16px;border-radius:8px;background:#f3f4f6"><div style="font-size:10px;text-transform:uppercase;color:#6b7280">Est. Net Worth</div><div style="font-size:18px;font-weight:700;margin-top:2px">${formatUSD(report.totalEstimatedWealthUSD)}</div></div><div style="flex:1;padding:12px 16px;border-radius:8px;background:#f3f4f6"><div style="font-size:10px;text-transform:uppercase;color:#6b7280">Overall Confidence</div><div style="font-size:18px;font-weight:700;margin-top:2px">${report.overallConfidence}%</div></div></div>
+<h2>1. Subject Profile</h2><table><tr><td style="padding:4px 0;font-size:13px;color:#6b7280;width:160px">Full Name</td><td style="padding:4px 0;font-size:13px">${p.name}${p.nameCn ? ` (${p.nameCn})` : ""}</td></tr><tr><td style="padding:4px 0;font-size:13px;color:#6b7280">Date of Birth</td><td style="padding:4px 0;font-size:13px">${p.dateOfBirth} (Age ${p.age})</td></tr><tr><td style="padding:4px 0;font-size:13px;color:#6b7280">Nationality</td><td style="padding:4px 0;font-size:13px">${p.nationality}</td></tr><tr><td style="padding:4px 0;font-size:13px;color:#6b7280">Residences</td><td style="padding:4px 0;font-size:13px">${p.residences.join(", ")}</td></tr><tr><td style="padding:4px 0;font-size:13px;color:#6b7280">Primary Industry</td><td style="padding:4px 0;font-size:13px">${p.primaryIndustry}</td></tr></table>
 <h2>2. Key Risk Parameters</h2><table><tr><th>Parameter</th><th>Assessment</th></tr>${paramRows}</table>
-<h2>3. Risk Assessment</h2><div style="padding:12px 16px;border-radius:8px;background:${riskBg};border:1px solid ${riskColor}33;margin-bottom:8px"><div style="font-weight:700;color:${riskColor};margin-bottom:8px">Overall Risk: ${p.riskRating}</div><ul style="margin:0;padding-left:20px">${p.riskReasoningPoints.map((pt) => `<li style="font-size:13px;margin-bottom:4px">${pt}</li>`).join("")}</ul></div>
+<h2>3. Wealth Composition</h2><table><tr><th>Category</th><th style="text-align:right">Value (USD)</th><th style="text-align:right">Allocation</th><th style="text-align:center">Confidence</th></tr>${wealthRows}</table>
 <div class="page-break"></div>
-<h2>4. Wealth Breakdown</h2><table><tr><th>Category</th><th style="text-align:right">Annual (¥)</th><th style="text-align:right">Total Value (¥)</th><th style="text-align:center">Confidence</th></tr>${wealthRows}</table>
-<h2>5. Data Sources Consulted (${report.dataSources.length})</h2><table><tr><th>Source</th><th>Provider</th><th>Status</th><th>Findings</th></tr>${sourceRows}</table>
-<div class="page-break"></div>
-<h2>6. SOW Narrative</h2>${narrativeHtml}
-<h2>7. Perpetual Screening (${report.screeningAlerts.length} Alerts)</h2><div style="font-size:12px;color:#6b7280;margin-bottom:8px">Next scheduled review: ${report.nextReviewDate}</div><table><tr><th>Date</th><th>Type</th><th>Severity</th><th>Alert</th></tr>${screeningRows}</table>
-<div style="border-top:2px solid #e5e7eb;margin-top:32px;padding-top:16px;font-size:11px;color:#9ca3af">This report was generated using verified data from government registries and regulated financial databases. All data sources are cited in Section 5. This document is for internal compliance use only.<br><br>Generated: ${now} | Next Review: ${report.nextReviewDate}</div>
+<h2>4. Career Timeline</h2><table><tr><th>Period</th><th>Phase</th><th>Organization</th><th>Location</th><th style="text-align:right">Cumulative Wealth</th></tr>${timelineRows}</table>
+<h2>5. Wealth Narrative</h2>${narrativeHtml}
+<div style="border-top:2px solid #e5e7eb;margin-top:32px;padding-top:16px;font-size:11px;color:#9ca3af">This report was generated using verified data from international registries, regulatory filings, market data providers, and on-chain analysis. All source citations are included in the assessment. This document is for internal compliance use only.<br><br>Generated: ${now}</div>
 </body></html>`;
 
 		const blob = new Blob([html], { type: "text/html" });
 		const url = URL.createObjectURL(blob);
 		const a = document.createElement("a");
 		a.href = url;
-		a.download = `SOW_Report_${p.nameEn.replace(/\s+/g, "_")}_${new Date().toISOString().slice(0, 10)}.html`;
+		a.download = `HNW_Report_${p.name.replace(/\s+/g, "_")}_${new Date().toISOString().slice(0, 10)}.html`;
 		document.body.appendChild(a);
 		a.click();
 		document.body.removeChild(a);
@@ -2827,41 +1779,36 @@ function DownloadReportButton({ report }: { report: SowReport }) {
 	);
 }
 
-/* ─── Shared UI Components ─── */
+/* ═══════════════════════════════════════════════════════════════
+   Shared UI Components
+   ═══════════════════════════════════════════════════════════════ */
 
-function SourceStatusIcon({ status }: { status: SowDataSource["status"] }) {
-	switch (status) {
-		case "confirmed":
-		case "clear":
-			return <CheckCircle2Icon className="size-4 text-emerald-600 dark:text-emerald-400" />;
-		case "found":
-			return <CheckCircle2Icon className="size-4 text-sky-600 dark:text-sky-400" />;
-		case "flagged":
-			return <AlertTriangleIcon className="size-4 text-amber-600 dark:text-amber-400" />;
-		case "discrepancy":
-			return <XCircleIcon className="size-4 text-red-600 dark:text-red-400" />;
-	}
-}
-
-function SourceStatusBadge({ status, label }: { status: SowDataSource["status"]; label: string }) {
-	const color = {
-		confirmed: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/20",
-		clear: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/20",
-		found: "bg-sky-500/15 text-sky-700 dark:text-sky-400 border-sky-500/20",
-		flagged: "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/20",
-		discrepancy: "bg-red-500/15 text-red-700 dark:text-red-400 border-red-500/20",
-	}[status];
-	return <span className={`text-[10px] font-semibold rounded-md border px-1.5 py-0.5 whitespace-nowrap ${color}`}>{label}</span>;
-}
-
-function RiskBadge({ rating, size = "sm" }: { rating: "Low" | "High"; size?: "sm" | "lg" }) {
-	const color = rating === "High" ? "bg-red-500/15 text-red-700 dark:text-red-400 border-red-500/20" : "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/20";
+function RiskBadge({ rating, size = "sm" }: { rating: "Low" | "Medium" | "High"; size?: "sm" | "lg" }) {
+	const colors: Record<string, string> = {
+		Low: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/20",
+		Medium: "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/20",
+		High: "bg-red-500/15 text-red-700 dark:text-red-400 border-red-500/20",
+	};
 	const sizeClass = size === "lg" ? "text-xs px-3 py-1" : "text-[10px] px-1.5 py-0.5";
-	return <span className={`font-semibold rounded-md border ${color} ${sizeClass}`}>{rating} Risk</span>;
+	return <span className={`font-semibold rounded-md border ${colors[rating]} ${sizeClass}`}>{rating} Risk</span>;
 }
 
-function formatRMB(n: number): string {
-	if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M`;
-	if (n >= 1_000) return `${(n / 1_000).toFixed(0)}K`;
-	return n.toLocaleString();
+function MonitoringStatusBadge({ status }: { status: "Active" | "Under Review" | "Flagged" }) {
+	const styles: Record<string, string> = {
+		Active: "text-emerald-700",
+		"Under Review": "text-amber-700",
+		Flagged: "text-red-700",
+	};
+	const icons: Record<string, typeof ShieldIcon> = {
+		Active: ShieldIcon,
+		"Under Review": EyeIcon,
+		Flagged: AlertTriangleIcon,
+	};
+	const Icon = icons[status] ?? ShieldIcon;
+	return (
+		<span className={`inline-flex items-center gap-1 text-[10px] font-semibold ${styles[status]}`}>
+			<Icon className="size-3" />
+			{status}
+		</span>
+	);
 }

@@ -1,769 +1,678 @@
-export interface SowCaseProfile {
+/* ═══════════════════════════════════════════════════════════════
+   HNW Wealth Intelligence — Data Model & Mock Data
+   Two reference cases: Jack Ma (Alibaba) & Yat Siu (Animoca)
+   ═══════════════════════════════════════════════════════════════ */
+
+// ── Interfaces ──────────────────────────────────────────────────
+
+export interface SourceCitation {
+	id: string;
+	label: string;
+	url?: string;
+	date?: string;
+	type: "filing" | "news" | "registry" | "market-data" | "public-record" | "estimate";
+}
+
+export interface WealthClaim {
+	id: string;
+	description: string;
+	estimatedValueUSD: number;
+	confidence: number; // 0-100
+	sources: SourceCitation[];
+}
+
+export type WealthCategory = "income" | "companies" | "investments" | "alternatives" | "crypto";
+
+export const CATEGORY_LABELS: Record<WealthCategory, string> = {
+	income: "Income",
+	companies: "Companies & Equity",
+	investments: "Investments",
+	alternatives: "Alternative Assets",
+	crypto: "Crypto & Digital Assets",
+};
+
+export const CATEGORY_COLORS: Record<WealthCategory, string> = {
+	income: "#0891b2",
+	companies: "#0d9488",
+	investments: "#6366f1",
+	alternatives: "#d97706",
+	crypto: "#9333ea",
+};
+
+export interface CategoryBreakdown {
+	category: WealthCategory;
+	claims: WealthClaim[];
+	subtotalUSD: number;
+	avgConfidence: number;
+}
+
+export interface CareerPhase {
+	id: string;
+	title: string;
+	organization?: string;
+	role?: string;
+	startYear: number;
+	endYear: number | null; // null = present
+	location: string;
+	description: string;
+	categories: CategoryBreakdown[];
+	phaseWealthUSD: number;
+	cumulativeWealthUSD: number;
+	keyEvents: string[];
+}
+
+export interface HnwProfile {
 	id: string;
 	name: string;
-	nameEn: string;
-	gender: "Male" | "Female";
+	nameCn?: string;
 	dateOfBirth: string;
 	age: number;
-	idNumber: string;
 	nationality: string;
-	occupation: string;
-	employer: string;
-	city: string;
-	riskRating: "Low" | "High";
-	riskReasoningPoints: string[];
+	residences: string[];
+	primaryIndustry: string;
+	estimatedNetWorthUSD: number;
+	netWorthSource: string;
+	riskRating: "Low" | "Medium" | "High";
+	riskScore: number;
 	profileSummary: string;
 }
 
-export interface SowDataSource {
+export interface KeyParameter {
+	label: string;
+	value: string;
+	status: "normal" | "warning" | "critical";
+}
+
+export interface DataSourceDef {
 	id: string;
 	name: string;
 	provider: string;
-	category: "Identity" | "Banking" | "Risk" | "Corporate" | "Income" | "Tax";
-	delayMs: number;
-	status: "confirmed" | "clear" | "found" | "flagged" | "discrepancy";
-	statusLabel: string;
-	findings: string;
-}
-
-export interface SowWealthItem {
 	category: string;
-	description: string;
-	estimatedAnnualRMB: number | null;
-	estimatedTotalRMB: number | null;
-	confidence: "High" | "Medium" | "Low";
+	delayMs: number;
 }
 
-export interface ScreeningAlert {
-	date: string;
-	type: "Litigation" | "Adverse Media" | "Sanctions" | "Corporate Change" | "Tax" | "Regulatory";
-	severity: "Info" | "Warning" | "Critical";
-	title: string;
-	detail: string;
+export interface CompanyNode {
+	name: string;
+	role: string;
+	ownership?: string;
+	status: "active" | "ipo" | "exited" | "restructured" | "delisted";
+	valuation?: string;
 }
 
-export interface DocumentEvidence {
+export interface PepScreeningEntry {
+	subjectName: string;
+	subjectNameCn?: string;
+	riskRating: "Low" | "Medium" | "High";
+	lastScreened: string;
+	listsChecked: string[];
+	pepHits: number;
+	pepDetails?: string;
+	sanctionsHits: number;
+	adverseMedia: number;
+	adverseMediaDetails?: string;
+	overallStatus: "Clear" | "Review Required" | "Flagged";
+}
+
+export interface HnwReport {
+	profile: HnwProfile;
+	careerTimeline: CareerPhase[];
+	totalEstimatedWealthUSD: number;
+	wealthByCategory: { category: WealthCategory; totalUSD: number; percentage: number; avgConfidence: number }[];
+	overallConfidence: number;
+	narrative: string;
+	keyParameters: KeyParameter[];
+	dataSources: DataSourceDef[];
+	companyNodes: CompanyNode[];
+	screeningResult: PepScreeningEntry;
+}
+
+export interface HnwMonitoringEntry {
 	id: string;
 	name: string;
-	type: "consent" | "identity" | "financial" | "corporate" | "correspondence";
-	format: "PDF" | "JPG" | "PNG" | "XLSX";
-	uploadedBy: string;
-	uploadedDate: string;
-	sizeKB: number;
-	verified: boolean;
-	verifiedBy?: string;
-	verifiedDate?: string;
-	notes?: string;
+	nameCn?: string;
+	industry: string;
+	estimatedNetWorthUSD: number;
+	riskRating: "Low" | "Medium" | "High";
+	lastScreened: string;
+	openAlerts: number;
+	status: "Active" | "Under Review" | "Flagged";
+	screeningFrequency: string;
 }
 
-export interface AuditTrailEntry {
+export interface HnwNotification {
 	id: string;
-	timestamp: string;
-	action: string;
-	actor: string;
-	actorRole: string;
-	category: "system" | "analyst" | "approval" | "data" | "escalation";
-	detail?: string;
-}
-
-export interface RemediationItem {
-	id: string;
+	type: "alert" | "review-due" | "update" | "completed";
 	title: string;
-	description: string;
-	priority: "Critical" | "High" | "Medium" | "Low";
-	status: "Open" | "In Progress" | "Resolved" | "Overdue";
-	assignee: string;
-	createdDate: string;
-	dueDate: string;
-	resolvedDate?: string;
-	category: "documentation" | "verification" | "investigation" | "regulatory" | "monitoring";
-}
-
-export interface DashboardIssue {
-	id: string;
-	caseRef: string;
+	detail: string;
+	time: string;
 	subjectName: string;
-	type: "Overdue Review" | "Unresolved Alert" | "Missing Document" | "EDD Pending" | "Remediation Overdue" | "Data Source Error";
-	severity: "Critical" | "High" | "Medium";
-	description: string;
-	daysPending: number;
-	assignee: string;
+	read: boolean;
 }
 
-export interface SowReport {
-	profile: SowCaseProfile;
-	dataSources: SowDataSource[];
-	wealthBreakdown: SowWealthItem[];
-	totalEstimatedWealthRMB: number;
-	totalEstimatedAnnualIncomeRMB: number;
-	narrative: string;
-	screeningAlerts: ScreeningAlert[];
-	nextReviewDate: string;
-	keyParameters: { label: string; value: string; status: "normal" | "warning" | "critical" }[];
-	documentEvidence: DocumentEvidence[];
-	auditTrail: AuditTrailEntry[];
-	remediationItems: RemediationItem[];
+// ── Utility ─────────────────────────────────────────────────────
+
+export function formatUSD(value: number): string {
+	if (value >= 1_000_000_000) return `$${(value / 1_000_000_000).toFixed(1)}B`;
+	if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`;
+	if (value >= 1_000) return `$${(value / 1_000).toFixed(0)}K`;
+	return `$${value.toFixed(0)}`;
 }
 
-const LOW_RISK_PROFILE: SowCaseProfile = {
-	id: "case-low",
-	name: "陈志远",
-	nameEn: "Chen Zhiyuan",
-	gender: "Male",
-	dateOfBirth: "1978-03-15",
-	age: 48,
-	idNumber: "4403••••••••3017",
-	nationality: "Chinese",
-	occupation: "Vice President, Technology",
-	employer: "Shenzhen Yunchuang Technology Co., Ltd.",
-	city: "Shenzhen, Guangdong",
-	riskRating: "Low",
-	riskReasoningPoints: [
-		"Identity fully verified through MPS 4-factor authentication",
-		"Declared income consistent with social insurance contribution records",
-		"No litigation, criminal, or adverse media records found",
-		"Commercial interests in two active companies — both in good standing with consistent filings",
-		"Property holdings proportionate to verified income over career span",
-		"Bank account and mobile number verified, all linked to the same identity",
-		"Tax filings consistent across all available years, no discrepancies",
-	],
-	profileSummary:
-		"Senior technology executive with 20+ years in the Shenzhen tech sector. Wealth derived primarily from salaried income and minority shareholdings in two active technology companies. All data sources return consistent, verified results with no anomalies.",
+// ── Jack Ma: Sources ────────────────────────────────────────────
+
+const SRC_MA: Record<string, SourceCitation> = {
+	secF1:        { id: "s1", label: "SEC Form F-1 (Alibaba Group, 2014)", url: "https://www.sec.gov/Archives/edgar/data/1577552/000119312514184994/d709111df1.htm", date: "2014-05-06", type: "filing" },
+	nyseIpo:      { id: "s2", label: "NYSE: BABA IPO — $25B raised at $68/share", date: "2014-09-19", type: "market-data" },
+	forbes2024:   { id: "s3", label: "Forbes Real-Time Billionaires (Ma Yun)", url: "https://www.forbes.com/profile/jack-ma/", date: "2024-12-01", type: "estimate" },
+	bloomberg:    { id: "s4", label: "Bloomberg Billionaires Index", date: "2024-12-01", type: "estimate" },
+	scmpAnt:      { id: "s5", label: "SCMP: Ant Group $150B valuation before IPO halt", date: "2020-11-03", type: "news" },
+	reutersAnt:   { id: "s6", label: "Reuters: Ant Group IPO suspended by regulators", date: "2020-11-03", type: "news" },
+	wsj2023:      { id: "s7", label: "WSJ: Ma cedes control of Ant Group", date: "2023-01-07", type: "news" },
+	ftTrust:      { id: "s8", label: "FT: Jack Ma transfers $2.4B Alibaba shares to Singapore trust", date: "2023-04-18", type: "news" },
+	samr:         { id: "s9", label: "SAMR National Enterprise Credit Information (Alibaba)", type: "registry" },
+	yahooAcq:     { id: "s10", label: "Yahoo acquires 40% of Alibaba for $1B", date: "2005-08-11", type: "news" },
+	softbank:     { id: "s11", label: "SoftBank $20M investment in Alibaba (2000)", date: "2000-01-01", type: "news" },
+	goldmanSachs: { id: "s12", label: "Goldman Sachs leads $5M Series A for Alibaba", date: "1999-10-01", type: "news" },
+	yunfeng:      { id: "s13", label: "Yunfeng Capital AUM ~$8B (Crunchbase)", type: "estimate" },
+	jmFound:      { id: "s14", label: "Jack Ma Foundation annual report", date: "2023-01-01", type: "public-record" },
+	babaPrice:    { id: "s15", label: "NYSE BABA historical share price", type: "market-data" },
+	antRestructure: { id: "s16", label: "PBOC: Ant Group restructuring approval", date: "2023-07-07", type: "public-record" },
 };
 
-const LOW_RISK_SOURCES: SowDataSource[] = [
+// ── Jack Ma: Career Timeline ────────────────────────────────────
+
+const JACK_MA_CAREER: CareerPhase[] = [
 	{
-		id: "kyc-2fv",
-		name: "Identity Verification — 2-Factor",
-		provider: "Ministry of Public Security",
-		category: "Identity",
-		delayMs: 1200,
-		status: "confirmed",
-		statusLabel: "Identity Confirmed",
-		findings: "Full name and ID number match MPS records. Identity record is active and valid.",
+		id: "jm-1", title: "English Teacher", organization: "Hangzhou Institute of Electronic Engineering", role: "Lecturer",
+		startYear: 1988, endYear: 1995, location: "Hangzhou, China",
+		description: "Taught English at a local university after graduating from Hangzhou Normal University. Monthly salary approximately $12-20. Built foundational communication skills and first visited the US in 1995 where he encountered the internet.",
+		categories: [
+			{ category: "income", claims: [
+				{ id: "jm1-1", description: "University lecturer salary (~$15/month for 7 years)", estimatedValueUSD: 12_600, confidence: 60, sources: [{ id: "est-1", label: "Estimated from PRC public university salary scales (1988-1995)", type: "estimate" }] },
+			], subtotalUSD: 12_600, avgConfidence: 60 },
+		],
+		phaseWealthUSD: 12_600, cumulativeWealthUSD: 12_600,
+		keyEvents: ["1988: Graduated Hangzhou Normal University", "1995: First visit to United States, discovered the internet"],
 	},
 	{
-		id: "kyc-4fv",
-		name: "Identity Verification — 4-Factor",
-		provider: "Ministry of Public Security",
-		category: "Identity",
-		delayMs: 1800,
-		status: "confirmed",
-		statusLabel: "All Four Factors Match",
-		findings:
-			"Name, ID number, issue date (2018-06-10), and expiry date (2038-06-10) all confirmed against MPS records.",
+		id: "jm-2", title: "China Pages & Early Ventures", organization: "China Yellowpages / MOFTEC", role: "Founder / Project Lead",
+		startYear: 1995, endYear: 1999, location: "Hangzhou / Beijing, China",
+		description: "Founded China Pages (Zhongguo Huangye), one of China's first internet companies. Partnered with Hangzhou Telecom, eventually lost control. Moved to Beijing to work on a government e-commerce project for MOFTEC (Ministry of Foreign Trade). Both ventures generated minimal personal wealth.",
+		categories: [
+			{ category: "income", claims: [
+				{ id: "jm2-1", description: "Salary and earnings from China Pages and MOFTEC (~$500/month average)", estimatedValueUSD: 24_000, confidence: 40, sources: [{ id: "est-2", label: "Estimated from PRC private/government sector norms (late 1990s)", type: "estimate" }] },
+			], subtotalUSD: 24_000, avgConfidence: 40 },
+			{ category: "companies", claims: [
+				{ id: "jm2-2", description: "China Pages equity (diluted after Hangzhou Telecom partnership, eventually exited at near-zero)", estimatedValueUSD: 0, confidence: 50, sources: [{ id: "news-1", label: "Various biographies of Jack Ma document China Pages failure", type: "news" }] },
+			], subtotalUSD: 0, avgConfidence: 50 },
+		],
+		phaseWealthUSD: 24_000, cumulativeWealthUSD: 36_600,
+		keyEvents: ["1995: Founded China Pages", "1998: Joined MOFTEC e-commerce project in Beijing", "1999: Left Beijing, decided to start Alibaba"],
 	},
 	{
-		id: "mobile-attr",
-		name: "Mobile Number Attribution",
-		provider: "Telecom Operator",
-		category: "Identity",
-		delayMs: 1000,
-		status: "confirmed",
-		statusLabel: "Mobile Verified",
-		findings:
-			"Number registered to China Mobile, Shenzhen, Guangdong. In service for 12+ years. Location consistent with declared residence.",
+		id: "jm-3", title: "Alibaba Founding & Growth", organization: "Alibaba Group", role: "Founder & CEO",
+		startYear: 1999, endYear: 2014, location: "Hangzhou, China",
+		description: "Founded Alibaba with 17 co-founders in his apartment with $60K pooled savings. Built Alibaba.com (B2B), launched Taobao (2003) to defeat eBay in China, created Alipay (2004). Raised successive rounds: Goldman Sachs $5M (1999), SoftBank $20M (2000), Yahoo $1B for 40% stake (2005). By 2014, Alibaba was China's dominant e-commerce platform.",
+		categories: [
+			{ category: "income", claims: [
+				{ id: "jm3-1", description: "CEO compensation at Alibaba Group (salary + bonuses, 1999-2014)", estimatedValueUSD: 5_000_000, confidence: 45, sources: [{ id: "est-3", label: "Estimated from Chinese tech CEO compensation benchmarks", type: "estimate" }] },
+			], subtotalUSD: 5_000_000, avgConfidence: 45 },
+			{ category: "companies", claims: [
+				{ id: "jm3-2", description: "Pre-IPO Alibaba Group equity stake (accumulated ~8.9% through founding shares)", estimatedValueUSD: 1_500_000_000, confidence: 70, sources: [SRC_MA.goldmanSachs, SRC_MA.softbank, SRC_MA.yahooAcq, { id: "est-4", label: "Pre-IPO secondary market estimates", type: "estimate" }] },
+			], subtotalUSD: 1_500_000_000, avgConfidence: 70 },
+		],
+		phaseWealthUSD: 1_505_000_000, cumulativeWealthUSD: 1_505_036_600,
+		keyEvents: ["1999: Alibaba founded, Goldman Sachs $5M Series A", "2000: SoftBank invests $20M", "2003: Taobao launched", "2004: Alipay spun out", "2005: Yahoo acquires 40% for $1B", "2013: Alibaba reaches $150B pre-IPO valuation"],
 	},
 	{
-		id: "bank-3fv",
-		name: "Bank Account Verification — 3-Factor",
-		provider: "UnionPay",
-		category: "Banking",
-		delayMs: 1500,
-		status: "confirmed",
-		statusLabel: "Account Verified",
-		findings: "Name, ID number, and bank card number confirmed through UnionPay. Account is active — China Merchants Bank, Category I account.",
+		id: "jm-4", title: "Alibaba IPO & Peak Wealth", organization: "Alibaba Group (NYSE: BABA)", role: "Executive Chairman",
+		startYear: 2014, endYear: 2019, location: "Hangzhou, China / Global",
+		description: "Alibaba's NYSE IPO on September 19, 2014 raised $25 billion — the largest IPO in history at the time. Ma held approximately 6.2% of shares. Alibaba's market cap reached over $500B by 2019. Ant Financial (later Ant Group) was spun out and grew rapidly in digital payments (Alipay).",
+		categories: [
+			{ category: "companies", claims: [
+				{ id: "jm4-1", description: "6.2% stake in Alibaba Group at IPO ($231B market cap = ~$14.3B)", estimatedValueUSD: 14_300_000_000, confidence: 95, sources: [SRC_MA.secF1, SRC_MA.nyseIpo] },
+				{ id: "jm4-2", description: "Alibaba share price appreciation 2014-2019 (peaked ~$210/share, stake grew to ~$25B+)", estimatedValueUSD: 25_000_000_000, confidence: 90, sources: [SRC_MA.babaPrice, SRC_MA.bloomberg] },
+				{ id: "jm4-3", description: "Ant Financial/Ant Group stake (~10% personal holding, valued at ~$150B pre-IPO)", estimatedValueUSD: 15_000_000_000, confidence: 65, sources: [SRC_MA.scmpAnt] },
+			], subtotalUSD: 25_000_000_000, avgConfidence: 83 },
+			{ category: "investments", claims: [
+				{ id: "jm4-4", description: "Yunfeng Capital co-founder (PE/VC fund, AUM ~$8B, Ma's carried interest estimated)", estimatedValueUSD: 800_000_000, confidence: 40, sources: [SRC_MA.yunfeng] },
+			], subtotalUSD: 800_000_000, avgConfidence: 40 },
+			{ category: "alternatives", claims: [
+				{ id: "jm4-5", description: "Property holdings including residences in Hong Kong, Hangzhou, and reported overseas properties", estimatedValueUSD: 200_000_000, confidence: 30, sources: [{ id: "est-5", label: "Media reports on luxury property purchases", type: "news" }] },
+			], subtotalUSD: 200_000_000, avgConfidence: 30 },
+		],
+		phaseWealthUSD: 26_000_000_000, cumulativeWealthUSD: 26_000_000_000,
+		keyEvents: ["2014-09-19: Alibaba IPO raises $25B on NYSE", "2016: Alibaba surpasses Walmart as world's largest retailer", "2018: Ant Financial raises $14B at $150B valuation", "2019-09-10: Ma steps down as Alibaba Chairman"],
 	},
 	{
-		id: "adverse",
-		name: "Adverse History — Risk Score",
-		provider: "People's Bank of China",
-		category: "Risk",
-		delayMs: 2000,
-		status: "clear",
-		statusLabel: "No Adverse Records",
-		findings: "No adverse records found. Risk score: Low. No criminal offenses or financial defaults on record.",
+		id: "jm-5", title: "Regulatory Crackdown & Restructuring", organization: "Ant Group / Alibaba Group", role: "Former Chairman",
+		startYear: 2019, endYear: 2023, location: "Hangzhou / Overseas",
+		description: "After stepping down, Ma gave a speech criticizing financial regulators in October 2020. Within days, Ant Group's $37B dual IPO was suspended. Ma disappeared from public view for ~3 months. Alibaba was hit with a $2.8B antitrust fine. Ant Group was forced to restructure as a financial holding company under central bank supervision. Ma's wealth declined sharply.",
+		categories: [
+			{ category: "companies", claims: [
+				{ id: "jm5-1", description: "Alibaba stake declined — BABA fell from ~$300 to ~$80 (2020-2023), stake value ~$8-12B", estimatedValueUSD: 10_000_000_000, confidence: 80, sources: [SRC_MA.babaPrice, SRC_MA.bloomberg] },
+				{ id: "jm5-2", description: "Ant Group stake post-restructuring — valuation collapsed from $150B to ~$70B, Ma's ~10% = ~$7B", estimatedValueUSD: 7_000_000_000, confidence: 50, sources: [SRC_MA.reutersAnt, SRC_MA.wsj2023, SRC_MA.antRestructure] },
+			], subtotalUSD: 17_000_000_000, avgConfidence: 65 },
+		],
+		phaseWealthUSD: -9_000_000_000, cumulativeWealthUSD: 17_000_000_000,
+		keyEvents: ["2020-10-24: Bund Finance Summit speech criticizing regulators", "2020-11-03: Ant Group IPO suspended", "2020-12 to 2021-01: Ma absent from public view", "2021-04: Alibaba fined $2.8B for antitrust violations", "2023-01: Ma cedes control of Ant Group"],
 	},
 	{
-		id: "fraud",
-		name: "Financial Risk Assessment",
-		provider: "Major Credit Reporting Agencies",
-		category: "Risk",
-		delayMs: 1300,
-		status: "clear",
-		statusLabel: "No Risk Flags",
-		findings:
-			"No overdue online loans, no multi-platform borrowing behaviour detected. Credit standing is clean.",
-	},
-	{
-		id: "litigation",
-		name: "Litigation Records Search",
-		provider: "Supreme People's Court",
-		category: "Risk",
-		delayMs: 2500,
-		status: "clear",
-		statusLabel: "No Records Found",
-		findings:
-			"No civil or criminal litigation records. No enforcement actions, no dishonest debtor records, no administrative penalties.",
-	},
-	{
-		id: "commercial",
-		name: "Commercial Interest Registry",
-		provider: "People's Bank of China & Third-Party",
-		category: "Corporate",
-		delayMs: 2200,
-		status: "found",
-		statusLabel: "2 Companies Found",
-		findings:
-			"Holds positions in 2 enterprises: (1) Director & 35% shareholder — Shenzhen Yunchuang Technology Co., Ltd. (2) 8% shareholder — Guangdong Xinhe Software Co., Ltd.",
-	},
-	{
-		id: "kyb-a",
-		name: "KYB Report — Shenzhen Yunchuang Technology",
-		provider: "SAMR & Third-Party Providers",
-		category: "Corporate",
-		delayMs: 2800,
-		status: "confirmed",
-		statusLabel: "Active — Good Standing",
-		findings:
-			"Registered capital: ¥5,000,000. Status: Active. Incorporated 2012. Business scope: software development, cloud computing services. 3 shareholders, 45 employees. Tax credit rating: A. No penalties, no litigation.",
-	},
-	{
-		id: "kyb-b",
-		name: "KYB Report — Guangdong Xinhe Software",
-		provider: "SAMR & Third-Party Providers",
-		category: "Corporate",
-		delayMs: 3000,
-		status: "confirmed",
-		statusLabel: "Active — Good Standing",
-		findings:
-			"Registered capital: ¥20,000,000. Status: Active. Incorporated 2015. Business scope: enterprise software, SaaS platforms. 5 shareholders, 120 employees. Tax credit rating: A. No penalties.",
-	},
-	{
-		id: "income",
-		name: "Estimated Annual Income",
-		provider: "MOHRSS (Social Insurance)",
-		category: "Income",
-		delayMs: 1500,
-		status: "confirmed",
-		statusLabel: "Income Verified",
-		findings:
-			"Estimated annual income based on social insurance contributions: ¥1,100,000 – ¥1,400,000 bracket. Consistent with declared occupation and seniority.",
-	},
-	{
-		id: "tax",
-		name: "Tax Filing Verification",
-		provider: "State Taxation Administration",
-		category: "Tax",
-		delayMs: 2000,
-		status: "confirmed",
-		statusLabel: "Filings Consistent",
-		findings:
-			"Individual income tax filings verified for 2021–2025. Declared income consistent with social insurance records. No discrepancies or audit flags.",
+		id: "jm-6", title: "Philanthropy & Reduced Profile", organization: "Jack Ma Foundation", role: "Philanthropist",
+		startYear: 2023, endYear: null, location: "Tokyo / Hong Kong / Hangzhou",
+		description: "Ma has spent time in Japan, Hong Kong, and occasionally mainland China. He transferred approximately $2.4B in Alibaba shares to a Singapore-based family trust. Forbes estimates his net worth at ~$25.5B. He has focused on agriculture technology, education philanthropy, and has maintained a significantly lower public profile.",
+		categories: [
+			{ category: "companies", claims: [
+				{ id: "jm6-1", description: "Remaining Alibaba Group stake (reduced after trust transfer, BABA recovered to ~$85-100)", estimatedValueUSD: 12_500_000_000, confidence: 70, sources: [SRC_MA.babaPrice, SRC_MA.forbes2024] },
+				{ id: "jm6-2", description: "Ant Group stake (restructured entity, estimated ~$70-80B valuation, Ma's ~8% post-dilution)", estimatedValueUSD: 6_000_000_000, confidence: 45, sources: [SRC_MA.antRestructure, SRC_MA.bloomberg] },
+			], subtotalUSD: 18_500_000_000, avgConfidence: 58 },
+			{ category: "investments", claims: [
+				{ id: "jm6-3", description: "Yunfeng Capital and other PE/VC fund interests", estimatedValueUSD: 1_500_000_000, confidence: 35, sources: [SRC_MA.yunfeng] },
+				{ id: "jm6-4", description: "Singapore family trust (transferred $2.4B in BABA shares)", estimatedValueUSD: 2_400_000_000, confidence: 85, sources: [SRC_MA.ftTrust] },
+			], subtotalUSD: 3_900_000_000, avgConfidence: 60 },
+			{ category: "alternatives", claims: [
+				{ id: "jm6-5", description: "Global real estate portfolio (Hong Kong, Hangzhou, reported properties in New York, France)", estimatedValueUSD: 300_000_000, confidence: 25, sources: [{ id: "news-re", label: "SCMP, Bloomberg reporting on property holdings", type: "news" }] },
+				{ id: "jm6-6", description: "Art collection, wine, other luxury assets", estimatedValueUSD: 50_000_000, confidence: 15, sources: [{ id: "est-lux", label: "Industry estimates for UHNW lifestyle assets", type: "estimate" }] },
+			], subtotalUSD: 350_000_000, avgConfidence: 20 },
+		],
+		phaseWealthUSD: 22_750_000_000, cumulativeWealthUSD: 25_500_000_000,
+		keyEvents: ["2023-04: $2.4B Alibaba shares transferred to Singapore trust", "2023-06: Alibaba splits into 6 business groups", "2024: Focus on agriculture technology and education"],
 	},
 ];
 
-const LOW_RISK_WEALTH: SowWealthItem[] = [
-	{
-		category: "Employment Income",
-		description:
-			"Vice President, Technology at Shenzhen Yunchuang Technology Co., Ltd. Social insurance contributions indicate top-bracket salary consistent with senior tech management in Shenzhen.",
-		estimatedAnnualRMB: 1_200_000,
-		estimatedTotalRMB: null,
-		confidence: "High",
-	},
-	{
-		category: "Business Holdings — Yunchuang Technology",
-		description:
-			"35% equity stake in Shenzhen Yunchuang Technology Co., Ltd. (registered capital ¥5M, active since 2012). Company has 45 employees and an A-rated tax credit.",
-		estimatedAnnualRMB: 180_000,
-		estimatedTotalRMB: 1_750_000,
-		confidence: "Medium",
-	},
-	{
-		category: "Business Holdings — Xinhe Software",
-		description:
-			"8% equity stake in Guangdong Xinhe Software Co., Ltd. (registered capital ¥20M, active since 2015). Minority passive investment — no directorship.",
-		estimatedAnnualRMB: 120_000,
-		estimatedTotalRMB: 1_600_000,
-		confidence: "Medium",
-	},
-	{
-		category: "Property",
-		description:
-			"Two residential properties: (1) 89m² apartment in Nanshan District, Shenzhen — estimated market value ¥6,500,000. (2) 110m² apartment in Dongguan — estimated market value ¥2,800,000.",
-		estimatedAnnualRMB: null,
-		estimatedTotalRMB: 9_300_000,
-		confidence: "High",
-	},
-	{
-		category: "Investment & Dividend Income",
-		description:
-			"Dividend distributions from two company holdings, estimated based on company size, profitability indicators, and shareholding ratio.",
-		estimatedAnnualRMB: 120_000,
-		estimatedTotalRMB: null,
-		confidence: "Medium",
-	},
-];
+// ── Yat Siu: Sources ────────────────────────────────────────────
 
-const LOW_RISK_NARRATIVE = `Chen Zhiyuan (陈志远), male, 48, is a senior technology executive based in Shenzhen, Guangdong Province. He serves as Vice President of Technology at Shenzhen Yunchuang Technology Co., Ltd., a software development firm he co-founded in 2012. His identity has been fully verified through the Ministry of Public Security's 4-factor authentication, with all credentials confirmed as active and valid.
-
-His primary source of wealth is salaried employment income. Social insurance contribution records indicate an annual income in the ¥1.1M–¥1.4M range, consistent with senior management compensation in the Shenzhen technology sector. Tax filings from 2021–2025 corroborate this income level with no discrepancies.
-
-In addition to employment income, Mr. Chen holds equity interests in two active technology companies. He is a 35% shareholder and director of Shenzhen Yunchuang Technology (registered capital ¥5M), and an 8% passive shareholder in Guangdong Xinhe Software (registered capital ¥20M). Both companies are in good standing with A-rated tax credit, no outstanding litigation, and no regulatory penalties. Combined estimated equity value is approximately ¥3,350,000 with annual dividend income estimated at ¥120,000.
-
-His property portfolio consists of two residential apartments — one in Nanshan District, Shenzhen (est. ¥6.5M) and one in Dongguan (est. ¥2.8M) — with a combined estimated value of ¥9.3M. This property accumulation is proportionate to his verified income trajectory over a 20+ year career.
-
-No adverse records were found across any data source. No litigation, no criminal history, no fraud indicators, no blacklist entries. Mobile and banking records are consistent with declared identity and residence. The overall wealth profile is coherent: income sources are identifiable, verifiable, and proportionate to the individual's career and business interests.`;
-
-const HIGH_RISK_PROFILE: SowCaseProfile = {
-	id: "case-high",
-	name: "刘雨薇",
-	nameEn: "Liu Yuwei",
-	gender: "Female",
-	dateOfBirth: "1993-08-22",
-	age: 32,
-	idNumber: "3101••••••••6028",
-	nationality: "Chinese",
-	occupation: "Independent Consultant",
-	employer: "Self-employed",
-	city: "Shanghai",
-	riskRating: "High",
-	riskReasoningPoints: [
-		"Declared income (¥350K/year consulting) is inconsistent with property holdings (3 apartments, est. ¥18.5M total)",
-		"Mobile number registered in Hangzhou, not Shanghai as declared — residence inconsistency",
-		"Medium fraud risk score — phone number linked to multiple financial accounts across provinces",
-		"2 civil litigation cases found: defendant in a ¥2.1M contract dispute (ongoing)",
-		"One associated company under active regulatory investigation (Shanghai Meihe Trading)",
-		"One associated company dissolved in 2024 — previously in real estate sector during regulatory crackdown",
-		"Tax filings show discrepancies in 2023 and 2024 — declared income significantly below spending patterns",
-		"Estimated ¥800K+ annual gap between verified income and apparent consumption/asset accumulation",
-	],
-	profileSummary:
-		"Young self-declared independent consultant based in Shanghai. Significant unexplained wealth gap — property holdings and spending patterns are disproportionate to verified income. Multiple corporate associations including one under regulatory investigation and one dissolved entity. Litigation exposure and tax discrepancies compound the risk profile.",
+const SRC_SIU: Record<string, SourceCitation> = {
+	ibmAcq:        { id: "y1", label: "IBM acquires Outblaze messaging division", date: "2009-01-01", type: "news" },
+	asxListing:    { id: "y2", label: "ASX: Animoca Brands IPO listing", date: "2015-01-01", type: "market-data" },
+	asxDelist:     { id: "y3", label: "ASX: Animoca Brands delisted over crypto accounting", date: "2020-03-25", type: "registry" },
+	tcAnimoca:     { id: "y4", label: "TechCrunch: Animoca raises $358M at $5.9B valuation", url: "https://techcrunch.com/2022/01/18/animoca-brands-raises-358-million/", date: "2022-01-18", type: "news" },
+	coinGecko:     { id: "y5", label: "CoinGecko: SAND token historical price data", url: "https://www.coingecko.com/en/coins/the-sandbox", type: "market-data" },
+	crunchbase:    { id: "y6", label: "Crunchbase: Animoca Brands investment portfolio (340+ investments)", type: "registry" },
+	dappradar:     { id: "y7", label: "DappRadar: NFT market valuation data", type: "market-data" },
+	hkCompanies:   { id: "y8", label: "HK Companies Registry: Outblaze Limited", type: "registry" },
+	forbesSiu:     { id: "y9", label: "Forbes: Yat Siu profile & net worth estimate", date: "2024-06-01", type: "estimate" },
+	bloombergSiu:  { id: "y10", label: "Bloomberg: Animoca Brands profile", type: "news" },
+	sandboxAcq:    { id: "y11", label: "Animoca acquires The Sandbox from Pixowl", date: "2018-08-01", type: "news" },
+	sandPeak:      { id: "y12", label: "SAND all-time high $8.40 (Nov 25, 2021)", date: "2021-11-25", type: "market-data" },
+	hkPolicy:      { id: "y13", label: "HKMA: Virtual asset regulatory framework", date: "2023-06-01", type: "public-record" },
+	sequoia:       { id: "y14", label: "Sequoia China leads Animoca $65M round", date: "2021-05-01", type: "news" },
 };
 
-const HIGH_RISK_SOURCES: SowDataSource[] = [
+// ── Yat Siu: Career Timeline ────────────────────────────────────
+
+const YAT_SIU_CAREER: CareerPhase[] = [
 	{
-		id: "kyc-2fv",
-		name: "Identity Verification — 2-Factor",
-		provider: "Ministry of Public Security",
-		category: "Identity",
-		delayMs: 1100,
-		status: "confirmed",
-		statusLabel: "Identity Confirmed",
-		findings: "Full name and ID number match MPS records. Identity record is active and valid.",
+		id: "ys-1", title: "Early Career at Atari", organization: "Atari Corporation", role: "Software Engineer",
+		startYear: 1990, endYear: 1995, location: "Vienna, Austria / Sunnyvale, USA",
+		description: "Born in Vienna to a Chinese-Austrian family. Joined Atari in his teens as one of their youngest employees. Worked on the Atari Falcon and other projects before Atari's decline. Gained foundational experience in gaming and technology.",
+		categories: [
+			{ category: "income", claims: [
+				{ id: "ys1-1", description: "Atari software engineer salary (1990-1995)", estimatedValueUSD: 150_000, confidence: 40, sources: [{ id: "est-at", label: "Estimated from Austrian/US tech salaries (early 1990s)", type: "estimate" }] },
+			], subtotalUSD: 150_000, avgConfidence: 40 },
+		],
+		phaseWealthUSD: 150_000, cumulativeWealthUSD: 150_000,
+		keyEvents: ["1990: Joined Atari as teenager", "1995: Left Atari after company restructuring"],
 	},
 	{
-		id: "kyc-4fv",
-		name: "Identity Verification — 4-Factor",
-		provider: "Ministry of Public Security",
-		category: "Identity",
-		delayMs: 1600,
-		status: "confirmed",
-		statusLabel: "All Four Factors Match",
-		findings:
-			"Name, ID number, issue date (2021-11-05), and expiry date (2041-11-05) confirmed against MPS records.",
+		id: "ys-2", title: "Outblaze & Hong Kong Tech", organization: "Outblaze Limited", role: "Founder & CEO",
+		startYear: 1998, endYear: 2012, location: "Hong Kong",
+		description: "Founded Outblaze in Hong Kong as a white-label web services company. Grew it into a provider of messaging, community, and gaming services for major portals. Sold the messaging/community division to IBM in 2009 for an estimated $10-20M. Retained the gaming division which would eventually become Animoca Brands.",
+		categories: [
+			{ category: "income", claims: [
+				{ id: "ys2-1", description: "CEO salary at Outblaze (1998-2012)", estimatedValueUSD: 2_000_000, confidence: 35, sources: [{ id: "est-ob", label: "Estimated from HK tech CEO compensation", type: "estimate" }] },
+			], subtotalUSD: 2_000_000, avgConfidence: 35 },
+			{ category: "companies", claims: [
+				{ id: "ys2-2", description: "Sale of Outblaze messaging division to IBM (~$10-20M, Siu retained majority)", estimatedValueUSD: 15_000_000, confidence: 55, sources: [SRC_SIU.ibmAcq, SRC_SIU.hkCompanies] },
+			], subtotalUSD: 15_000_000, avgConfidence: 55 },
+			{ category: "alternatives", claims: [
+				{ id: "ys2-3", description: "Hong Kong residential property acquired during this period", estimatedValueUSD: 3_000_000, confidence: 35, sources: [{ id: "est-hk", label: "HK Land Registry records (estimated)", type: "estimate" }] },
+			], subtotalUSD: 3_000_000, avgConfidence: 35 },
+		],
+		phaseWealthUSD: 20_000_000, cumulativeWealthUSD: 20_150_000,
+		keyEvents: ["1998: Founded Outblaze in Hong Kong", "2004: Outblaze services powering 100+ portals", "2009: IBM acquires Outblaze messaging division"],
 	},
 	{
-		id: "mobile-attr",
-		name: "Mobile Number Attribution",
-		provider: "Telecom Operator",
-		category: "Identity",
-		delayMs: 1200,
-		status: "flagged",
-		statusLabel: "Location Mismatch",
-		findings:
-			"Number registered to China Unicom, Hangzhou, Zhejiang. Declared residence is Shanghai. Mobile in service for 4 years. Location inconsistency noted.",
+		id: "ys-3", title: "Animoca Brands Founding", organization: "Animoca Brands", role: "Co-Founder & Chairman",
+		startYear: 2014, endYear: 2017, location: "Hong Kong",
+		description: "Repurposed the gaming division of Outblaze into Animoca Brands, focusing on mobile games. Licensed major brands (Garfield, Doraemon, Astro Boy, Power Rangers). Listed on the Australian Securities Exchange (ASX) in 2015. Generated revenue from mobile games but modest profitability.",
+		categories: [
+			{ category: "companies", claims: [
+				{ id: "ys3-1", description: "Animoca Brands ASX listing equity (co-founder stake ~55%, ASX market cap AU$20-50M)", estimatedValueUSD: 20_000_000, confidence: 60, sources: [SRC_SIU.asxListing, { id: "asx-mc", label: "ASX historical market cap data", type: "market-data" }] },
+			], subtotalUSD: 20_000_000, avgConfidence: 60 },
+			{ category: "income", claims: [
+				{ id: "ys3-2", description: "Chairman compensation at Animoca Brands", estimatedValueUSD: 1_500_000, confidence: 40, sources: [{ id: "est-ch", label: "Estimated from ASX-listed company executive comp", type: "estimate" }] },
+			], subtotalUSD: 1_500_000, avgConfidence: 40 },
+		],
+		phaseWealthUSD: 21_500_000, cumulativeWealthUSD: 41_650_000,
+		keyEvents: ["2014: Animoca Brands incorporated", "2015: Listed on ASX", "2016-17: Licensed Garfield, Doraemon, Power Rangers mobile games"],
 	},
 	{
-		id: "bank-3fv",
-		name: "Bank Account Verification — 3-Factor",
-		provider: "UnionPay",
-		category: "Banking",
-		delayMs: 1400,
-		status: "confirmed",
-		statusLabel: "Account Verified",
-		findings: "Name, ID number, and bank card number confirmed. Account active — ICBC, Category I account.",
+		id: "ys-4", title: "Pivot to Blockchain Gaming", organization: "Animoca Brands / The Sandbox", role: "Chairman",
+		startYear: 2018, endYear: 2020, location: "Hong Kong",
+		description: "Strategic pivot to blockchain gaming and NFTs. Acquired The Sandbox from Pixowl in 2018. Launched SAND token. Invested in Dapper Labs (CryptoKitties/NBA Top Shot). ASX delisted Animoca in March 2020 over disputes about crypto asset accounting. This delisting actually removed constraints on their crypto strategy.",
+		categories: [
+			{ category: "companies", claims: [
+				{ id: "ys4-1", description: "Animoca Brands equity (post-delisting, private valuation rising, ~$100M by late 2020)", estimatedValueUSD: 55_000_000, confidence: 50, sources: [SRC_SIU.asxDelist, { id: "priv-val", label: "Private secondary market estimates", type: "estimate" }] },
+			], subtotalUSD: 55_000_000, avgConfidence: 50 },
+			{ category: "crypto", claims: [
+				{ id: "ys4-2", description: "SAND token allocation (team/founder allocation, tokens worth ~$0.05-0.10 pre-boom)", estimatedValueUSD: 5_000_000, confidence: 45, sources: [SRC_SIU.coinGecko, SRC_SIU.sandboxAcq] },
+				{ id: "ys4-3", description: "Various NFT and token holdings from early blockchain gaming investments", estimatedValueUSD: 3_000_000, confidence: 30, sources: [SRC_SIU.dappradar] },
+			], subtotalUSD: 8_000_000, avgConfidence: 38 },
+			{ category: "investments", claims: [
+				{ id: "ys4-4", description: "Early investments in Dapper Labs, Sky Mavis (Axie Infinity), and other blockchain startups", estimatedValueUSD: 10_000_000, confidence: 40, sources: [SRC_SIU.crunchbase] },
+			], subtotalUSD: 10_000_000, avgConfidence: 40 },
+		],
+		phaseWealthUSD: 73_000_000, cumulativeWealthUSD: 114_650_000,
+		keyEvents: ["2018: Acquired The Sandbox from Pixowl", "2019: SAND token launched", "2019: Invested in Dapper Labs", "2020-03: ASX delists Animoca Brands"],
 	},
 	{
-		id: "adverse",
-		name: "Adverse History — Risk Score",
-		provider: "People's Bank of China",
-		category: "Risk",
-		delayMs: 1800,
-		status: "clear",
-		statusLabel: "No Criminal Records",
-		findings:
-			"No criminal offenses on record. No financial defaults recorded with PBOC. Risk score: Low-Medium.",
+		id: "ys-5", title: "Web3 Boom & Peak Wealth", organization: "Animoca Brands", role: "Co-Founder & Chairman",
+		startYear: 2021, endYear: 2022, location: "Hong Kong",
+		description: "The NFT and metaverse boom propelled Animoca Brands to a $5.9B valuation in January 2022 after raising $358.8M. SAND token peaked at $8.40 in November 2021 with a market cap exceeding $7B. Animoca made over 340 blockchain investments. Siu became one of crypto's most prominent advocates.",
+		categories: [
+			{ category: "companies", claims: [
+				{ id: "ys5-1", description: "Animoca Brands equity at $5.9B valuation (estimated ~30-40% stake after dilution)", estimatedValueUSD: 2_000_000_000, confidence: 70, sources: [SRC_SIU.tcAnimoca, SRC_SIU.sequoia] },
+			], subtotalUSD: 2_000_000_000, avgConfidence: 70 },
+			{ category: "crypto", claims: [
+				{ id: "ys5-2", description: "SAND token holdings at peak (~$8.40, estimated 100-200M tokens in founder/team allocation)", estimatedValueUSD: 800_000_000, confidence: 55, sources: [SRC_SIU.sandPeak, SRC_SIU.coinGecko] },
+				{ id: "ys5-3", description: "NFT portfolio (LAND plots, Bored Apes, other blue-chip NFTs at peak valuations)", estimatedValueUSD: 150_000_000, confidence: 35, sources: [SRC_SIU.dappradar] },
+				{ id: "ys5-4", description: "Various token allocations from 340+ portfolio investments", estimatedValueUSD: 200_000_000, confidence: 30, sources: [SRC_SIU.crunchbase, SRC_SIU.coinGecko] },
+			], subtotalUSD: 1_150_000_000, avgConfidence: 40 },
+			{ category: "investments", claims: [
+				{ id: "ys5-5", description: "Portfolio of 340+ blockchain/Web3 investments (book value)", estimatedValueUSD: 500_000_000, confidence: 45, sources: [SRC_SIU.crunchbase, SRC_SIU.bloombergSiu] },
+			], subtotalUSD: 500_000_000, avgConfidence: 45 },
+			{ category: "alternatives", claims: [
+				{ id: "ys5-6", description: "Hong Kong property portfolio (appreciated significantly)", estimatedValueUSD: 8_000_000, confidence: 40, sources: [{ id: "hk-prop", label: "HK property index appreciation 2018-2022", type: "market-data" }] },
+			], subtotalUSD: 8_000_000, avgConfidence: 40 },
+		],
+		phaseWealthUSD: 3_658_000_000, cumulativeWealthUSD: 3_658_000_000,
+		keyEvents: ["2021-05: Sequoia China leads $65M round", "2021-11-25: SAND peaks at $8.40 (ATH)", "2022-01: Animoca raises $358.8M at $5.9B valuation", "2022: 340+ blockchain investments made"],
 	},
 	{
-		id: "fraud",
-		name: "Financial Risk Assessment",
-		provider: "Major Credit Reporting Agencies",
-		category: "Risk",
-		delayMs: 1500,
-		status: "flagged",
-		statusLabel: "Medium Risk",
-		findings:
-			"Phone number linked to financial accounts at 6 institutions across 3 provinces (Shanghai, Zhejiang, Jiangsu). Multi-platform borrowing pattern detected. No current overdue amounts, but risk score elevated.",
-	},
-	{
-		id: "litigation",
-		name: "Litigation Records Search",
-		provider: "Supreme People's Court",
-		category: "Risk",
-		delayMs: 2800,
-		status: "flagged",
-		statusLabel: "2 Cases Found",
-		findings:
-			"(1) Plaintiff in a ¥450,000 service fee dispute — resolved 2023. (2) Defendant in a ¥2,100,000 contract dispute filed by a Zhejiang trading company — case ongoing, hearing scheduled Q3 2026.",
-	},
-	{
-		id: "commercial",
-		name: "Commercial Interest Registry",
-		provider: "People's Bank of China & Third-Party",
-		category: "Corporate",
-		delayMs: 2400,
-		status: "found",
-		statusLabel: "3 Companies Found",
-		findings:
-			"Holds positions in 3 enterprises: (1) 100% shareholder & director — Shanghai Yuwei Consulting Co., Ltd. (2) 60% shareholder & director — Shanghai Meihe Trading Co., Ltd. (3) Former 40% shareholder — Hangzhou Qianhe Real Estate Co., Ltd. (dissolved).",
-	},
-	{
-		id: "kyb-a",
-		name: "KYB Report — Shanghai Yuwei Consulting",
-		provider: "SAMR & Third-Party Providers",
-		category: "Corporate",
-		delayMs: 2500,
-		status: "confirmed",
-		statusLabel: "Active",
-		findings:
-			"Registered capital: ¥500,000. Status: Active. Incorporated 2020. Business scope: management consulting, business advisory. Sole shareholder. 2 employees. Tax credit rating: B. No penalties.",
-	},
-	{
-		id: "kyb-b",
-		name: "KYB Report — Shanghai Meihe Trading",
-		provider: "SAMR & Third-Party Providers",
-		category: "Corporate",
-		delayMs: 3000,
-		status: "flagged",
-		statusLabel: "Under Investigation",
-		findings:
-			"Registered capital: ¥3,000,000. Status: Active — regulatory investigation pending. Incorporated 2019. Business scope: import/export, general trading. 2 shareholders (Liu Yuwei 60%, Zhang Wei 40%). 8 employees. Tax credit rating: C. Administrative penalty recorded 2024 — failure to file annual report. Investigation by Shanghai Market Supervision Bureau opened Jan 2026.",
-	},
-	{
-		id: "kyb-c",
-		name: "KYB Report — Hangzhou Qianhe Real Estate",
-		provider: "SAMR & Third-Party Providers",
-		category: "Corporate",
-		delayMs: 2200,
-		status: "flagged",
-		statusLabel: "Dissolved",
-		findings:
-			"Status: Dissolved (Oct 2024). Previously registered capital: ¥10,000,000. Business scope: real estate brokerage, property management. Dissolved during sector-wide regulatory tightening. 2 outstanding enforcement records at time of dissolution.",
-	},
-	{
-		id: "income",
-		name: "Estimated Annual Income",
-		provider: "MOHRSS (Social Insurance)",
-		category: "Income",
-		delayMs: 1800,
-		status: "discrepancy",
-		statusLabel: "Income Gap Detected",
-		findings:
-			"Social insurance contributions indicate annual income in the ¥280,000 – ¥420,000 bracket. This is inconsistent with property holdings (3 apartments, est. combined value ¥18.5M) and apparent spending patterns.",
-	},
-	{
-		id: "tax",
-		name: "Tax Filing Verification",
-		provider: "State Taxation Administration",
-		category: "Tax",
-		delayMs: 2300,
-		status: "discrepancy",
-		statusLabel: "Discrepancies Found",
-		findings:
-			"Individual income tax filings reviewed for 2021–2025. Declared income for 2023 (¥310,000) and 2024 (¥380,000) shows significant gap with estimated consumption. Consulting income reported under sole proprietorship — limited third-party verification available.",
+		id: "ys-6", title: "Market Correction & Rebuilding", organization: "Animoca Brands", role: "Co-Founder & Chairman",
+		startYear: 2023, endYear: null, location: "Hong Kong",
+		description: "Crypto winter caused severe portfolio markdowns. SAND fell ~90% from peak. NFT market collapsed. However, Animoca Brands maintained its $5.9B valuation from last funding round (no down round). Siu became active in Hong Kong's virtual asset regulatory framework, positioning Animoca as a key player in HK's Web3 hub strategy.",
+		categories: [
+			{ category: "companies", claims: [
+				{ id: "ys6-1", description: "Animoca Brands equity (last round $5.9B, likely marked down 30-50% in secondary markets)", estimatedValueUSD: 1_200_000_000, confidence: 45, sources: [SRC_SIU.tcAnimoca, SRC_SIU.bloombergSiu, { id: "sec-est", label: "Secondary market estimates suggest 30-50% discount", type: "estimate" }] },
+			], subtotalUSD: 1_200_000_000, avgConfidence: 45 },
+			{ category: "crypto", claims: [
+				{ id: "ys6-2", description: "SAND token holdings at current price (~$0.30-0.60, down ~93% from peak)", estimatedValueUSD: 60_000_000, confidence: 65, sources: [SRC_SIU.coinGecko] },
+				{ id: "ys6-3", description: "NFT portfolio (severely depreciated, floor prices down 80-95%)", estimatedValueUSD: 15_000_000, confidence: 25, sources: [SRC_SIU.dappradar] },
+				{ id: "ys6-4", description: "Remaining token positions from portfolio companies", estimatedValueUSD: 30_000_000, confidence: 20, sources: [SRC_SIU.crunchbase, SRC_SIU.coinGecko] },
+			], subtotalUSD: 105_000_000, avgConfidence: 37 },
+			{ category: "investments", claims: [
+				{ id: "ys6-5", description: "Blockchain/Web3 portfolio (heavily marked down but some survivors)", estimatedValueUSD: 150_000_000, confidence: 30, sources: [SRC_SIU.crunchbase] },
+			], subtotalUSD: 150_000_000, avgConfidence: 30 },
+			{ category: "alternatives", claims: [
+				{ id: "ys6-6", description: "Hong Kong property and other tangible assets", estimatedValueUSD: 7_000_000, confidence: 40, sources: [{ id: "hk-prop2", label: "HK property market data", type: "market-data" }] },
+			], subtotalUSD: 7_000_000, avgConfidence: 40 },
+		],
+		phaseWealthUSD: 1_462_000_000, cumulativeWealthUSD: 2_400_000_000,
+		keyEvents: ["2023: SAND drops below $0.50", "2023-06: HK launches virtual asset regulatory framework", "2024: Animoca active in HK Web3 hub strategy", "2024: No down-round — maintains $5.9B last-round valuation"],
 	},
 ];
 
-const HIGH_RISK_WEALTH: SowWealthItem[] = [
+// ── Helper: aggregate wealth by category ────────────────────────
+
+function aggregateWealth(timeline: CareerPhase[]): { category: WealthCategory; totalUSD: number; percentage: number; avgConfidence: number }[] {
+	const totals: Record<WealthCategory, { sum: number; confSum: number; count: number }> = {
+		income: { sum: 0, confSum: 0, count: 0 },
+		companies: { sum: 0, confSum: 0, count: 0 },
+		investments: { sum: 0, confSum: 0, count: 0 },
+		alternatives: { sum: 0, confSum: 0, count: 0 },
+		crypto: { sum: 0, confSum: 0, count: 0 },
+	};
+	// Use only the last phase for current breakdown
+	const lastPhase = timeline[timeline.length - 1];
+	for (const cat of lastPhase.categories) {
+		totals[cat.category].sum += cat.subtotalUSD;
+		for (const c of cat.claims) {
+			totals[cat.category].confSum += c.confidence;
+			totals[cat.category].count++;
+		}
+	}
+	const grandTotal = Object.values(totals).reduce((s, t) => s + t.sum, 0);
+	return (Object.keys(totals) as WealthCategory[]).map((cat) => ({
+		category: cat,
+		totalUSD: totals[cat].sum,
+		percentage: grandTotal > 0 ? (totals[cat].sum / grandTotal) * 100 : 0,
+		avgConfidence: totals[cat].count > 0 ? Math.round(totals[cat].confSum / totals[cat].count) : 0,
+	}));
+}
+
+function overallConfidence(timeline: CareerPhase[]): number {
+	let totalWeight = 0;
+	let weightedConf = 0;
+	const last = timeline[timeline.length - 1];
+	for (const cat of last.categories) {
+		for (const cl of cat.claims) {
+			weightedConf += cl.confidence * cl.estimatedValueUSD;
+			totalWeight += cl.estimatedValueUSD;
+		}
+	}
+	return totalWeight > 0 ? Math.round(weightedConf / totalWeight) : 0;
+}
+
+// ── Data Sources (for generating animation) ─────────────────────
+
+const JACK_MA_SOURCES: DataSourceDef[] = [
+	{ id: "ds-1", name: "SEC EDGAR — Form F-1, 20-F filings", provider: "U.S. Securities and Exchange Commission", category: "Regulatory Filings", delayMs: 1800 },
+	{ id: "ds-2", name: "NYSE Historical Market Data (BABA)", provider: "New York Stock Exchange", category: "Market Data", delayMs: 1200 },
+	{ id: "ds-3", name: "Bloomberg Billionaires Index", provider: "Bloomberg LP", category: "Wealth Estimates", delayMs: 2200 },
+	{ id: "ds-4", name: "SAMR National Enterprise Credit System", provider: "State Administration for Market Regulation", category: "Corporate Registry", delayMs: 1500 },
+	{ id: "ds-5", name: "PBOC Ant Group Regulatory Filings", provider: "People's Bank of China", category: "Regulatory Filings", delayMs: 2000 },
+	{ id: "ds-6", name: "Forbes Real-Time Billionaires", provider: "Forbes Media", category: "Wealth Estimates", delayMs: 800 },
+	{ id: "ds-7", name: "Hong Kong Land Registry", provider: "HKSAR Government", category: "Property Records", delayMs: 1400 },
+	{ id: "ds-8", name: "Dow Jones Adverse Media Screening", provider: "Dow Jones Risk & Compliance", category: "Adverse Media", delayMs: 1600 },
+	{ id: "ds-9", name: "OFAC / EU / UN Sanctions Lists", provider: "Multi-jurisdictional", category: "Sanctions Screening", delayMs: 900 },
+	{ id: "ds-10", name: "PEP Database (Global)", provider: "World-Check / Dow Jones", category: "PEP Screening", delayMs: 1100 },
+	{ id: "ds-11", name: "Crunchbase — Investment Portfolio", provider: "Crunchbase Inc.", category: "Investment Data", delayMs: 1300 },
+	{ id: "ds-12", name: "Singapore ACRA Registry", provider: "Accounting and Corporate Regulatory Authority", category: "Trust & Structures", delayMs: 1700 },
+];
+
+const YAT_SIU_SOURCES: DataSourceDef[] = [
+	{ id: "ds-1", name: "HK Companies Registry (CR Online)", provider: "HKSAR Companies Registry", category: "Corporate Registry", delayMs: 1500 },
+	{ id: "ds-2", name: "ASX Historical Data (Animoca)", provider: "Australian Securities Exchange", category: "Market Data", delayMs: 1800 },
+	{ id: "ds-3", name: "CoinGecko — SAND Token Data", provider: "CoinGecko", category: "Crypto Market Data", delayMs: 900 },
+	{ id: "ds-4", name: "CoinMarketCap — Token Holdings", provider: "CoinMarketCap", category: "Crypto Market Data", delayMs: 800 },
+	{ id: "ds-5", name: "Etherscan / Polygon — On-chain Analysis", provider: "Blockchain Explorers", category: "On-chain Data", delayMs: 2200 },
+	{ id: "ds-6", name: "DappRadar — NFT Portfolio Valuation", provider: "DappRadar", category: "NFT Valuations", delayMs: 2000 },
+	{ id: "ds-7", name: "Crunchbase — Animoca Investment Portfolio", provider: "Crunchbase Inc.", category: "Investment Data", delayMs: 1300 },
+	{ id: "ds-8", name: "Bloomberg Company Profile", provider: "Bloomberg LP", category: "Company Intelligence", delayMs: 1600 },
+	{ id: "ds-9", name: "Forbes / Forbes Crypto Billionaires", provider: "Forbes Media", category: "Wealth Estimates", delayMs: 700 },
+	{ id: "ds-10", name: "Dow Jones Adverse Media Screening", provider: "Dow Jones Risk & Compliance", category: "Adverse Media", delayMs: 1400 },
+	{ id: "ds-11", name: "OFAC / EU / UN Sanctions Lists", provider: "Multi-jurisdictional", category: "Sanctions Screening", delayMs: 900 },
+	{ id: "ds-12", name: "HKMA Virtual Asset Registry", provider: "Hong Kong Monetary Authority", category: "Regulatory Data", delayMs: 1200 },
+];
+
+// ── Company Nodes (for network graph) ───────────────────────────
+
+const JACK_MA_COMPANIES: CompanyNode[] = [
+	{ name: "Alibaba Group (NYSE: BABA)", role: "Founder & Former Chairman", ownership: "~4.5%", status: "active", valuation: "$215B" },
+	{ name: "Ant Group", role: "Co-founder, former controlling shareholder", ownership: "~8%", status: "restructured", valuation: "~$70B" },
+	{ name: "Yunfeng Capital", role: "Co-founder", ownership: "GP interest", status: "active", valuation: "AUM ~$8B" },
+	{ name: "Jack Ma Foundation", role: "Founder", status: "active" },
+	{ name: "Singapore Family Trust", role: "Settlor", status: "active", valuation: "$2.4B+" },
+];
+
+const YAT_SIU_COMPANIES: CompanyNode[] = [
+	{ name: "Animoca Brands", role: "Co-founder & Chairman", ownership: "~30-40%", status: "active", valuation: "$5.9B (last round)" },
+	{ name: "The Sandbox", role: "Parent company (via Animoca)", ownership: "Subsidiary", status: "active", valuation: "SAND mcap ~$900M" },
+	{ name: "Outblaze Limited", role: "Founder", ownership: "Majority", status: "exited", valuation: "Messaging sold to IBM" },
+	{ name: "Animoca Ventures", role: "GP", ownership: "GP interest", status: "active", valuation: "340+ investments" },
+	{ name: "nWay (fighting games)", role: "Via Animoca", ownership: "Subsidiary", status: "active" },
+];
+
+// ── Key Parameters ──────────────────────────────────────────────
+
+const JACK_MA_PARAMS: KeyParameter[] = [
+	{ label: "Wealth Plausibility", value: "High — career trajectory clearly explains wealth accumulation", status: "normal" },
+	{ label: "Source Diversity", value: "12 independent sources across filings, market data, registries", status: "normal" },
+	{ label: "Overall Confidence", value: `${overallConfidence(JACK_MA_CAREER)}%`, status: "normal" },
+	{ label: "Regulatory Exposure", value: "Significant — Ant Group restructuring, Alibaba antitrust fine", status: "warning" },
+	{ label: "PEP Status", value: "Near-match — political connections in China require monitoring", status: "warning" },
+	{ label: "Wealth Volatility", value: "Moderate — Alibaba stock fluctuations, Ant Group valuation uncertainty", status: "warning" },
+	{ label: "Jurisdictional Complexity", value: "High — China, Hong Kong, Singapore, global structures", status: "warning" },
+	{ label: "Transparency Score", value: "Good — SEC filings, NYSE listing provide verified data", status: "normal" },
+];
+
+const YAT_SIU_PARAMS: KeyParameter[] = [
+	{ label: "Wealth Plausibility", value: "Plausible but volatile — majority tied to crypto asset valuations", status: "warning" },
+	{ label: "Source Diversity", value: "12 sources but crypto data has lower reliability", status: "warning" },
+	{ label: "Overall Confidence", value: `${overallConfidence(YAT_SIU_CAREER)}%`, status: "critical" },
+	{ label: "Regulatory Exposure", value: "High — ASX delisting, crypto regulatory uncertainty globally", status: "critical" },
+	{ label: "PEP Status", value: "Clear — no PEP matches or political exposure", status: "normal" },
+	{ label: "Wealth Volatility", value: "Extreme — 90%+ drawdown in crypto assets from peak", status: "critical" },
+	{ label: "Jurisdictional Complexity", value: "Moderate — Hong Kong primary, Australia (former), global crypto", status: "warning" },
+	{ label: "Transparency Score", value: "Low — private company, crypto assets, no mandatory disclosure", status: "critical" },
+];
+
+// ── PEP/Sanctions Screening ─────────────────────────────────────
+
+export const PEP_SCREENING: PepScreeningEntry[] = [
 	{
-		category: "Consulting Income",
-		description:
-			"Self-declared independent consultant operating through Shanghai Yuwei Consulting Co., Ltd. (sole shareholder). Social insurance contributions and tax filings indicate ¥280K–¥420K annual income. Limited third-party corroboration — income self-reported through sole proprietorship.",
-		estimatedAnnualRMB: 350_000,
-		estimatedTotalRMB: null,
-		confidence: "Low",
+		subjectName: "Jack Ma (Ma Yun)", subjectNameCn: "马云", riskRating: "Medium",
+		lastScreened: "2026-05-17",
+		listsChecked: ["OFAC SDN", "EU Consolidated", "UN Security Council", "PBOC", "HK SFC", "World-Check PEP", "Dow Jones Watchlist"],
+		pepHits: 1,
+		pepDetails: "Near-match: CPPCC delegate (12th National Committee, 2013-2018). Not a current PEP but retains political connections in China. Requires enhanced monitoring.",
+		sanctionsHits: 0,
+		adverseMedia: 3,
+		adverseMediaDetails: "Ant Group IPO suspension (2020), Alibaba $2.8B antitrust fine (2021), 3-month public disappearance (2020-2021). All widely reported by major outlets.",
+		overallStatus: "Review Required",
 	},
 	{
-		category: "Business Holdings — Yuwei Consulting",
-		description:
-			"100% ownership of Shanghai Yuwei Consulting (registered capital ¥500K, 2 employees). Minimal asset value — single-person consulting vehicle.",
-		estimatedAnnualRMB: null,
-		estimatedTotalRMB: 500_000,
-		confidence: "Low",
+		subjectName: "Yat Siu", subjectNameCn: "蕭逸", riskRating: "High",
+		lastScreened: "2026-05-17",
+		listsChecked: ["OFAC SDN", "EU Consolidated", "UN Security Council", "HKMA", "ASIC", "World-Check PEP", "Dow Jones Watchlist"],
+		pepHits: 0,
+		sanctionsHits: 0,
+		adverseMedia: 2,
+		adverseMediaDetails: "ASX delisting of Animoca Brands over crypto accounting disputes (2020). General crypto industry regulatory scrutiny coverage.",
+		overallStatus: "Clear",
 	},
 	{
-		category: "Business Holdings — Meihe Trading",
-		description:
-			"60% shareholding in Shanghai Meihe Trading (registered capital ¥3M). Company is under active regulatory investigation by Shanghai Market Supervision Bureau. Tax credit rating: C. Valuation uncertain due to investigation status.",
-		estimatedAnnualRMB: null,
-		estimatedTotalRMB: 1_800_000,
-		confidence: "Low",
+		subjectName: "Elon Musk", riskRating: "Medium",
+		lastScreened: "2026-05-15",
+		listsChecked: ["OFAC SDN", "EU Consolidated", "UN Security Council", "SEC", "World-Check PEP", "Dow Jones Watchlist"],
+		pepHits: 1,
+		pepDetails: "Current US government official — Department of Government Efficiency (DOGE). Active PEP classification.",
+		sanctionsHits: 0,
+		adverseMedia: 5,
+		adverseMediaDetails: "SEC enforcement actions (Tesla tweets), DoJ investigations, multiple regulatory inquiries across jurisdictions.",
+		overallStatus: "Flagged",
 	},
 	{
-		category: "Business Holdings — Qianhe Real Estate (Dissolved)",
-		description:
-			"Former 40% shareholder of Hangzhou Qianhe Real Estate Co., Ltd. (dissolved Oct 2024, registered capital ¥10M). 2 outstanding enforcement records at dissolution. Historical value — current realisable value unknown.",
-		estimatedAnnualRMB: null,
-		estimatedTotalRMB: 0,
-		confidence: "Low",
-	},
-	{
-		category: "Property",
-		description:
-			"Three residential properties in Shanghai: (1) 75m² apartment in Jing'an District — est. ¥8,200,000. (2) 62m² apartment in Pudong — est. ¥5,100,000. (3) 55m² apartment in Minhang — est. ¥5,200,000. Total property value is disproportionate to verified income.",
-		estimatedAnnualRMB: null,
-		estimatedTotalRMB: 18_500_000,
-		confidence: "High",
-	},
-	{
-		category: "Unexplained Gap",
-		description:
-			"Verified annual income (¥280K–¥420K) cannot account for accumulated property holdings (¥18.5M) over the subject's career span (approx. 10 working years since age 22). Even assuming maximum savings rate, the gap exceeds ¥800K per year. Sources of funds for property acquisitions are not explained by verified data.",
-		estimatedAnnualRMB: 800_000,
-		estimatedTotalRMB: null,
-		confidence: "Low",
+		subjectName: "Changpeng Zhao (CZ)", subjectNameCn: "赵长鹏", riskRating: "High",
+		lastScreened: "2026-05-16",
+		listsChecked: ["OFAC SDN", "EU Consolidated", "UN Security Council", "DOJ", "FinCEN", "World-Check PEP", "Dow Jones Watchlist"],
+		pepHits: 0,
+		sanctionsHits: 0,
+		adverseMedia: 8,
+		adverseMediaDetails: "DOJ guilty plea (Nov 2023) for BSA/AML violations. $4.3B Binance settlement. 4-month prison sentence served. Ongoing regulatory scrutiny.",
+		overallStatus: "Flagged",
 	},
 ];
 
-const HIGH_RISK_NARRATIVE = `Liu Yuwei (刘雨薇), female, 32, presents as an independent management consultant based in Shanghai. Her identity has been verified through MPS 4-factor authentication. However, multiple data sources raise concerns about the consistency and plausibility of her declared source of wealth.
+// ── Narratives ──────────────────────────────────────────────────
 
-Her stated occupation is self-employed consulting, operated through Shanghai Yuwei Consulting Co., Ltd. — a sole-proprietorship vehicle with ¥500,000 registered capital and 2 employees. Social insurance records and tax filings indicate annual income in the ¥280,000–¥420,000 range. This income level is inconsistent with her property portfolio: three Shanghai apartments with a combined estimated market value of ¥18,500,000. Over an approximately 10-year career, her verified income cannot plausibly account for this level of asset accumulation, even under generous savings assumptions. The annual gap between verified income and apparent wealth accumulation exceeds ¥800,000.
+const JACK_MA_NARRATIVE = `Jack Ma's wealth trajectory is one of the most documented in modern Chinese business history. His estimated net worth of approximately $25.5 billion is overwhelmingly derived from his founding equity in Alibaba Group, which was crystallized through the company's record-breaking $25 billion NYSE IPO in September 2014. SEC Form F-1 filings confirm Ma held approximately 6.2% of Alibaba shares at IPO, valued at ~$14.3 billion against the initial $231 billion market capitalization.
 
-Corporate associations introduce additional concerns. Ms. Liu holds a 60% stake in Shanghai Meihe Trading Co., Ltd., which is currently under active investigation by the Shanghai Market Supervision Bureau (opened January 2026) and carries a C-rated tax credit. She was also previously a 40% shareholder in Hangzhou Qianhe Real Estate Co., Ltd., which was dissolved in October 2024 during the real estate regulatory crackdown, with 2 outstanding enforcement records at the time of dissolution.
+The wealth accumulation path is clearly traceable: from a $60,000 pooled founding investment in 1999, through successive institutional rounds (Goldman Sachs $5M, SoftBank $20M, Yahoo $1B), to public market valuation. This represents the highest-confidence portion of his wealth profile, backed by regulatory filings and exchange data.
 
-Litigation records show two civil cases: one resolved service fee dispute (¥450,000, plaintiff, 2023) and one ongoing contract dispute (¥2,100,000, defendant, hearing Q3 2026). Her mobile number is registered in Hangzhou rather than her declared residence of Shanghai, and is linked to financial accounts at 6 institutions across 3 provinces — an unusual pattern that elevates her fraud risk score.
+Lower-confidence components include his stake in Ant Group (restructured under PBOC supervision after the 2020 IPO suspension, current valuation estimates range from $70-80B), his Yunfeng Capital fund interests, and real estate holdings. The 2023 transfer of $2.4B in Alibaba shares to a Singapore family trust adds jurisdictional complexity.
 
-In summary, the subject's verified income does not support her declared wealth. The property-to-income ratio is unexplained, one associated company is under investigation, another has been dissolved with enforcement records, and there are tax filing discrepancies across two years. This case requires enhanced due diligence with direct client engagement to clarify the source of funds for property acquisitions and the nature of trading activities through Meihe Trading.`;
+Key risk factors include significant regulatory exposure (Ant Group restructuring, $2.8B Alibaba antitrust fine), PEP near-match status from his former CPPCC membership, and ongoing uncertainty about the true value of his Ant Group stake post-restructuring. Despite these factors, the overall wealth plausibility score is high — the career trajectory clearly explains the accumulation of wealth at this scale.`;
 
-const LOW_RISK_SCREENING: ScreeningAlert[] = [
-	{
-		date: "2026-04-28",
-		type: "Sanctions",
-		severity: "Info",
-		title: "Sanctions screening clear — quarterly refresh",
-		detail: "Quarterly sanctions screening against OFAC SDN, EU Consolidated List, UN Security Council, and PBOC blacklist completed. No matches found for subject or associated entities.",
-	},
-	{
-		date: "2026-04-12",
-		type: "Corporate Change",
-		severity: "Info",
-		title: "Annual return filed — Shenzhen Yunchuang Technology",
-		detail: "2025 annual return filed with Shenzhen Market Supervision Bureau. No changes to shareholders, directors, or registered capital. Revenue reported at ¥12.3M (+8% YoY).",
-	},
-	{
-		date: "2026-03-22",
-		type: "Corporate Change",
-		severity: "Info",
-		title: "Employee count update — Shenzhen Yunchuang Technology",
-		detail: "Social insurance registration count increased from 45 to 52 employees. Consistent with reported business growth trajectory.",
-	},
-	{
-		date: "2026-03-08",
-		type: "Corporate Change",
-		severity: "Info",
-		title: "New patent registered — Guangdong Xinhe Software",
-		detail: "Utility patent #ZL202510234567.8 registered for cloud infrastructure optimization method. Business scope remains consistent with prior filings.",
-	},
-	{
-		date: "2026-02-15",
-		type: "Tax",
-		severity: "Info",
-		title: "FY2025 tax filing confirmed — Chen Zhiyuan",
-		detail: "Individual income tax filing for FY2025 confirmed by STA. Declared income of ¥1,280,000 is consistent with prior filings and social insurance contributions. No discrepancies.",
-	},
+const YAT_SIU_NARRATIVE = `Yat Siu's estimated net worth of approximately $2.4 billion represents one of the more complex wealth profiles in the technology sector due to its heavy concentration in crypto assets and private company equity. Unlike traditional tech billionaires whose wealth is anchored to publicly traded shares, approximately 85% of Siu's estimated wealth derives from two sources: his co-founder stake in Animoca Brands (last valued at $5.9B in January 2022) and crypto/NFT holdings whose valuations have experienced extreme volatility.
+
+The career trajectory shows a credible progression from early tech roles at Atari, through the founding and IBM exit of Outblaze (~$15M), to the strategic pivot of Animoca Brands into blockchain gaming. The acquisition of The Sandbox in 2018 proved transformative — SAND token reached an all-time high of $8.40 in November 2021.
+
+However, significant valuation uncertainty persists. SAND has declined approximately 93% from its peak. NFT market values have collapsed 80-95% from 2021 highs. Animoca Brands' $5.9B valuation is based on the last funding round (January 2022) and has not been tested by a subsequent round or public offering. Secondary market estimates suggest a 30-50% discount may be appropriate.
+
+The overall confidence score is notably lower than typical UHNW profiles. On-chain data provides some transparency for crypto holdings, but private company valuations, unrealized investment returns from 340+ portfolio companies, and illiquid NFT holdings create substantial uncertainty. The ASX delisting in 2020 removed mandatory public disclosure requirements, further reducing transparency.`;
+
+// ── Monitoring Table ────────────────────────────────────────────
+
+export const HNW_MONITORING: HnwMonitoringEntry[] = [
+	{ id: "m1", name: "Jack Ma", nameCn: "马云", industry: "E-Commerce / Fintech", estimatedNetWorthUSD: 25_500_000_000, riskRating: "Medium", lastScreened: "2026-05-17", openAlerts: 2, status: "Under Review", screeningFrequency: "Monthly" },
+	{ id: "m2", name: "Yat Siu", nameCn: "蕭逸", industry: "Blockchain Gaming / Web3", estimatedNetWorthUSD: 2_400_000_000, riskRating: "High", lastScreened: "2026-05-17", openAlerts: 3, status: "Active", screeningFrequency: "Weekly" },
+	{ id: "m3", name: "Elon Musk", industry: "EV / Space / AI", estimatedNetWorthUSD: 240_000_000_000, riskRating: "Medium", lastScreened: "2026-05-15", openAlerts: 5, status: "Flagged", screeningFrequency: "Weekly" },
+	{ id: "m4", name: "Changpeng Zhao", nameCn: "赵长鹏", industry: "Crypto Exchanges", estimatedNetWorthUSD: 33_000_000_000, riskRating: "High", lastScreened: "2026-05-16", openAlerts: 4, status: "Flagged", screeningFrequency: "Weekly" },
+	{ id: "m5", name: "Masayoshi Son", nameCn: "孙正义", industry: "Venture Capital / Telecom", estimatedNetWorthUSD: 10_300_000_000, riskRating: "Low", lastScreened: "2026-05-14", openAlerts: 0, status: "Active", screeningFrequency: "Monthly" },
+	{ id: "m6", name: "Li Ka-shing", nameCn: "李嘉诚", industry: "Real Estate / Conglomerate", estimatedNetWorthUSD: 35_000_000_000, riskRating: "Low", lastScreened: "2026-05-12", openAlerts: 1, status: "Active", screeningFrequency: "Quarterly" },
+	{ id: "m7", name: "Vitalik Buterin", industry: "Blockchain / Ethereum", estimatedNetWorthUSD: 1_500_000_000, riskRating: "Medium", lastScreened: "2026-05-16", openAlerts: 1, status: "Active", screeningFrequency: "Monthly" },
 ];
 
-const HIGH_RISK_SCREENING: ScreeningAlert[] = [
-	{
-		date: "2026-05-10",
-		type: "Regulatory",
-		severity: "Critical",
-		title: "Investigation update — Shanghai Meihe Trading",
-		detail: "Shanghai Market Supervision Bureau issued preliminary findings. Company ordered to produce financial records for 2023–2025. Administrative hearing scheduled for June 2026.",
-	},
-	{
-		date: "2026-04-28",
-		type: "Litigation",
-		severity: "Warning",
-		title: "New court filing — contract dispute escalation",
-		detail: "Zhejiang Huaxin Trading Co. filed supplementary claim increasing disputed amount from ¥2,100,000 to ¥3,450,000. Additional allegations of breach of fiduciary duty.",
-	},
-	{
-		date: "2026-04-15",
-		type: "Adverse Media",
-		severity: "Warning",
-		title: "Media mention — Shanghai real estate investigations",
-		detail: "Subject's name appeared in a Caixin investigative report on former Hangzhou Qianhe Real Estate shareholders. Article alleges undisclosed related-party transactions during 2022–2023.",
-	},
-	{
-		date: "2026-03-22",
-		type: "Tax",
-		severity: "Warning",
-		title: "Tax audit notice issued — Shanghai Yuwei Consulting",
-		detail: "State Taxation Administration issued audit notice for FY2024. Scope: individual income tax and corporate income tax cross-verification.",
-	},
-	{
-		date: "2026-02-14",
-		type: "Corporate Change",
-		severity: "Info",
-		title: "Director resignation — Shanghai Meihe Trading",
-		detail: "Zhang Wei (40% shareholder) resigned as co-director. Liu Yuwei now sole director. No corresponding share transfer recorded.",
-	},
-	{
-		date: "2026-01-30",
-		type: "Sanctions",
-		severity: "Warning",
-		title: "Near-match on PEP database — secondary association",
-		detail: "Automated PEP screening flagged a partial name match for 'Liu Wei' (brother, per client declaration) against provincial-level government official registry. Manual review determined this is a different individual — cleared, but flagged for ongoing monitoring.",
-	},
-	{
-		date: "2026-01-15",
-		type: "Adverse Media",
-		severity: "Warning",
-		title: "Social media activity flagged — luxury lifestyle inconsistency",
-		detail: "Automated adverse media scan detected social media posts showing overseas travel (Maldives, Switzerland) and luxury goods purchases inconsistent with declared ¥350K annual income. Screenshots archived for EDD file.",
-	},
-	{
-		date: "2025-12-20",
-		type: "Regulatory",
-		severity: "Critical",
-		title: "SAMR administrative penalty — Shanghai Meihe Trading",
-		detail: "Administrative penalty of ¥50,000 issued by Shanghai Market Supervision Bureau for failure to file 2024 annual report within statutory deadline. Second consecutive year of late filing.",
-	},
+// ── Notifications ───────────────────────────────────────────────
+
+export const HNW_NOTIFICATIONS: HnwNotification[] = [
+	{ id: "n1", type: "alert", title: "Adverse media hit — Jack Ma", detail: "Bloomberg reports on Ant Group regulatory developments. New PBOC disclosure requirements affecting valuation estimates.", time: "3 hours ago", subjectName: "Jack Ma", read: false },
+	{ id: "n2", type: "alert", title: "SAND token price alert — Yat Siu", detail: "SAND dropped 12% in 24h to $0.28. Portfolio mark-to-market valuation update required.", time: "5 hours ago", subjectName: "Yat Siu", read: false },
+	{ id: "n3", type: "update", title: "SEC filing update — Alibaba Group", detail: "Alibaba 20-F annual report filed. Updated share structure and beneficial ownership data available.", time: "1 day ago", subjectName: "Jack Ma", read: true },
+	{ id: "n4", type: "review-due", title: "Quarterly review due — Li Ka-shing", detail: "Routine quarterly screening and wealth re-assessment scheduled. 8 data sources queued.", time: "2 days ago", subjectName: "Li Ka-shing", read: true },
+	{ id: "n5", type: "completed", title: "Assessment complete — Masayoshi Son", detail: "Monthly screening completed. No material changes. SoftBank Vision Fund NAV stable.", time: "4 days ago", subjectName: "Masayoshi Son", read: true },
+	{ id: "n6", type: "alert", title: "PEP status change — Elon Musk", detail: "Updated PEP classification following Department of Government Efficiency role. Enhanced monitoring applied.", time: "1 week ago", subjectName: "Elon Musk", read: true },
+	{ id: "n7", type: "update", title: "On-chain activity — Vitalik Buterin", detail: "Large ETH transfer detected from known Buterin wallet. Charitable donation to Kanro confirmed.", time: "1 week ago", subjectName: "Vitalik Buterin", read: true },
+	{ id: "n8", type: "alert", title: "Regulatory update — CZ / Binance", detail: "FinCEN monitoring report filed. Post-settlement compliance status reviewed.", time: "2 weeks ago", subjectName: "Changpeng Zhao", read: true },
 ];
 
-const LOW_RISK_PARAMS: SowReport["keyParameters"] = [
-	{ label: "Income-to-Wealth Ratio", value: "1 : 7.8", status: "normal" },
-	{ label: "Wealth Accumulation Period", value: "20+ years", status: "normal" },
-	{ label: "Income Verification", value: "Corroborated", status: "normal" },
-	{ label: "Corporate Standing", value: "All Active / A-rated", status: "normal" },
-	{ label: "Litigation Exposure", value: "None", status: "normal" },
-	{ label: "Tax Compliance", value: "Consistent filings", status: "normal" },
-	{ label: "PEP / Sanctions", value: "Not listed", status: "normal" },
-	{ label: "Source of Funds", value: "Employment + Equity", status: "normal" },
-];
+// ── Assemble Reports ────────────────────────────────────────────
 
-const HIGH_RISK_PARAMS: SowReport["keyParameters"] = [
-	{ label: "Income-to-Wealth Ratio", value: "1 : 18.1", status: "critical" },
-	{ label: "Wealth Accumulation Period", value: "~10 years", status: "warning" },
-	{ label: "Income Verification", value: "Self-reported only", status: "warning" },
-	{ label: "Corporate Standing", value: "1 Under Investigation", status: "critical" },
-	{ label: "Litigation Exposure", value: "2 cases (1 ongoing)", status: "warning" },
-	{ label: "Tax Compliance", value: "Discrepancies 2023–24", status: "critical" },
-	{ label: "PEP / Sanctions", value: "Not listed", status: "normal" },
-	{ label: "Source of Funds", value: "Unexplained gap ¥800K+/yr", status: "critical" },
-];
-
-const LOW_RISK_DOCUMENTS: DocumentEvidence[] = [
-	{ id: "doc-1", name: "Signed_Consent_Form_ChenZhiyuan.pdf", type: "consent", format: "PDF", uploadedBy: "Analyst Wang", uploadedDate: "2026-05-17 09:15", sizeKB: 245, verified: true, verifiedBy: "Senior Analyst Li", verifiedDate: "2026-05-17 09:22", notes: "Original consent form with wet signature, countersigned by relationship manager." },
-	{ id: "doc-2", name: "ID_Card_Front_Back.jpg", type: "identity", format: "JPG", uploadedBy: "Analyst Wang", uploadedDate: "2026-05-17 09:16", sizeKB: 1830, verified: true, verifiedBy: "System (MPS 4-Factor)", verifiedDate: "2026-05-17 09:18" },
-	{ id: "doc-3", name: "Bank_Statement_CMB_2025Q4.pdf", type: "financial", format: "PDF", uploadedBy: "Analyst Wang", uploadedDate: "2026-05-17 09:20", sizeKB: 412, verified: true, verifiedBy: "Analyst Wang", verifiedDate: "2026-05-17 10:05", notes: "Quarterly statement from China Merchants Bank. Income deposits consistent with declared salary." },
-	{ id: "doc-4", name: "Yunchuang_Business_License.pdf", type: "corporate", format: "PDF", uploadedBy: "System (SAMR)", uploadedDate: "2026-05-17 09:35", sizeKB: 890, verified: true, verifiedBy: "System (SAMR Registry)", verifiedDate: "2026-05-17 09:35" },
-	{ id: "doc-5", name: "Tax_Certificate_FY2025.pdf", type: "financial", format: "PDF", uploadedBy: "Analyst Wang", uploadedDate: "2026-05-17 09:25", sizeKB: 156, verified: true, verifiedBy: "Analyst Wang", verifiedDate: "2026-05-17 10:10" },
-	{ id: "doc-6", name: "Property_Deed_Nanshan.pdf", type: "financial", format: "PDF", uploadedBy: "Analyst Wang", uploadedDate: "2026-05-17 09:28", sizeKB: 2100, verified: true, verifiedBy: "Senior Analyst Li", verifiedDate: "2026-05-17 10:30", notes: "Property registration certificate for Nanshan District apartment. Purchased 2018, mortgage fully paid." },
-];
-
-const HIGH_RISK_DOCUMENTS: DocumentEvidence[] = [
-	{ id: "doc-1", name: "Signed_Consent_Form_LiuYuwei.pdf", type: "consent", format: "PDF", uploadedBy: "Analyst Zhang", uploadedDate: "2026-05-17 10:05", sizeKB: 198, verified: true, verifiedBy: "Senior Analyst Li", verifiedDate: "2026-05-17 10:12" },
-	{ id: "doc-2", name: "ID_Card_Scan.jpg", type: "identity", format: "JPG", uploadedBy: "Analyst Zhang", uploadedDate: "2026-05-17 10:06", sizeKB: 1650, verified: true, verifiedBy: "System (MPS 4-Factor)", verifiedDate: "2026-05-17 10:08" },
-	{ id: "doc-3", name: "ICBC_Statement_2025H2.pdf", type: "financial", format: "PDF", uploadedBy: "Analyst Zhang", uploadedDate: "2026-05-17 10:15", sizeKB: 380, verified: true, verifiedBy: "Analyst Zhang", verifiedDate: "2026-05-17 11:00", notes: "Statement shows irregular large deposits not matching declared consulting income." },
-	{ id: "doc-4", name: "Yuwei_Consulting_Registration.pdf", type: "corporate", format: "PDF", uploadedBy: "System (SAMR)", uploadedDate: "2026-05-17 10:32", sizeKB: 560, verified: true, verifiedBy: "System (SAMR Registry)", verifiedDate: "2026-05-17 10:32" },
-	{ id: "doc-5", name: "Meihe_Trading_Investigation_Notice.pdf", type: "corporate", format: "PDF", uploadedBy: "Analyst Zhang", uploadedDate: "2026-05-17 10:40", sizeKB: 125, verified: true, verifiedBy: "Senior Analyst Li", verifiedDate: "2026-05-17 11:15", notes: "Official notice from Shanghai MSB re: investigation opened Jan 2026." },
-	{ id: "doc-6", name: "Property_Deed_Jingan.jpg", type: "financial", format: "JPG", uploadedBy: "Analyst Zhang", uploadedDate: "2026-05-17 10:20", sizeKB: 3200, verified: false, notes: "Pending verification — deed shows purchase price ¥7.8M in 2022, inconsistent with declared income at that time." },
-	{ id: "doc-7", name: "Client_Email_SOF_Explanation.pdf", type: "correspondence", format: "PDF", uploadedBy: "Analyst Zhang", uploadedDate: "2026-05-17 14:30", sizeKB: 85, verified: false, notes: "Client's email response regarding source of funds for property. Claims family gift — no supporting documentation provided yet." },
-];
-
-const LOW_RISK_AUDIT: AuditTrailEntry[] = [
-	{ id: "at-1", timestamp: "2026-05-17 09:10:00", action: "Case created", actor: "Analyst Wang", actorRole: "L2 Analyst", category: "system", detail: "New SOW case initiated for onboarding. Client referred by Private Banking RM." },
-	{ id: "at-2", timestamp: "2026-05-17 09:15:00", action: "Consent form uploaded", actor: "Analyst Wang", actorRole: "L2 Analyst", category: "analyst", detail: "Signed consent form received and uploaded. Original retained in physical file." },
-	{ id: "at-3", timestamp: "2026-05-17 09:18:00", action: "Identity verified (MPS 4-Factor)", actor: "System", actorRole: "Automated", category: "data", detail: "All 4 factors confirmed against MPS database. Verification ID: MPS-2026-0517-88421." },
-	{ id: "at-4", timestamp: "2026-05-17 09:25:00", action: "Supporting documents uploaded", actor: "Analyst Wang", actorRole: "L2 Analyst", category: "analyst", detail: "Bank statement, tax certificate, and property deed uploaded for verification." },
-	{ id: "at-5", timestamp: "2026-05-17 09:35:00", action: "Automated assessment initiated", actor: "System", actorRole: "Automated", category: "system", detail: "13 data sources queried. Assessment completed in 28.4 seconds." },
-	{ id: "at-6", timestamp: "2026-05-17 10:05:00", action: "Document verification complete", actor: "Analyst Wang", actorRole: "L2 Analyst", category: "analyst", detail: "All uploaded documents reviewed and cross-referenced with data source findings." },
-	{ id: "at-7", timestamp: "2026-05-17 10:30:00", action: "Senior review completed", actor: "Senior Analyst Li", actorRole: "L3 Senior Analyst", category: "approval", detail: "Report reviewed. Findings consistent. Risk rating confirmed as Low." },
-	{ id: "at-8", timestamp: "2026-05-17 10:45:00", action: "Case approved — standard onboarding", actor: "Senior Analyst Li", actorRole: "L3 Senior Analyst", category: "approval", detail: "SOW assessment approved. Client cleared for standard onboarding. Annual review scheduled for 2027-05-17." },
-];
-
-const HIGH_RISK_AUDIT: AuditTrailEntry[] = [
-	{ id: "at-1", timestamp: "2026-05-17 10:00:00", action: "Case created", actor: "Analyst Zhang", actorRole: "L2 Analyst", category: "system", detail: "New SOW case initiated. Client referred by Investment Banking division." },
-	{ id: "at-2", timestamp: "2026-05-17 10:05:00", action: "Consent form uploaded", actor: "Analyst Zhang", actorRole: "L2 Analyst", category: "analyst" },
-	{ id: "at-3", timestamp: "2026-05-17 10:08:00", action: "Identity verified (MPS 4-Factor)", actor: "System", actorRole: "Automated", category: "data", detail: "All 4 factors confirmed. Verification ID: MPS-2026-0517-91034." },
-	{ id: "at-4", timestamp: "2026-05-17 10:15:00", action: "Supporting documents uploaded", actor: "Analyst Zhang", actorRole: "L2 Analyst", category: "analyst", detail: "Bank statement and ID scan uploaded." },
-	{ id: "at-5", timestamp: "2026-05-17 10:32:00", action: "Automated assessment initiated", actor: "System", actorRole: "Automated", category: "system", detail: "13 data sources queried. Assessment completed in 32.1 seconds." },
-	{ id: "at-6", timestamp: "2026-05-17 11:00:00", action: "Multiple risk flags identified", actor: "System", actorRole: "Automated", category: "data", detail: "Automated risk scoring flagged: income gap, litigation, corporate investigation, tax discrepancy." },
-	{ id: "at-7", timestamp: "2026-05-17 11:15:00", action: "Investigation notice uploaded", actor: "Analyst Zhang", actorRole: "L2 Analyst", category: "analyst", detail: "Shanghai MSB investigation notice for Meihe Trading added to case file." },
-	{ id: "at-8", timestamp: "2026-05-17 11:30:00", action: "Escalated to Senior Analyst", actor: "Analyst Zhang", actorRole: "L2 Analyst", category: "escalation", detail: "Case escalated due to High risk rating. Multiple unresolved findings require senior review." },
-	{ id: "at-9", timestamp: "2026-05-17 13:00:00", action: "Senior review — EDD recommended", actor: "Senior Analyst Li", actorRole: "L3 Senior Analyst", category: "approval", detail: "Reviewed all findings. Recommending enhanced due diligence interview. Property source of funds must be clarified." },
-	{ id: "at-10", timestamp: "2026-05-17 13:15:00", action: "MLRO notification sent", actor: "Senior Analyst Li", actorRole: "L3 Senior Analyst", category: "escalation", detail: "Case referred to MLRO (Chen Wei) for independent review per policy for cases scoring >70." },
-	{ id: "at-11", timestamp: "2026-05-17 14:00:00", action: "EDD interview scheduled", actor: "Senior Analyst Li", actorRole: "L3 Senior Analyst", category: "analyst", detail: "Enhanced due diligence interview scheduled for 2026-05-24 at 14:00 CST." },
-	{ id: "at-12", timestamp: "2026-05-17 14:30:00", action: "Client correspondence received", actor: "Analyst Zhang", actorRole: "L2 Analyst", category: "analyst", detail: "Client responded via email regarding source of funds query. Claims family gift for property — no documentation provided." },
-	{ id: "at-13", timestamp: "2026-05-17 15:00:00", action: "Remediation tasks created", actor: "Senior Analyst Li", actorRole: "L3 Senior Analyst", category: "analyst", detail: "4 remediation items assigned: property SOF docs, EDD interview, Meihe Trading investigation follow-up, tax discrepancy review." },
-];
-
-const LOW_RISK_REMEDIATION: RemediationItem[] = [
-	{ id: "rem-1", title: "Schedule annual periodic review", description: "Configure automated annual review with full data source refresh for 2027-05-17.", priority: "Low", status: "Resolved", assignee: "System", createdDate: "2026-05-17", dueDate: "2026-05-24", resolvedDate: "2026-05-17", category: "monitoring" },
-	{ id: "rem-2", title: "Activate perpetual screening", description: "Enable monthly automated screening across sanctions, PEP, adverse media, and corporate registry sources.", priority: "Medium", status: "Resolved", assignee: "System", createdDate: "2026-05-17", dueDate: "2026-05-17", resolvedDate: "2026-05-17", category: "monitoring" },
-];
-
-const HIGH_RISK_REMEDIATION: RemediationItem[] = [
-	{ id: "rem-1", title: "Obtain property source of funds documentation", description: "Request client to provide documentary evidence for source of funds for 3 Shanghai property acquisitions (total ¥18.5M). Acceptable: gift deed with donor's bank statement, sale contract showing prior asset sale, inheritance documentation.", priority: "Critical", status: "Open", assignee: "Analyst Zhang", createdDate: "2026-05-17", dueDate: "2026-05-31", category: "documentation" },
-	{ id: "rem-2", title: "Complete EDD interview", description: "Conduct enhanced due diligence interview with client to clarify: (1) source of funds for properties, (2) nature of Meihe Trading activities, (3) explanation for tax filing discrepancies.", priority: "Critical", status: "In Progress", assignee: "Senior Analyst Li", createdDate: "2026-05-17", dueDate: "2026-05-24", category: "verification" },
-	{ id: "rem-3", title: "Monitor Meihe Trading investigation outcome", description: "Track Shanghai MSB investigation progress. Administrative hearing scheduled June 2026. Request interim updates from public records.", priority: "High", status: "Open", assignee: "Analyst Zhang", createdDate: "2026-05-17", dueDate: "2026-07-31", category: "investigation" },
-	{ id: "rem-4", title: "Review tax filing discrepancies with STA records", description: "Cross-reference client's FY2023 and FY2024 tax returns against social insurance contributions and bank statement deposits. Quantify the gap.", priority: "High", status: "In Progress", assignee: "Analyst Zhang", createdDate: "2026-05-17", dueDate: "2026-06-15", category: "verification" },
-	{ id: "rem-5", title: "File STR if funds unexplained after 30 days", description: "Per PBOC directive, if source of funds for property acquisitions cannot be satisfactorily explained within 30 days of EDD request, file Suspicious Transaction Report.", priority: "Critical", status: "Open", assignee: "MLRO Chen Wei", createdDate: "2026-05-17", dueDate: "2026-06-24", category: "regulatory" },
-	{ id: "rem-6", title: "Activate weekly perpetual screening", description: "Enable weekly automated screening for high-risk subject across all data sources including sanctions, adverse media, court records, and corporate registry.", priority: "Medium", status: "Resolved", assignee: "System", createdDate: "2026-05-17", dueDate: "2026-05-17", resolvedDate: "2026-05-17", category: "monitoring" },
-];
-
-export const DASHBOARD_ISSUES: DashboardIssue[] = [
-	{ id: "iss-1", caseRef: "SOW-2025-0918-087", subjectName: "张丽华", type: "Unresolved Alert", severity: "Critical", description: "3 unresolved alerts including adverse media hit linked to regulatory investigation. Last reviewed 14 days ago.", daysPending: 14, assignee: "Senior Analyst Li" },
-	{ id: "iss-2", caseRef: "SOW-2026-0402-291", subjectName: "赵薇薇", type: "EDD Pending", severity: "Critical", description: "Enhanced due diligence interview scheduled but not completed. 5 active alerts pending resolution.", daysPending: 45, assignee: "Senior Analyst Li" },
-	{ id: "iss-3", caseRef: "SOW-2026-0402-291", subjectName: "赵薇薇", type: "Missing Document", severity: "High", description: "Client has not provided requested source of funds documentation for offshore transfers. Reminder sent 2 weeks ago.", daysPending: 30, assignee: "Analyst Zhang" },
-	{ id: "iss-4", caseRef: "SOW-2026-0428-195", subjectName: "林婉琪", type: "Unresolved Alert", severity: "High", description: "Possible OFAC SDN partial match for associated entity requires manual verification and clearance.", daysPending: 21, assignee: "Analyst Wang" },
-	{ id: "iss-5", caseRef: "SOW-2025-0918-087", subjectName: "张丽华", type: "Remediation Overdue", severity: "High", description: "Remediation task to obtain updated corporate filing from associated entity overdue by 8 days.", daysPending: 8, assignee: "Analyst Zhang" },
-	{ id: "iss-6", caseRef: "SOW-2026-0428-195", subjectName: "林婉琪", type: "Overdue Review", severity: "Medium", description: "90-day interim review for high-risk case is 5 days overdue. Re-query of 6 data sources required.", daysPending: 5, assignee: "Analyst Wang" },
-	{ id: "iss-7", caseRef: "SOW-2025-1203-412", subjectName: "王建国", type: "Data Source Error", severity: "Medium", description: "SAMR commercial registry query returned timeout during last automated monthly scan. Manual retry required.", daysPending: 3, assignee: "System" },
-];
-
-export const SOW_CASES: SowReport[] = [
-	{
-		profile: LOW_RISK_PROFILE,
-		dataSources: LOW_RISK_SOURCES,
-		wealthBreakdown: LOW_RISK_WEALTH,
-		totalEstimatedWealthRMB: 12_650_000,
-		totalEstimatedAnnualIncomeRMB: 1_620_000,
-		narrative: LOW_RISK_NARRATIVE,
-		screeningAlerts: LOW_RISK_SCREENING,
-		nextReviewDate: "2027-05-17",
-		keyParameters: LOW_RISK_PARAMS,
-		documentEvidence: LOW_RISK_DOCUMENTS,
-		auditTrail: LOW_RISK_AUDIT,
-		remediationItems: LOW_RISK_REMEDIATION,
+const JACK_MA_REPORT: HnwReport = {
+	profile: {
+		id: "hnw-jack-ma",
+		name: "Jack Ma",
+		nameCn: "马云",
+		dateOfBirth: "1964-09-10",
+		age: 61,
+		nationality: "Chinese",
+		residences: ["Hangzhou, China", "Hong Kong", "Tokyo, Japan"],
+		primaryIndustry: "E-Commerce / Fintech",
+		estimatedNetWorthUSD: 25_500_000_000,
+		netWorthSource: "Forbes Real-Time Billionaires Index",
+		riskRating: "Medium",
+		riskScore: 48,
+		profileSummary: "Founder of Alibaba Group and co-founder of Ant Group. One of China's most prominent entrepreneurs. Wealth primarily derived from Alibaba equity crystallized through the 2014 NYSE IPO. Subject to enhanced monitoring due to regulatory exposure and PEP near-match status.",
 	},
-	{
-		profile: HIGH_RISK_PROFILE,
-		dataSources: HIGH_RISK_SOURCES,
-		wealthBreakdown: HIGH_RISK_WEALTH,
-		totalEstimatedWealthRMB: 20_800_000,
-		totalEstimatedAnnualIncomeRMB: 1_150_000,
-		narrative: HIGH_RISK_NARRATIVE,
-		screeningAlerts: HIGH_RISK_SCREENING,
-		nextReviewDate: "2026-11-17",
-		keyParameters: HIGH_RISK_PARAMS,
-		documentEvidence: HIGH_RISK_DOCUMENTS,
-		auditTrail: HIGH_RISK_AUDIT,
-		remediationItems: HIGH_RISK_REMEDIATION,
+	careerTimeline: JACK_MA_CAREER,
+	totalEstimatedWealthUSD: 25_500_000_000,
+	wealthByCategory: aggregateWealth(JACK_MA_CAREER),
+	overallConfidence: overallConfidence(JACK_MA_CAREER),
+	narrative: JACK_MA_NARRATIVE,
+	keyParameters: JACK_MA_PARAMS,
+	dataSources: JACK_MA_SOURCES,
+	companyNodes: JACK_MA_COMPANIES,
+	screeningResult: PEP_SCREENING[0],
+};
+
+const YAT_SIU_REPORT: HnwReport = {
+	profile: {
+		id: "hnw-yat-siu",
+		name: "Yat Siu",
+		nameCn: "蕭逸",
+		dateOfBirth: "1973-01-01",
+		age: 53,
+		nationality: "Austrian",
+		residences: ["Hong Kong"],
+		primaryIndustry: "Blockchain Gaming / Web3",
+		estimatedNetWorthUSD: 2_400_000_000,
+		netWorthSource: "Forbes estimate + on-chain analysis",
+		riskRating: "High",
+		riskScore: 72,
+		profileSummary: "Co-founder and chairman of Animoca Brands, a leading blockchain gaming and Web3 investment company. Wealth heavily concentrated in crypto assets and private company equity with extreme volatility. ASX-delisted in 2020. Active in Hong Kong's virtual asset regulatory framework.",
 	},
-];
+	careerTimeline: YAT_SIU_CAREER,
+	totalEstimatedWealthUSD: 2_400_000_000,
+	wealthByCategory: aggregateWealth(YAT_SIU_CAREER),
+	overallConfidence: overallConfidence(YAT_SIU_CAREER),
+	narrative: YAT_SIU_NARRATIVE,
+	keyParameters: YAT_SIU_PARAMS,
+	dataSources: YAT_SIU_SOURCES,
+	companyNodes: YAT_SIU_COMPANIES,
+	screeningResult: PEP_SCREENING[1],
+};
+
+export const HNW_CASES: HnwReport[] = [JACK_MA_REPORT, YAT_SIU_REPORT];

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import ApiDemo from "@/components/api-demo";
 
 export const metadata: Metadata = {
-	title: "SOW Assessment Platform · Demo",
+	title: "HNW Wealth Intelligence · Demo",
 	robots: { index: false, follow: false },
 };
 
@@ -22,10 +22,10 @@ export default function DemoPage() {
 						</div>
 						<div>
 							<h1 className="text-[15px] font-heading font-semibold tracking-tight leading-tight">
-								SOW Assessment Platform
+								HNW Wealth Intelligence
 							</h1>
 							<p className="text-[11px] text-white/45 leading-tight tracking-wide">
-								AI-powered due diligence · Government & financial data sources
+								AI-powered source of wealth · International data sources
 							</p>
 						</div>
 					</div>
