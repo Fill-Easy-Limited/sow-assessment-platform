@@ -415,6 +415,47 @@ const SRC_MA: Record<string, SourceCitation> = {
 		id: "s33", label: "FilEasy API: SAMR UBO — Yunfeng Capital", url: "https://www.fileasy.hk/", type: "registry",
 		...srcMeta("fileasy.hk", "FilEasy | SAMR UBO & Shareholder Structure — Yunfeng Capital", "FilEasy China Cross-Border API returning UBO and shareholder structure for Yunfeng Capital Management. Ultimate beneficial owners identified. MA Yun listed as co-founder and significant shareholder. Registered capital and business scope confirmed.", "#0066aa"),
 	},
+	// ── Additional sources (exhaustive wealth research) ──
+	brandonPark: {
+		id: "s34", label: "CNN Money: Jack Ma buys 28,100-acre Adirondack estate for $23M", url: "https://money.cnn.com/2015/06/25/real_estate/jack-ma-alibaba-new-york-property/", date: "2015-06-25", type: "news",
+		...srcMeta("cnn.com", "Jack Ma buys massive New York estate | CNN Money", "CNN Money article reporting Alibaba founder Jack Ma purchased Brandon Park, a 28,100-acre estate in the Adirondacks, for approximately $23 million via entity New Brandon LLC. Property includes 9 miles of St. Regis River.", "#cc0000"),
+	},
+	superyachtZen: {
+		id: "s35", label: "SuperYachtFan: M/Y Zen — 88m Feadship owned by Jack Ma", url: "https://www.superyachtfan.com/yacht/zen/", date: "2021-01-01", type: "news",
+		...srcMeta("superyachtfan.com", "Zen — 88m Feadship | SuperYachtFan", "SuperYachtFan vessel profile for M/Y Zen. 88 meters (289 ft), built by Feadship 2021. Owner: Jack Ma. Estimated value ~$200M. Design by De Voogt Naval Architects. 16 guests, 25 crew.", "#1a237e"),
+	},
+	privateJet: {
+		id: "s36", label: "Aviation registry: Gulfstream G650ER (VP-CZM) — Jack Ma", url: "https://www.superyachtfan.com/private-jet/owner/jack-ma/", type: "registry",
+		...srcMeta("superyachtfan.com", "Jack Ma Private Jet — Gulfstream G650ER | VP-CZM", "Aviation registry record for Gulfstream G650ER registered VP-CZM (2020). Ownership entity: Brilliant Sky Blue Limited (Cayman Islands). Estimated value ~$70M. Previous aircraft: Gulfstream G550 (N999HZ).", "#003366"),
+	},
+	huayiBros: {
+		id: "s37", label: "Hollywood Reporter: Jack Ma reduces stake in Huayi Brothers", url: "https://www.hollywoodreporter.com/news/general-news/jack-ma-reduces-stake-huayi-563849/", date: "2013-01-01", type: "news",
+		...srcMeta("hollywoodreporter.com", "Jack Ma Reduces Stake in Huayi Brothers | THR", "Hollywood Reporter article on Jack Ma reducing his personal stake in Huayi Brothers (Shenzhen-listed film studio). Originally 8% at 2009 IPO, reduced to ~2.6%. Alibaba Entrepreneurs Fund held additional 3.5%.", "#003087"),
+	},
+	enlightMedia: {
+		id: "s38", label: "Bloomberg: Alibaba buys $383M stake in Enlight Media", url: "https://www.bloomberg.com/news/articles/2015-03-04/alibaba-buys-383-million-stake-in-film-producer-enlight-media", date: "2015-03-04", type: "news",
+		...srcMeta("bloomberg.com", "Alibaba Buys $383M Stake in Enlight Media | Bloomberg", "Bloomberg article reporting Hangzhou Ali Venture Capital (80% Jack Ma, 20% Simon Xie) acquired RMB 2.4B ($383M) stake in Beijing-listed Enlight Media, making Alibaba second-largest shareholder.", "#1e1e1e"),
+	},
+	bluePoolCapital: {
+		id: "s39", label: "CBInsights: Blue Pool Capital — Ma & Tsai family office", url: "https://www.cbinsights.com/investor/blue-pool-capital", type: "estimate",
+		...srcMeta("cbinsights.com", "Blue Pool Capital Profile | CBInsights", "CBInsights investor profile for Blue Pool Capital. Family office co-founded 2004 by Jack Ma and Joe Tsai. AUM exceeded $50B as of 2022. 28+ investments. Riverside Fund raised $1B (2025, oversubscribed from $750M target).", "#003d7a"),
+	},
+	sgProperties: {
+		id: "s40", label: "Bloomberg: Jack Ma's wife buys prestige Singapore properties", url: "https://www.bloomberg.com/news/articles/2024-02-21/jack-mas-wife-bought-three-prestige-properties-in-singapore", date: "2024-02-21", type: "news",
+		...srcMeta("bloomberg.com", "Jack Ma's Wife Bought Three Prestige Properties in Singapore | Bloomberg", "Bloomberg report: Zhang Ying (Ma's wife, Singapore citizen) purchased 3 shophouses at 70-72 Duxton Road for S$45-50M ($33-37M) in 2024. Also owns Good Class Bungalow in Victoria Park area (~S$40M, 2019).", "#1e1e1e"),
+	},
+	yunfengFinancial: {
+		id: "s41", label: "SCMP: Yunfeng Financial (HK-listed) buys 10,000 ETH", url: "https://www.scmp.com/tech/blockchain/article/3324137/", date: "2025-09-01", type: "news",
+		...srcMeta("scmp.com", "Jack Ma-backed Yunfeng Dives Into Crypto | SCMP", "SCMP reporting Yunfeng Financial Group (HK-listed), in which Ma holds 11.15%, purchased 10,000 ETH ($44M) as strategic reserve. Expanding into crypto/Web3, RWA tokenization, and AI.", "#ffca05"),
+	},
+	universityDonation: {
+		id: "s42", label: "Newcastle Herald: Ma donates AU$26.4M to University of Newcastle", url: "https://www.newcastleherald.com.au/story/4445929/", date: "2017-02-01", type: "news",
+		...srcMeta("newcastleherald.com.au", "Friendship Leads to $26M Uni Donation | Newcastle Herald", "Newcastle Herald reporting Jack Ma's AU$26.4M donation to University of Newcastle Australia — largest gift in university history. Established Ma & Morley Scholarship Program (90 scholarships/year).", "#003399"),
+	},
+	nyLandRecords: {
+		id: "s43", label: "Franklin County Records: New Brandon LLC — Brandon Park deed", url: "https://www.franklincony.org/", type: "registry",
+		...srcMeta("franklincony.org", "Franklin County NY | Real Property Records — New Brandon LLC", "Franklin County NY property records for New Brandon LLC. 28,100-acre Brandon Park estate. Transfer recorded May 2015. Purchase entity linked to Jack Ma through corporate filings.", "#336633"),
+	},
 };
 
 // ── Jack Ma: Career Timeline ────────────────────────────────────
@@ -474,13 +515,17 @@ const JACK_MA_CAREER: CareerPhase[] = [
 			], subtotalUSD: 25_000_000_000, avgConfidence: 83 },
 			{ category: "investments", claims: [
 				{ id: "jm4-4", description: "Yunfeng Capital co-founder (PE/VC fund, AUM ~$8B, Ma's carried interest estimated)", estimatedValueUSD: 800_000_000, confidence: 40, sources: [SRC_MA.yunfeng] },
-			], subtotalUSD: 800_000_000, avgConfidence: 40 },
+				{ id: "jm4-7", description: "Blue Pool Capital family office (co-founded with Joe Tsai, AUM ~$50B+ by 2022)", estimatedValueUSD: 500_000_000, confidence: 35, sources: [SRC_MA.bluePoolCapital] },
+				{ id: "jm4-8", description: "Huayi Brothers film studio (~8% at 2009 IPO, reduced to ~2.6%)", estimatedValueUSD: 80_000_000, confidence: 60, sources: [SRC_MA.huayiBros] },
+				{ id: "jm4-9", description: "Enlight Media stake ($383M via Hangzhou Ali Venture Capital — 80% Ma-owned entity)", estimatedValueUSD: 306_000_000, confidence: 70, sources: [SRC_MA.enlightMedia] },
+			], subtotalUSD: 1_686_000_000, avgConfidence: 51 },
 			{ category: "alternatives", claims: [
-				{ id: "jm4-5", description: "Property holdings — HK Victoria Peak mansion (HK$1.5B), Hangzhou residences, reported overseas properties", estimatedValueUSD: 200_000_000, confidence: 70, sources: [SRC_MA.scmpProperty, SRC_MA.hkLandReg] },
-			], subtotalUSD: 200_000_000, avgConfidence: 70 },
+				{ id: "jm4-5", description: "Property holdings — HK Victoria Peak mansion (HK$1.5B), Hangzhou residences (FilEasy Land Registry search confirmed)", estimatedValueUSD: 200_000_000, confidence: 70, sources: [SRC_MA.scmpProperty, SRC_MA.hkLandReg] },
+				{ id: "jm4-10", description: "Brandon Park estate, Adirondacks NY — 28,100 acres purchased via New Brandon LLC for ~$23M", estimatedValueUSD: 23_000_000, confidence: 95, sources: [SRC_MA.brandonPark, SRC_MA.nyLandRecords] },
+			], subtotalUSD: 223_000_000, avgConfidence: 83 },
 		],
-		phaseWealthUSD: 26_000_000_000, cumulativeWealthUSD: 26_000_000_000,
-		keyEvents: ["2014-09-19: Alibaba IPO raises $25B on NYSE", "2016: Alibaba surpasses Walmart as world's largest retailer", "2018: Ant Financial raises $14B at $150B valuation", "2019-09-10: Ma steps down as Alibaba Chairman"],
+		phaseWealthUSD: 26_909_000_000, cumulativeWealthUSD: 26_909_000_000,
+		keyEvents: ["2014-09-19: Alibaba IPO raises $25B on NYSE", "2015-05: Purchases 28,100-acre Adirondack estate for $23M", "2015: Acquires Enlight Media stake ($383M)", "2016: Alibaba surpasses Walmart as world's largest retailer", "2018: Ant Financial raises $14B at $150B valuation", "2019-09-10: Ma steps down as Alibaba Chairman"],
 	},
 	{
 		id: "jm-5", title: "Regulatory Crackdown & Restructuring", organization: "Ant Group / Alibaba Group", role: "Former Chairman",
@@ -507,15 +552,22 @@ const JACK_MA_CAREER: CareerPhase[] = [
 			{ category: "investments", claims: [
 				{ id: "jm6-3", description: "Yunfeng Capital and other PE/VC fund interests (FilEasy SAMR UBO verification)", estimatedValueUSD: 1_500_000_000, confidence: 35, sources: [SRC_MA.yunfeng, SRC_MA.fileasySAMRUBO] },
 				{ id: "jm6-4", description: "Singapore family trust (transferred $2.4B in BABA shares, FilEasy CorpVerify ACRA search)", estimatedValueUSD: 2_400_000_000, confidence: 95, sources: [SRC_MA.ftTrust, SRC_MA.acraRegistry] },
-			], subtotalUSD: 3_900_000_000, avgConfidence: 65 },
+				{ id: "jm6-8", description: "Yunfeng Financial Group (HK-listed) — 11.15% personal stake, purchased 10,000 ETH ($44M) as strategic reserve", estimatedValueUSD: 200_000_000, confidence: 55, sources: [SRC_MA.yunfengFinancial] },
+				{ id: "jm6-9", description: "Blue Pool Capital family office returns (co-managed with Joe Tsai, AUM $50B+, Riverside Fund $1B)", estimatedValueUSD: 800_000_000, confidence: 30, sources: [SRC_MA.bluePoolCapital] },
+				{ id: "jm6-10", description: "Huayi Brothers and Enlight Media stakes (reduced but retained minority positions)", estimatedValueUSD: 150_000_000, confidence: 45, sources: [SRC_MA.huayiBros, SRC_MA.enlightMedia] },
+			], subtotalUSD: 5_050_000_000, avgConfidence: 52 },
 			{ category: "alternatives", claims: [
-				{ id: "jm6-5", description: "Global real estate portfolio (HK Victoria Peak, Hangzhou, New York — FilEasy Land Registry search confirmed)", estimatedValueUSD: 250_000_000, confidence: 75, sources: [SRC_MA.scmpProperty, SRC_MA.hkLandReg] },
+				{ id: "jm6-5", description: "HK Victoria Peak mansion (HK$1.5B) + Hangzhou residences — FilEasy Land Registry confirmed", estimatedValueUSD: 250_000_000, confidence: 75, sources: [SRC_MA.scmpProperty, SRC_MA.hkLandReg] },
+				{ id: "jm6-11", description: "Brandon Park estate, Adirondacks NY (28,100 acres, $23M via New Brandon LLC, 2015)", estimatedValueUSD: 25_000_000, confidence: 95, sources: [SRC_MA.brandonPark, SRC_MA.nyLandRecords] },
+				{ id: "jm6-12", description: "Singapore properties via wife Zhang Ying — Good Class Bungalow (~S$40M) + 3 Duxton Rd shophouses (~S$50M)", estimatedValueUSD: 65_000_000, confidence: 80, sources: [SRC_MA.sgProperties] },
 				{ id: "jm6-7", description: "Bordeaux vineyards — Château de Sours (54 ha) and Château Guerry, French property registry confirmed", estimatedValueUSD: 30_000_000, confidence: 60, sources: [SRC_MA.chateauDeSours, SRC_MA.frenchPropertyRegistry] },
-				{ id: "jm6-6", description: "Art collection, wine, other luxury assets (benchmarked via Wealth-X UHNW report)", estimatedValueUSD: 70_000_000, confidence: 40, sources: [SRC_MA.wealthXReport, SRC_MA.forbes2024] },
-			], subtotalUSD: 350_000_000, avgConfidence: 58 },
+				{ id: "jm6-13", description: "Superyacht 'Zen' — 88m Feadship (built 2021, estimated ~$200M)", estimatedValueUSD: 200_000_000, confidence: 85, sources: [SRC_MA.superyachtZen] },
+				{ id: "jm6-14", description: "Gulfstream G650ER private jet (VP-CZM, via Brilliant Sky Blue Ltd, Cayman Islands)", estimatedValueUSD: 65_000_000, confidence: 90, sources: [SRC_MA.privateJet] },
+				{ id: "jm6-6", description: "Art collection, wine cellar, other luxury assets (benchmarked via Wealth-X UHNW report)", estimatedValueUSD: 70_000_000, confidence: 40, sources: [SRC_MA.wealthXReport, SRC_MA.forbes2024] },
+			], subtotalUSD: 705_000_000, avgConfidence: 75 },
 		],
-		phaseWealthUSD: 22_750_000_000, cumulativeWealthUSD: 25_500_000_000,
-		keyEvents: ["2023-04: $2.4B Alibaba shares transferred to Singapore trust", "2023-06: Alibaba splits into 6 business groups", "2024: Focus on agriculture technology and education"],
+		phaseWealthUSD: 24_255_000_000, cumulativeWealthUSD: 25_500_000_000,
+		keyEvents: ["2023-04: $2.4B Alibaba shares transferred to Singapore trust", "2023-06: Alibaba splits into 6 business groups", "2024: Wife Zhang Ying acquires S$50M Singapore shophouses", "2024: Focus on agriculture technology and education", "2025: Yunfeng Financial buys 10,000 ETH ($44M)"],
 	},
 ];
 
@@ -693,6 +745,51 @@ const SRC_SIU: Record<string, SourceCitation> = {
 			searchType: "Organisation & Business Names Search (via FilEasy CorpVerify)",
 		},
 	},
+	// ── Additional sources (exhaustive wealth research) ──
+	tinyTapAcq: {
+		id: "y26", label: "CoinDesk: Animoca acquires TinyTap for $38.9M", url: "https://www.coindesk.com/business/2022/06/16/animoca-brands-acquires-most-of-educational-tech-company-tinytap-for-389m", date: "2022-06-16", type: "news",
+		...srcMeta("coindesk.com", "Animoca Brands Acquires TinyTap for $38.9M | CoinDesk", "CoinDesk reporting Animoca Brands acquisition of 80.45% stake in TinyTap (ed-tech platform) for US$38.875M (cash + shares). TinyTap later raised $8.5M at $100M valuation.", "#0a9c00"),
+	},
+	mocaToken: {
+		id: "y27", label: "Animoca: MOCA token launch — $29.3M raised", url: "https://www.animocabrands.com/moca-foundation-concludes-moca-token-launch", date: "2024-07-11", type: "market-data",
+		...srcMeta("animocabrands.com", "MOCA Token Launch — $29.3M Committed | Animoca Brands", "Animoca Brands press release: MOCA token sale concluded with $29.3M raised at 12x oversubscription. Public launch July 11, 2024. Mocaverse NFT collection: 8,888 NFTs.", "#ff6b35"),
+	},
+	apeCoinDAO: {
+		id: "y28", label: "Cointelegraph: ApeCoin DAO Council compensation — $250K/yr", url: "https://cointelegraph.com/news/board-member-yat-siu-answers-community-concerns-on-apecoin-dao-salary-payouts", date: "2023-06-01", type: "news",
+		...srcMeta("cointelegraph.com", "Yat Siu on ApeCoin DAO Council Compensation | Cointelegraph", "Cointelegraph article: ApeCoin DAO Special Council member compensation disclosed at $20,833/month (~$250K/year). Yat Siu served on council. Caused community controversy in June 2023.", "#1a1a2e"),
+	},
+	nasdaqMerger: {
+		id: "y29", label: "Bloomberg: Animoca plans Nasdaq listing via reverse merger", url: "https://www.bloomberg.com/news/articles/2025-11-03/animoca-brands-plans-nasdaq-listing-through-reverse-merger", date: "2025-11-03", type: "news",
+		...srcMeta("bloomberg.com", "Animoca Brands Plans Nasdaq Listing Through Reverse Merger | Bloomberg", "Bloomberg: Animoca Brands filed for Nasdaq listing via reverse merger with Currenc Group (CURR). Target ~$1B valuation. Animoca shareholders get 95%. Expected closing Q3 2026.", "#1e1e1e"),
+	},
+	anchorpointJV: {
+		id: "y30", label: "Standard Chartered: Anchorpoint Financial JV — HKMA stablecoin license", url: "https://www.sc.com/en/press-release/standard-chartered-backed-anchorpoint-licensed-stablecoin/", date: "2025-02-01", type: "news",
+		...srcMeta("sc.com", "Anchorpoint Financial Granted Stablecoin Issuer Licence | StanChart", "Standard Chartered press release: Anchorpoint Financial JV (Standard Chartered + HKT + Animoca Brands) granted HKMA stablecoin issuer licence. Will issue HKDAP (HKD At Par) regulated stablecoin.", "#003087"),
+	},
+	animocaFinancials: {
+		id: "y31", label: "Animoca Brands: FY2024 Investor Update — $4.3B total assets", url: "https://www.animocabrands.com/animoca-brands-investor-update-for-the-quarter-and-fiscal-year-ending-on-31-december-2024", date: "2025-03-01", type: "filing",
+		...srcMeta("animocabrands.com", "Animoca Brands Investor Update — FY2024 | Animoca Brands", "Animoca Brands FY2024 financials: total assets $4.3B, cash + stablecoins $293M, digital assets $538M, minority investments $564M (540+ companies), off-balance sheet token reserves $2.9B.", "#ff6b35"),
+	},
+	nwayAcq: {
+		id: "y32", label: "Animoca: Acquires nWay for $7.69M (Dec 2019)", url: "https://www.animocabrands.com/animocabrands-acquire-nway", date: "2019-12-01", type: "news",
+		...srcMeta("animocabrands.com", "Animoca Brands Acquires nWay | Press Release", "Animoca press release: Acquisition of nWay Inc. (SF-based fighting game studio) for US$7.69M. Power Rangers: Legacy Wars (60M+ downloads). Prior funding: $20M over 3 rounds.", "#ff6b35"),
+	},
+	edenGamesAcq: {
+		id: "y33", label: "Animoca: Acquires Eden Games for ~$15.3M", url: "https://www.animocabrands.com/animoca-brands-acquires-eden-games", date: "2022-04-11", type: "news",
+		...srcMeta("animocabrands.com", "Animoca Brands Acquires Eden Games | Press Release", "Animoca press release: Acquisition of Eden Games from Engine Gaming (Nasdaq: GAME) for ~$15.3-16M. Racing studio behind Need for Speed: Porsche, F1 Mobile Racing, Gear.Club.", "#ff6b35"),
+	},
+	blowfishAcq: {
+		id: "y34", label: "Animoca: Acquires Blowfish Studios for up to A$35M", url: "https://stockhead.com.au/cryptocurrency/animoca-brands-acquires-sydney-based-gaming-company-blowfish-studios/", date: "2021-07-30", type: "news",
+		...srcMeta("stockhead.com.au", "Animoca Acquires Blowfish Studios for up to $35M | Stockhead", "Stockhead reporting: Animoca acquired Sydney-based Blowfish Studios. A$9M upfront (A$4M cash + A$5M shares) plus up to A$26M in earnouts. Total potential: A$35M (~US$25.8M).", "#003d7a"),
+	},
+	gameeAcq: {
+		id: "y35", label: "Animoca: Acquires GAMEE for $4.5M (Jul 2020)", url: "https://www.animocabrands.com/gamee-launches-arc8-play-to-earn-mobile-blockchain-gaming-platform-with-1300000-users", date: "2020-07-01", type: "news",
+		...srcMeta("animocabrands.com", "GAMEE / Arc8 Platform — 1.3M Users | Animoca Brands", "Animoca Brands press release: GAMEE acquired for US$4.5M in July 2020. Arc8 play-to-earn platform launched October 2021 with 1.3M registered users. GMEE token (3.18B supply).", "#ff6b35"),
+	},
+	lympoHack: {
+		id: "y36", label: "Cointelegraph: Lympo hot wallet hacked — $18.7M stolen", url: "https://cointelegraph.com/news/animoca-brands-lympo-nft-platform-hacked-for-18-7-million", date: "2022-01-10", type: "news",
+		...srcMeta("cointelegraph.com", "Animoca's Lympo Hacked for $18.7M | Cointelegraph", "Cointelegraph: Animoca subsidiary Lympo's hot wallet hacked January 10, 2022. 165.2M LMT tokens stolen worth $18.7M. LMT price crashed 92% in 12 hours. Lympo was acquired for $2.88M.", "#1a1a2e"),
+	},
 };
 
 // ── Yat Siu: Career Timeline ────────────────────────────────────
@@ -757,10 +854,12 @@ const YAT_SIU_CAREER: CareerPhase[] = [
 			], subtotalUSD: 8_000_000, avgConfidence: 38 },
 			{ category: "investments", claims: [
 				{ id: "ys4-4", description: "Early investments in Dapper Labs, Sky Mavis (Axie Infinity), and other blockchain startups", estimatedValueUSD: 10_000_000, confidence: 40, sources: [SRC_SIU.crunchbase] },
-			], subtotalUSD: 10_000_000, avgConfidence: 40 },
+				{ id: "ys4-5", description: "nWay Inc. acquisition (SF fighting game studio, $7.69M, Power Rangers: Legacy Wars 60M+ downloads)", estimatedValueUSD: 7_690_000, confidence: 95, sources: [SRC_SIU.nwayAcq] },
+				{ id: "ys4-6", description: "GAMEE acquisition ($4.5M, mobile gaming platform, later launched Arc8 with 1.3M users)", estimatedValueUSD: 4_500_000, confidence: 95, sources: [SRC_SIU.gameeAcq] },
+			], subtotalUSD: 22_190_000, avgConfidence: 77 },
 		],
-		phaseWealthUSD: 73_000_000, cumulativeWealthUSD: 114_650_000,
-		keyEvents: ["2018: Acquired The Sandbox from Pixowl", "2019: SAND token launched", "2019: Invested in Dapper Labs", "2020-03: ASX delists Animoca Brands"],
+		phaseWealthUSD: 85_190_000, cumulativeWealthUSD: 126_840_000,
+		keyEvents: ["2018: Acquired The Sandbox from Pixowl", "2019: SAND token launched", "2019-12: Acquired nWay for $7.69M", "2019: Invested in Dapper Labs", "2020-03: ASX delists Animoca Brands", "2020-07: Acquired GAMEE for $4.5M"],
 	},
 	{
 		id: "ys-5", title: "Web3 Boom & Peak Wealth", organization: "Animoca Brands", role: "Co-Founder & Chairman",
@@ -773,40 +872,53 @@ const YAT_SIU_CAREER: CareerPhase[] = [
 			{ category: "crypto", claims: [
 				{ id: "ys5-2", description: "SAND token holdings at peak (~$8.40, estimated 100-200M tokens in founder/team allocation)", estimatedValueUSD: 800_000_000, confidence: 55, sources: [SRC_SIU.sandPeak, SRC_SIU.coinGecko] },
 				{ id: "ys5-3", description: "NFT portfolio (LAND plots, Bored Apes, other blue-chip NFTs at peak valuations)", estimatedValueUSD: 150_000_000, confidence: 35, sources: [SRC_SIU.dappradar] },
-				{ id: "ys5-4", description: "Various token allocations from 340+ portfolio investments", estimatedValueUSD: 200_000_000, confidence: 30, sources: [SRC_SIU.crunchbase, SRC_SIU.coinGecko] },
-			], subtotalUSD: 1_150_000_000, avgConfidence: 40 },
+				{ id: "ys5-4", description: "Various token allocations (REVV, TOWER, GMEE, LMT) from subsidiaries and 340+ portfolio investments", estimatedValueUSD: 250_000_000, confidence: 30, sources: [SRC_SIU.crunchbase, SRC_SIU.coinGecko, SRC_SIU.gameeAcq] },
+			], subtotalUSD: 1_200_000_000, avgConfidence: 40 },
 			{ category: "investments", claims: [
-				{ id: "ys5-5", description: "Portfolio of 340+ blockchain/Web3 investments (book value)", estimatedValueUSD: 500_000_000, confidence: 45, sources: [SRC_SIU.crunchbase, SRC_SIU.bloombergSiu] },
-			], subtotalUSD: 500_000_000, avgConfidence: 45 },
+				{ id: "ys5-5", description: "Portfolio of 340+ blockchain/Web3 investments (book value at peak, $529.6M gains reported in FY2021)", estimatedValueUSD: 500_000_000, confidence: 45, sources: [SRC_SIU.crunchbase, SRC_SIU.bloombergSiu, SRC_SIU.animocaFinancials] },
+				{ id: "ys5-7", description: "TinyTap ed-tech acquisition (80.45% for $38.9M, later raised at $100M valuation)", estimatedValueUSD: 80_000_000, confidence: 65, sources: [SRC_SIU.tinyTapAcq] },
+				{ id: "ys5-8", description: "Blowfish Studios acquisition (up to A$35M / ~US$25.8M, Sydney game developer)", estimatedValueUSD: 25_000_000, confidence: 80, sources: [SRC_SIU.blowfishAcq] },
+				{ id: "ys5-9", description: "Eden Games acquisition (~$15.3M, racing studio — NFS Porsche, F1 Mobile Racing)", estimatedValueUSD: 15_000_000, confidence: 85, sources: [SRC_SIU.edenGamesAcq] },
+			], subtotalUSD: 620_000_000, avgConfidence: 69 },
 			{ category: "alternatives", claims: [
 				{ id: "ys5-6", description: "Hong Kong property portfolio (appreciated — FilEasy Land Registry search and RVD index confirmed)", estimatedValueUSD: 8_000_000, confidence: 100, sources: [SRC_SIU.hkLandRegistry, SRC_SIU.hkRVD] },
 			], subtotalUSD: 8_000_000, avgConfidence: 100 },
+			{ category: "income", claims: [
+				{ id: "ys5-10", description: "ApeCoin DAO Special Council compensation (~$250K/year, publicly disclosed June 2023)", estimatedValueUSD: 500_000, confidence: 100, sources: [SRC_SIU.apeCoinDAO] },
+			], subtotalUSD: 500_000, avgConfidence: 100 },
 		],
-		phaseWealthUSD: 3_658_000_000, cumulativeWealthUSD: 3_658_000_000,
-		keyEvents: ["2021-05: Sequoia China leads $65M round", "2021-11-25: SAND peaks at $8.40 (ATH)", "2022-01: Animoca raises $358.8M at $5.9B valuation", "2022: 340+ blockchain investments made"],
+		phaseWealthUSD: 3_828_500_000, cumulativeWealthUSD: 3_828_500_000,
+		keyEvents: ["2021-05: Sequoia China leads $65M round", "2021-07: Acquires Blowfish Studios (A$35M)", "2021-11-25: SAND peaks at $8.40 (ATH)", "2022-01: Animoca raises $358.8M at $5.9B valuation", "2022-01: Lympo subsidiary hacked ($18.7M stolen)", "2022-04: Acquires Eden Games (~$15.3M)", "2022-06: Acquires TinyTap for $38.9M"],
 	},
 	{
 		id: "ys-6", title: "Market Correction & Rebuilding", organization: "Animoca Brands", role: "Co-Founder & Chairman",
 		startYear: 2023, endYear: null, location: "Hong Kong",
-		description: "Crypto winter caused severe portfolio markdowns. SAND fell ~90% from peak. NFT market collapsed. However, Animoca Brands maintained its $5.9B valuation from last funding round (no down round). Siu became active in Hong Kong's virtual asset regulatory framework, positioning Animoca as a key player in HK's Web3 hub strategy.",
+		description: "Crypto winter caused severe portfolio markdowns. SAND fell ~90% from peak. NFT market collapsed. However, Animoca Brands maintained its $5.9B valuation from last funding round (no down round) and filed for a Nasdaq listing via reverse merger with Currenc Group in November 2025. Siu launched MOCA token ($29.3M raised), secured HKMA stablecoin license via Anchorpoint Financial JV (with Standard Chartered and HKT), and grew portfolio to 540+ companies. FY2024 total assets: $4.3B.",
 		categories: [
 			{ category: "companies", claims: [
-				{ id: "ys6-1", description: "Animoca Brands equity (last round $5.9B, PitchBook secondary data suggests 30-50% discount)", estimatedValueUSD: 1_200_000_000, confidence: 55, sources: [SRC_SIU.tcAnimoca, SRC_SIU.bloombergSiu, SRC_SIU.pitchbook, SRC_SIU.fileasyHKCR] },
-			], subtotalUSD: 1_200_000_000, avgConfidence: 55 },
+				{ id: "ys6-1", description: "Animoca Brands equity (last round $5.9B, PitchBook secondary suggests 30-50% discount, Nasdaq reverse merger filed Nov 2025 at ~$1B)", estimatedValueUSD: 1_200_000_000, confidence: 55, sources: [SRC_SIU.tcAnimoca, SRC_SIU.bloombergSiu, SRC_SIU.pitchbook, SRC_SIU.fileasyHKCR, SRC_SIU.nasdaqMerger] },
+				{ id: "ys6-7", description: "Anchorpoint Financial JV (Standard Chartered + HKT + Animoca) — HKMA stablecoin issuer license for HKDAP", estimatedValueUSD: 50_000_000, confidence: 30, sources: [SRC_SIU.anchorpointJV] },
+			], subtotalUSD: 1_250_000_000, avgConfidence: 43 },
 			{ category: "crypto", claims: [
 				{ id: "ys6-2", description: "SAND token holdings at current price (~$0.30-0.60, down ~93% from peak)", estimatedValueUSD: 60_000_000, confidence: 65, sources: [SRC_SIU.coinGecko] },
+				{ id: "ys6-8", description: "MOCA token (launched Jul 2024, $29.3M raised, ATH $0.48, current ~$0.014) + Mocaverse NFTs (8,888 collection)", estimatedValueUSD: 20_000_000, confidence: 40, sources: [SRC_SIU.mocaToken] },
 				{ id: "ys6-3", description: "NFT portfolio (severely depreciated, floor prices down 80-95%)", estimatedValueUSD: 15_000_000, confidence: 25, sources: [SRC_SIU.dappradar] },
-				{ id: "ys6-4", description: "Remaining token positions from portfolio companies", estimatedValueUSD: 30_000_000, confidence: 20, sources: [SRC_SIU.crunchbase, SRC_SIU.coinGecko] },
-			], subtotalUSD: 105_000_000, avgConfidence: 37 },
+				{ id: "ys6-4", description: "Remaining token positions (REVV near-zero, TOWER near-zero, GMEE, EDU, CHECK + off-balance sheet reserves $2.9B)", estimatedValueUSD: 40_000_000, confidence: 20, sources: [SRC_SIU.crunchbase, SRC_SIU.coinGecko, SRC_SIU.animocaFinancials] },
+			], subtotalUSD: 135_000_000, avgConfidence: 38 },
 			{ category: "investments", claims: [
-				{ id: "ys6-5", description: "Blockchain/Web3 portfolio (heavily marked down but some survivors)", estimatedValueUSD: 150_000_000, confidence: 30, sources: [SRC_SIU.crunchbase] },
-			], subtotalUSD: 150_000_000, avgConfidence: 30 },
+				{ id: "ys6-5", description: "540+ blockchain/Web3 portfolio companies (FY2024 fair value $564M, 7 exits including Bitte)", estimatedValueUSD: 170_000_000, confidence: 35, sources: [SRC_SIU.crunchbase, SRC_SIU.animocaFinancials] },
+				{ id: "ys6-9", description: "Animoca Ventures fund (separate entity, AUM $100M+, 100+ companies across 26 countries)", estimatedValueUSD: 15_000_000, confidence: 25, sources: [SRC_SIU.crunchbase] },
+				{ id: "ys6-10", description: "Subsidiary portfolio (TinyTap, nWay, Eden Games, Blowfish, GAMEE, Forj) — marked down from acquisition cost", estimatedValueUSD: 60_000_000, confidence: 50, sources: [SRC_SIU.tinyTapAcq, SRC_SIU.nwayAcq, SRC_SIU.edenGamesAcq, SRC_SIU.animocaFinancials] },
+			], subtotalUSD: 245_000_000, avgConfidence: 37 },
 			{ category: "alternatives", claims: [
 				{ id: "ys6-6", description: "Hong Kong property and other tangible assets (FilEasy Land Registry search confirmed, RVD indexed)", estimatedValueUSD: 7_000_000, confidence: 100, sources: [SRC_SIU.hkLandRegistry, SRC_SIU.hkRVD] },
 			], subtotalUSD: 7_000_000, avgConfidence: 100 },
+			{ category: "income", claims: [
+				{ id: "ys6-11", description: "Advisory/board compensation (ApeCoin DAO ~$250K/yr, DigitalX, Hex Trust + speaking fees)", estimatedValueUSD: 400_000, confidence: 75, sources: [SRC_SIU.apeCoinDAO] },
+			], subtotalUSD: 400_000, avgConfidence: 75 },
 		],
-		phaseWealthUSD: 1_462_000_000, cumulativeWealthUSD: 2_400_000_000,
-		keyEvents: ["2023: SAND drops below $0.50", "2023-06: HK launches virtual asset regulatory framework", "2024: Animoca active in HK Web3 hub strategy", "2024: No down-round — maintains $5.9B last-round valuation"],
+		phaseWealthUSD: 1_637_400_000, cumulativeWealthUSD: 2_400_000_000,
+		keyEvents: ["2023: SAND drops below $0.50", "2023-06: HK launches virtual asset regulatory framework", "2024-07: MOCA token launches ($29.3M raised)", "2024-12: X/Twitter account hacked (phishing)", "2025-02: Anchorpoint Financial JV gets HKMA stablecoin license", "2025-11: Files Nasdaq reverse merger with Currenc Group"],
 	},
 ];
 
@@ -870,6 +982,10 @@ const JACK_MA_SOURCES: DataSourceDef[] = [
 	{ id: "ds-14", name: "China Individual Income Tax Records", provider: "State Taxation Administration", category: "Tax Records", delayMs: 1900 },
 	{ id: "ds-15", name: "FilEasy — SAMR UBO & Shareholder Structures", provider: "FilEasy Ltd / China SAMR", category: "Corporate Registry", delayMs: 1600 },
 	{ id: "ds-16", name: "French Land Registry (SPF)", provider: "Service de Publicité Foncière", category: "Property Records", delayMs: 2100 },
+	{ id: "ds-17", name: "Franklin County NY — Property Records", provider: "Franklin County Real Property", category: "Property Records", delayMs: 1300 },
+	{ id: "ds-18", name: "SuperYachtFan / Maritime Registry", provider: "Vessel & Aviation Registry", category: "Luxury Assets", delayMs: 1000 },
+	{ id: "ds-19", name: "Singapore ACRA + Property Records", provider: "IRAS / URA / FilEasy CorpVerify", category: "Property Records", delayMs: 1700 },
+	{ id: "ds-20", name: "HK Stock Exchange — Yunfeng Financial", provider: "HKEX / SEHK", category: "Market Data", delayMs: 1200 },
 ];
 
 const YAT_SIU_SOURCES: DataSourceDef[] = [
@@ -888,6 +1004,10 @@ const YAT_SIU_SOURCES: DataSourceDef[] = [
 	{ id: "ds-13", name: "FilEasy — HK Land Registry Property Search", provider: "FilEasy Ltd / HKSAR Land Reg", category: "Property Records", delayMs: 1100 },
 	{ id: "ds-14", name: "FilEasy — ASIC Company Register Search", provider: "FilEasy Ltd / AU ASIC", category: "Corporate Registry", delayMs: 1600 },
 	{ id: "ds-15", name: "HK Inland Revenue Department", provider: "HKSAR IRD", category: "Tax Records", delayMs: 1800 },
+	{ id: "ds-16", name: "Animoca FY2024 Investor Filings", provider: "Animoca Brands Corp.", category: "Company Financials", delayMs: 1400 },
+	{ id: "ds-17", name: "Nasdaq / SEC — Currenc Group Merger Filing", provider: "SEC / Nasdaq", category: "Regulatory Filings", delayMs: 2000 },
+	{ id: "ds-18", name: "HKMA Stablecoin Registry", provider: "Hong Kong Monetary Authority", category: "Regulatory Data", delayMs: 1100 },
+	{ id: "ds-19", name: "CoinList / Token Sale Records", provider: "CoinList Markets", category: "Crypto Market Data", delayMs: 900 },
 ];
 
 // ── Company Nodes (for network graph) ───────────────────────────
@@ -896,23 +1016,32 @@ const JACK_MA_COMPANIES: CompanyNode[] = [
 	{ name: "Alibaba Group (NYSE: BABA)", role: "Founder & Former Chairman", ownership: "~4.5%", status: "active", valuation: "$215B" },
 	{ name: "Ant Group", role: "Co-founder, former controlling shareholder", ownership: "~8%", status: "restructured", valuation: "~$70B" },
 	{ name: "Yunfeng Capital", role: "Co-founder", ownership: "GP interest", status: "active", valuation: "AUM ~$8B" },
-	{ name: "Jack Ma Foundation", role: "Founder", status: "active" },
+	{ name: "Blue Pool Capital", role: "Co-founder (with Joe Tsai)", ownership: "Co-principal", status: "active", valuation: "AUM ~$50B" },
+	{ name: "Yunfeng Financial Group (HK-listed)", role: "Major shareholder", ownership: "11.15%", status: "active", valuation: "Bought 10K ETH" },
 	{ name: "Singapore Family Trust", role: "Settlor", status: "active", valuation: "$2.4B+" },
+	{ name: "Jack Ma Foundation", role: "Founder", status: "active" },
+	{ name: "Huayi Brothers (Shenzhen-listed)", role: "Minority investor", ownership: "~2.6%", status: "active" },
+	{ name: "Enlight Media (Beijing-listed)", role: "Via Hangzhou Ali Venture Capital (80%)", ownership: "~10%", status: "active" },
 ];
 
 const YAT_SIU_COMPANIES: CompanyNode[] = [
 	{ name: "Animoca Brands", role: "Co-founder & Chairman", ownership: "~30-40%", status: "active", valuation: "$5.9B (last round)" },
 	{ name: "The Sandbox", role: "Parent company (via Animoca)", ownership: "Subsidiary", status: "active", valuation: "SAND mcap ~$900M" },
 	{ name: "Outblaze Limited", role: "Founder", ownership: "Majority", status: "exited", valuation: "Messaging sold to IBM" },
-	{ name: "Animoca Ventures", role: "GP", ownership: "GP interest", status: "active", valuation: "340+ investments" },
+	{ name: "TinyTap (ed-tech)", role: "Via Animoca (84.13%)", ownership: "Subsidiary", status: "active", valuation: "$100M (2023 raise)" },
+	{ name: "Animoca Ventures", role: "GP", ownership: "GP interest", status: "active", valuation: "AUM $100M+" },
 	{ name: "nWay (fighting games)", role: "Via Animoca", ownership: "Subsidiary", status: "active" },
+	{ name: "Eden Games (racing)", role: "Via Animoca", ownership: "Subsidiary", status: "active" },
+	{ name: "Blowfish Studios", role: "Via Animoca", ownership: "Subsidiary", status: "active" },
+	{ name: "GAMEE / Arc8", role: "Via Animoca", ownership: "Subsidiary", status: "active", valuation: "51% LOI with AlphaTON" },
+	{ name: "Anchorpoint Financial", role: "JV (StanChart + HKT + Animoca)", ownership: "JV partner", status: "active", valuation: "HKMA licensed" },
 ];
 
 // ── Key Parameters ──────────────────────────────────────────────
 
 const JACK_MA_PARAMS: KeyParameter[] = [
 	{ label: "Wealth Plausibility", value: "High — career trajectory clearly explains wealth accumulation", status: "normal" },
-	{ label: "Source Diversity", value: "16 independent sources across filings, market data, registries (FilEasy multi-registry)", status: "normal" },
+	{ label: "Source Diversity", value: "20 independent sources across filings, market data, registries, property records (FilEasy multi-registry)", status: "normal" },
 	{ label: "Overall Confidence", value: `${overallConfidence(JACK_MA_CAREER)}%`, status: "normal" },
 	{ label: "Regulatory Exposure", value: "Significant — Ant Group restructuring, Alibaba antitrust fine", status: "warning" },
 	{ label: "PEP Status", value: "Near-match — political connections in China require monitoring", status: "warning" },
@@ -923,7 +1052,7 @@ const JACK_MA_PARAMS: KeyParameter[] = [
 
 const YAT_SIU_PARAMS: KeyParameter[] = [
 	{ label: "Wealth Plausibility", value: "Plausible but volatile — majority tied to crypto asset valuations", status: "warning" },
-	{ label: "Source Diversity", value: "15 sources (FilEasy multi-registry) but crypto data has lower reliability", status: "warning" },
+	{ label: "Source Diversity", value: "19 sources (FilEasy multi-registry, Nasdaq filings, HKMA) but crypto data has lower reliability", status: "warning" },
 	{ label: "Overall Confidence", value: `${overallConfidence(YAT_SIU_CAREER)}%`, status: "critical" },
 	{ label: "Regulatory Exposure", value: "High — ASX delisting, crypto regulatory uncertainty globally", status: "critical" },
 	{ label: "PEP Status", value: "Clear — no PEP matches or political exposure", status: "normal" },
@@ -952,9 +1081,9 @@ export const PEP_SCREENING: PepScreeningEntry[] = [
 		listsChecked: ["OFAC SDN", "EU Consolidated", "UN Security Council", "HKMA", "ASIC", "World-Check PEP", "Dow Jones Watchlist"],
 		pepHits: 0,
 		sanctionsHits: 0,
-		adverseMedia: 2,
-		adverseMediaDetails: "ASX delisting of Animoca Brands over crypto accounting disputes (2020). General crypto industry regulatory scrutiny coverage.",
-		overallStatus: "Clear",
+		adverseMedia: 4,
+		adverseMediaDetails: "ASX delisting of Animoca Brands over crypto accounting disputes (2020). Lympo subsidiary hacked — $18.7M stolen (Jan 2022). X/Twitter account compromised via phishing (Dec 2024). General crypto regulatory scrutiny.",
+		overallStatus: "Review Required",
 	},
 	{
 		subjectName: "Elon Musk", riskRating: "Medium",
@@ -981,21 +1110,19 @@ export const PEP_SCREENING: PepScreeningEntry[] = [
 
 // ── Narratives ──────────────────────────────────────────────────
 
-const JACK_MA_NARRATIVE = `Jack Ma's wealth trajectory is one of the most documented in modern Chinese business history. His estimated net worth of approximately $25.5 billion is overwhelmingly derived from his founding equity in Alibaba Group, which was crystallized through the company's record-breaking $25 billion NYSE IPO in September 2014. SEC Form F-1 filings confirm Ma held approximately 6.2% of Alibaba shares at IPO, valued at ~$14.3 billion against the initial $231 billion market capitalization.
+const JACK_MA_NARRATIVE = `Jack Ma's wealth trajectory is one of the most documented in modern Chinese business history. His estimated net worth of approximately $25.5 billion is overwhelmingly derived from his founding equity in Alibaba Group, crystallized through the company's record-breaking $25 billion NYSE IPO in September 2014. SEC Form F-1 filings confirm Ma held approximately 6.2% of Alibaba shares at IPO. The wealth accumulation path from $60,000 pooled founding investment through Goldman Sachs ($5M), SoftBank ($20M), and Yahoo ($1B) rounds to public market is well-documented.
 
-The wealth accumulation path is clearly traceable: from a $60,000 pooled founding investment in 1999, through successive institutional rounds (Goldman Sachs $5M, SoftBank $20M, Yahoo $1B), to public market valuation. This represents the highest-confidence portion of his wealth profile, backed by regulatory filings and exchange data.
+Beyond core Alibaba equity, the assessment identified a substantial portfolio of alternative assets and investments: the Blue Pool Capital family office (co-founded with Joe Tsai, AUM ~$50B), an 11.15% stake in HK-listed Yunfeng Financial Group (which purchased 10,000 ETH as strategic reserve in 2025), Yunfeng Capital PE fund (AUM ~$8B), minority stakes in Huayi Brothers and Enlight Media, and a Singapore family trust holding $2.4B in BABA shares. Real estate includes a Victoria Peak mansion (HK$1.5B, FilEasy Land Registry confirmed), a 28,100-acre Adirondack estate ($23M via New Brandon LLC), two Bordeaux vineyards (Château de Sours and Château Guerry), and Singapore properties held via wife Zhang Ying (Good Class Bungalow ~S$40M and three Duxton Road shophouses ~S$50M). Lifestyle assets include the 88m superyacht Zen (~$200M, Feadship 2021) and a Gulfstream G650ER private jet (~$65M, registered VP-CZM in the Cayman Islands).
 
-Lower-confidence components include his stake in Ant Group (restructured under PBOC supervision after the 2020 IPO suspension, current valuation estimates range from $70-80B), his Yunfeng Capital fund interests, and real estate holdings. The 2023 transfer of $2.4B in Alibaba shares to a Singapore family trust adds jurisdictional complexity.
+Key risk factors include significant regulatory exposure (Ant Group restructuring, $2.8B Alibaba antitrust fine), PEP near-match status from his former CPPCC membership, and ongoing uncertainty about the true value of his Ant Group stake post-restructuring (~8% of ~$70B). Singapore properties in wife's name and corporate-entity-held assets (New Brandon LLC, Brilliant Sky Blue Ltd) add jurisdictional complexity. Despite these factors, the overall wealth plausibility score is high — 20 independent data sources across 6 jurisdictions clearly explain the accumulation of wealth at this scale.`;
 
-Key risk factors include significant regulatory exposure (Ant Group restructuring, $2.8B Alibaba antitrust fine), PEP near-match status from his former CPPCC membership, and ongoing uncertainty about the true value of his Ant Group stake post-restructuring. Despite these factors, the overall wealth plausibility score is high — the career trajectory clearly explains the accumulation of wealth at this scale.`;
+const YAT_SIU_NARRATIVE = `Yat Siu's estimated net worth of approximately $2.4 billion represents one of the more complex wealth profiles in the technology sector. Unlike traditional tech billionaires anchored to publicly traded shares, the majority of Siu's wealth derives from his co-founder stake in Animoca Brands (last valued at $5.9B in January 2022), crypto/NFT holdings with extreme volatility, and an extensive portfolio of 540+ blockchain investments.
 
-const YAT_SIU_NARRATIVE = `Yat Siu's estimated net worth of approximately $2.4 billion represents one of the more complex wealth profiles in the technology sector due to its heavy concentration in crypto assets and private company equity. Unlike traditional tech billionaires whose wealth is anchored to publicly traded shares, approximately 85% of Siu's estimated wealth derives from two sources: his co-founder stake in Animoca Brands (last valued at $5.9B in January 2022) and crypto/NFT holdings whose valuations have experienced extreme volatility.
+The career trajectory shows credible progression: Atari (teen employee), Outblaze founding and IBM exit (~$15M), Animoca Brands ASX listing, strategic pivot to blockchain gaming via The Sandbox acquisition (2018), and explosive growth during the 2021-2022 Web3 boom. Animoca executed an aggressive acquisition strategy — nWay ($7.69M), GAMEE ($4.5M), TinyTap ($38.9M), Blowfish Studios (up to A$35M), and Eden Games (~$15.3M) — building a gaming studio portfolio with recognized IP (Power Rangers, F1 Racing, Gear.Club).
 
-The career trajectory shows a credible progression from early tech roles at Atari, through the founding and IBM exit of Outblaze (~$15M), to the strategic pivot of Animoca Brands into blockchain gaming. The acquisition of The Sandbox in 2018 proved transformative — SAND token reached an all-time high of $8.40 in November 2021.
+Significant developments since 2023 include: the MOCA token launch ($29.3M raised, Jul 2024), the Anchorpoint Financial JV with Standard Chartered and HKT (granted HKMA stablecoin issuer licence for HKDAP), and a Nasdaq reverse merger filing with Currenc Group (Nov 2025) at ~$1B valuation — notably below the last $5.9B private round. FY2024 financials show total assets of $4.3B, with $2.9B in off-balance sheet token reserves.
 
-However, significant valuation uncertainty persists. SAND has declined approximately 93% from its peak. NFT market values have collapsed 80-95% from 2021 highs. Animoca Brands' $5.9B valuation is based on the last funding round (January 2022) and has not been tested by a subsequent round or public offering. Secondary market estimates suggest a 30-50% discount may be appropriate.
-
-The overall confidence score is notably lower than typical UHNW profiles. On-chain data provides some transparency for crypto holdings, but private company valuations, unrealized investment returns from 340+ portfolio companies, and illiquid NFT holdings create substantial uncertainty. The ASX delisting in 2020 removed mandatory public disclosure requirements, further reducing transparency.`;
+However, substantial risks persist. SAND has declined ~93% from peak. Subsidiary tokens (REVV, TOWER) are effectively defunct. The Lympo subsidiary was hacked for $18.7M (Jan 2022) — 6.5x its acquisition cost. Siu's X/Twitter account was compromised via phishing (Dec 2024). NFT valuations remain highly subjective (client claims $50M vs. DappRadar floor prices of $12-18M). The ASX delisting in 2020 removed mandatory disclosure, and the overall confidence score reflects limited transparency across 19 data sources.`;
 
 // ── Monitoring Table ────────────────────────────────────────────
 
@@ -1034,6 +1161,10 @@ const JACK_MA_CLIENT_DOCS: ClientDocument[] = [
 	{ id: "cd-jm-7", type: "incorporation-cert", label: "FilEasy API: SAMR — Alibaba Group Holdings Registration", submittedBy: "FilEasy API — automated retrieval", submittedDate: "2026-05-17", status: "verified", fileDescription: "SAMR National Enterprise Credit Information System record for Alibaba Group Holding Limited. USCC: 91330100799999776H. Legal representative: 马云. Business scope, registered capital, credit standing, and judicial records returned.", verificationNotes: "100% verified — government authority. FilEasy China Cross-Border API returned full SAMR registration, credit standing (Normal), and judicial records (antitrust fine resolved 2021).", governmentAuthority: "China SAMR (via FilEasy China Cross-Border)" },
 	{ id: "cd-jm-8", type: "incorporation-cert", label: "FilEasy API: HK CR — Alibaba Group (HK) Limited", submittedBy: "FilEasy API — automated retrieval", submittedDate: "2026-05-17", status: "verified", fileDescription: "Hong Kong Companies Registry record for Alibaba Group (HK) Limited (CR No. 1359598). Directors, registered office, annual returns. Hong Kong subsidiary entity.", verificationNotes: "100% verified — government authority. FilEasy CorpVerify returned exact match on company name and CR number.", governmentAuthority: "Hong Kong Companies Registry (via FilEasy CorpVerify)" },
 	{ id: "cd-jm-9", type: "property-deed", label: "French Land Registry — Château de Sours, Bordeaux", submittedBy: "Client (via Notaire, Bordeaux)", submittedDate: "2026-05-02", status: "verified", fileDescription: "Service de Publicité Foncière deed for Château de Sours, Saint-Quentin-de-Baron, Gironde. 54-hectare vineyard property. Owner: corporate entity linked to Ma Yun. Second French vineyard acquisition after Château Guerry.", verificationNotes: "Verified via French land registry. Ownership via corporate entity — beneficial owner cross-referenced against SCMP reporting. Valuation estimate from vineyard broker data.", governmentAuthority: "Service de Publicité Foncière (French Land Registry)" },
+	{ id: "cd-jm-10", type: "property-deed", label: "Franklin County NY — Brandon Park Estate (28,100 acres)", submittedBy: "Client (via Sullivan & Cromwell LLP)", submittedDate: "2026-04-28", status: "verified", fileDescription: "Franklin County NY deed for Brandon Park. 28,100 acres in Adirondacks. Purchased May 2015 via New Brandon LLC for ~$23M. Includes 9 miles of St. Regis River, lakes, 20+ structures.", verificationNotes: "Deed verified via Franklin County real property records. Ownership entity New Brandon LLC linked to Ma through corporate filings.", governmentAuthority: "Franklin County NY Clerk (Real Property)" },
+	{ id: "cd-jm-11", type: "other", label: "Maritime Registry — M/Y Zen (88m Feadship)", submittedBy: "Client (via maritime broker)", submittedDate: "2026-05-05", status: "verified", fileDescription: "Vessel registration for M/Y Zen. 88m (289 ft) Feadship, launched 2021. 2,562 GT. Builder: Royal Van Lent. Registered owner details. 16 guests, 25 crew. Estimated value ~$200M.", verificationNotes: "Vessel identity confirmed via IMO number and flag state registry. Ownership linked to Ma through corporate structures.", governmentAuthority: "Cayman Islands Shipping Registry" },
+	{ id: "cd-jm-12", type: "other", label: "Aviation Registry — Gulfstream G650ER (VP-CZM)", submittedBy: "Client (via aviation management company)", submittedDate: "2026-05-05", status: "verified", fileDescription: "Aircraft registration for Gulfstream G650ER. Registration: VP-CZM (Cayman Islands). Year: 2020. Ownership entity: Brilliant Sky Blue Limited. Estimated value ~$65-70M.", verificationNotes: "Registration confirmed via Cayman Islands Civil Aviation Authority. Previous aircraft G550 (N999HZ) also documented.", governmentAuthority: "Cayman Islands CAA" },
+	{ id: "cd-jm-13", type: "other", label: "HKEX Disclosure — Yunfeng Financial Group (11.15% stake)", submittedBy: "FilEasy API — automated retrieval", submittedDate: "2026-05-17", status: "verified", fileDescription: "HKEX mandatory disclosure filing showing Ma Yun as holder of 11.15% stake in Yunfeng Financial Group. Recent disclosure: company purchased 10,000 ETH ($44M) as strategic reserve.", verificationNotes: "100% verified — government authority. HKEX mandatory substantial shareholder disclosure.", governmentAuthority: "HKEX / SFC (via FilEasy CorpVerify)" },
 ];
 
 const YAT_SIU_CLIENT_DOCS: ClientDocument[] = [
@@ -1044,6 +1175,9 @@ const YAT_SIU_CLIENT_DOCS: ClientDocument[] = [
 	{ id: "cd-ys-5", type: "bank-statement", label: "HSBC Private Banking — HKD Account Statement", submittedBy: "Client (via HSBC HK)", submittedDate: "2026-04-15", status: "verified", fileDescription: "HSBC Private Banking statement for account ending ••7293. Period: Jan-Mar 2026. Shows salary credits from Animoca Brands, dividend income, and crypto exchange settlements.", verificationNotes: "Salary credits match ASX annual report executive remuneration disclosures. HSBC is HKMA-regulated institution.", governmentAuthority: "Hong Kong Monetary Authority (HKMA) — regulated institution" },
 	{ id: "cd-ys-6", type: "property-deed", label: "FilEasy API: HK Land Registry — Mid-Levels Residential Property", submittedBy: "FilEasy API — automated retrieval", submittedDate: "2026-05-17", status: "verified", fileDescription: "Hong Kong Land Registry memorial for residential property in Mid-Levels. Owner: SIU Yat. Purchase completed 2005. Current estimated value per RVD index. Retrieved via FilEasy property search API.", verificationNotes: "100% verified — government authority. FilEasy API returned land registry memorial with registered owner and transaction history. RVD price index applied for current valuation.", governmentAuthority: "Hong Kong Land Registry (via FilEasy API)" },
 	{ id: "cd-ys-7", type: "incorporation-cert", label: "FilEasy API: Animoca Brands Limited — HK CR Search", submittedBy: "FilEasy API — automated retrieval", submittedDate: "2026-05-17", status: "verified", fileDescription: "HK Companies Registry record for Animoca Brands Limited (CR No. 2283149). Incorporation date, registered office, directors (SIU Yat), secretary, annual returns.", verificationNotes: "100% verified — government authority. FilEasy API exact match on company name and CR number.", governmentAuthority: "Hong Kong Companies Registry (via FilEasy API)" },
+	{ id: "cd-ys-8", type: "other", label: "Animoca Brands FY2024 Investor Update — $4.3B total assets", submittedBy: "Animoca Brands IR department", submittedDate: "2026-03-15", status: "verified", fileDescription: "FY2024 annual investor update: total assets $4.3B, cash + stablecoins $293M, digital assets $538M, minority investments $564M (540+ companies), off-balance sheet token reserves $2.9B. Total bookings $314M.", verificationNotes: "Company filing — not independently audited but cross-referenced against prior filings. Consistent with PitchBook and Bloomberg estimates.", governmentAuthority: "N/A (private company disclosure)" },
+	{ id: "cd-ys-9", type: "other", label: "SEC Filing — Currenc Group (CURR) Reverse Merger with Animoca", submittedBy: "Client (via Davis Polk & Wardwell LLP)", submittedDate: "2025-11-10", status: "pending", fileDescription: "SEC filing for proposed reverse merger between Currenc Group Inc. (Nasdaq: CURR) and Animoca Brands. Animoca shareholders to receive 95% ownership. Target valuation ~$1B. Expected closing Q3 2026.", verificationNotes: "Filed with SEC. Subject to regulatory approval. Valuation significantly below last private round ($5.9B). If completed, will be Animoca's first public listing.", governmentAuthority: "U.S. Securities and Exchange Commission (SEC)" },
+	{ id: "cd-ys-10", type: "other", label: "HKMA Stablecoin Issuer License — Anchorpoint Financial", submittedBy: "Anchorpoint Financial Ltd (via Standard Chartered)", submittedDate: "2025-02-20", status: "verified", fileDescription: "HKMA stablecoin issuer licence granted to Anchorpoint Financial (JV: Standard Chartered + HKT + Animoca Brands). Product: HKDAP (Hong Kong Dollar At Par). One of first two licences issued under HK stablecoin framework.", verificationNotes: "100% verified — government authority. HKMA public registry confirms licence.", governmentAuthority: "Hong Kong Monetary Authority (HKMA)" },
 ];
 
 // ── Cross-References ───────────────────────────────────────────
@@ -1062,6 +1196,12 @@ const JACK_MA_CROSS_REFS: CrossReference[] = [
 	{ id: "xr-jm-11", field: "New York Property", clientDocLabel: "Client self-declaration", externalSourceLabel: "NYC Dept of Finance — ACRIS", clientValue: "Reported luxury residence, Manhattan", externalValue: "No matching record found under MA YUN or known entities", match: "not-available", confidence: 20, verifiedVia: "NYC ACRIS search — no result", notes: "Client disclosed NYC property but no matching deed found in ACRIS under known name or entity variants. May be held via undisclosed LLC." },
 	{ id: "xr-jm-12", field: "Ant Group Stake", clientDocLabel: "Client counsel disclosure", externalSourceLabel: "Reuters / WSJ — Post-restructuring reports", clientValue: "~10% personal stake in Ant Group", externalValue: "Ma ceded control; stake diluted to ~8% post-restructuring", match: "partial", confidence: 55, verifiedVia: "News sources — no official registry confirmation", notes: "Client claims 10% but post-restructuring dilution suggests ~8%. Ant Group is private with no mandatory disclosure — exact figure unverifiable." },
 	{ id: "xr-jm-13", field: "Ant Group Credit Standing", clientDocLabel: "FilEasy: SAMR — Ant Group Judicial Records", externalSourceLabel: "PBOC Restructuring Approval", clientValue: "SAMR status: Normal, judicial orders resolved", externalValue: "PBOC approved financial holding company status (Jul 2023)", match: "exact", confidence: 100, verifiedVia: "FilEasy China Cross-Border (SAMR Judicial) — government authority" },
+	{ id: "xr-jm-14", field: "Adirondack Estate", clientDocLabel: "Franklin County NY — New Brandon LLC deed", externalSourceLabel: "CNN Money / The Land Report", clientValue: "28,100 acres, Brandon Park, purchased May 2015 via New Brandon LLC", externalValue: "Jack Ma buys $23M Adirondack estate (28,100 acres)", match: "exact", confidence: 95, verifiedVia: "Franklin County deed records + news cross-reference", notes: "Ownership via corporate entity New Brandon LLC. Beneficial owner confirmed through corporate filings and multiple news reports." },
+	{ id: "xr-jm-15", field: "Superyacht 'Zen'", clientDocLabel: "Maritime registry — M/Y Zen", externalSourceLabel: "SuperYachtFan / Vice / Asia Pacific Boating", clientValue: "88m Feadship (2021), est. $200M", externalValue: "Jack Ma spotted aboard Zen in Mallorca (2022-2023)", match: "exact", confidence: 85, verifiedVia: "Vessel registry + news photography", notes: "Ownership confirmed via vessel registry and multiple sightings. Exact purchase price not publicly disclosed — $200M is industry estimate." },
+	{ id: "xr-jm-16", field: "Private Jet", clientDocLabel: "Aviation registry — VP-CZM", externalSourceLabel: "SuperYachtFan aviation tracking", clientValue: "Gulfstream G650ER, reg VP-CZM, owner Brilliant Sky Blue Ltd (Cayman)", externalValue: "Aircraft tracked to Hangzhou home base, linked to Ma", match: "exact", confidence: 90, verifiedVia: "Cayman Islands corporate registry + aviation tracking" },
+	{ id: "xr-jm-17", field: "Singapore Properties", clientDocLabel: "Client counsel disclosure", externalSourceLabel: "Bloomberg Singapore property report", clientValue: "Good Class Bungalow + 3 Duxton Rd shophouses", externalValue: "Zhang Ying (Ma's wife) purchased — GCB ~S$40M, shophouses S$45-50M", match: "partial", confidence: 80, verifiedVia: "Bloomberg + Singapore property records", notes: "Properties held in wife's name (Zhang Ying, Singapore citizen). Beneficial ownership attributed to Ma household wealth but not personally titled." },
+	{ id: "xr-jm-18", field: "Yunfeng Financial Holdings", clientDocLabel: "HKEX disclosure — Yunfeng Financial Group", externalSourceLabel: "SCMP / HKEX annual report", clientValue: "11.15% stake in HK-listed Yunfeng Financial", externalValue: "Yunfeng Financial purchased 10,000 ETH ($44M) Sept 2025", match: "exact", confidence: 100, verifiedVia: "HKEX mandatory disclosure — government authority" },
+	{ id: "xr-jm-19", field: "Blue Pool Capital AUM", clientDocLabel: "Client family office disclosure", externalSourceLabel: "CBInsights / Financial Times", clientValue: "Co-founder of Blue Pool Capital, manages family wealth", externalValue: "AUM $50B+ as of 2022, Riverside Fund raised $1B (2025)", match: "partial", confidence: 60, verifiedVia: "Industry databases — AUM not officially disclosed", notes: "Blue Pool Capital is a private family office with no mandatory AUM disclosure. $50B+ figure from industry estimates." },
 ];
 
 const YAT_SIU_CROSS_REFS: CrossReference[] = [
@@ -1076,6 +1216,12 @@ const YAT_SIU_CROSS_REFS: CrossReference[] = [
 	{ id: "xr-ys-9", field: "NFT Portfolio Value", clientDocLabel: "Client self-declaration", externalSourceLabel: "DappRadar Portfolio Tracker", clientValue: "$50M estimated (personal collection)", externalValue: "Floor price aggregate: ~$12-18M", match: "mismatch", confidence: 25, verifiedVia: "DappRadar floor price methodology", notes: "Client's self-assessed NFT value ($50M) significantly exceeds market floor prices ($12-18M). NFT valuations are illiquid and subjective. Last sold comparables suggest 60-75% markdown from client estimate." },
 	{ id: "xr-ys-10", field: "Animoca Brands Valuation", clientDocLabel: "Client counsel (investor deck)", externalSourceLabel: "PitchBook Secondary Market Data", clientValue: "$5.9B (last funding round, Jan 2022)", externalValue: "Secondary trades imply $2.5-3.5B (30-50% discount)", match: "partial", confidence: 45, verifiedVia: "PitchBook private secondary market", notes: "Last round valuation ($5.9B) has not been tested by a subsequent round. Secondary market estimates suggest significant discount. No IPO or down-round to establish current fair value." },
 	{ id: "xr-ys-11", field: "IBM Acquisition Proceeds", clientDocLabel: "FilEasy: HK CR — Outblaze Limited", externalSourceLabel: "IBM Press Release (2009)", clientValue: "Messaging division sold — est. $10-20M", externalValue: "IBM confirms acquisition, no price disclosed", match: "partial", confidence: 70, verifiedVia: "IBM newsroom + HK CR records", notes: "IBM confirmed the acquisition but never disclosed the price. Range of $10-20M is inferred from industry comparables and media reports. Exact figure unverifiable." },
+	{ id: "xr-ys-12", field: "TinyTap Acquisition", clientDocLabel: "Animoca press release — TinyTap", externalSourceLabel: "CoinDesk / The Block reporting", clientValue: "80.45% stake for $38.875M (cash + shares)", externalValue: "Animoca acquires TinyTap for $38.9M, later raised at $100M", match: "exact", confidence: 90, verifiedVia: "Company filings + news cross-reference" },
+	{ id: "xr-ys-13", field: "MOCA Token Raise", clientDocLabel: "CoinList token sale records", externalSourceLabel: "Animoca Brands investor update", clientValue: "$29.3M raised, 12x oversubscribed", externalValue: "MOCA launched July 2024, ATH $0.48, current ~$0.014", match: "exact", confidence: 85, verifiedVia: "CoinList platform + on-chain data" },
+	{ id: "xr-ys-14", field: "Nasdaq Reverse Merger", clientDocLabel: "SEC filing — Currenc Group (CURR)", externalSourceLabel: "Bloomberg / CoinDesk reporting", clientValue: "Filed Nov 2025, Animoca shareholders get 95%", externalValue: "Target ~$1B valuation, expected Q3 2026 close", match: "exact", confidence: 80, verifiedVia: "SEC filings + news cross-reference", notes: "Merger subject to regulatory approval and market conditions. Valuation significantly below last private round ($5.9B). If completed, first public listing for Animoca." },
+	{ id: "xr-ys-15", field: "Lympo Hack Loss", clientDocLabel: "Animoca subsidiary disclosure", externalSourceLabel: "Cointelegraph / blockchain records", clientValue: "Lympo acquired for $2.88M (2020)", externalValue: "Hot wallet hacked Jan 2022 — $18.7M in LMT tokens stolen", match: "mismatch", confidence: 95, verifiedVia: "On-chain transaction records", notes: "Hack loss ($18.7M) exceeded acquisition cost ($2.88M) by 6.5x. Demonstrates crypto subsidiary security risk. LMT crashed 92% in 12 hours." },
+	{ id: "xr-ys-16", field: "REVV Token Value", clientDocLabel: "CoinGecko market data", externalSourceLabel: "On-chain analysis", clientValue: "REVV ATH: $0.63, market cap $169K current", externalValue: "Effectively near-zero — 99.97% decline from ATH", match: "exact", confidence: 95, verifiedVia: "CoinGecko + on-chain data", notes: "REVV token is effectively defunct. Total market cap under $200K. Illustrates tail risk in subsidiary token allocations." },
+	{ id: "xr-ys-17", field: "Anchorpoint Stablecoin License", clientDocLabel: "HKMA public registry", externalSourceLabel: "Standard Chartered press release", clientValue: "HKMA stablecoin issuer licence granted (Feb 2025)", externalValue: "JV with Standard Chartered + HKT to issue HKDAP", match: "exact", confidence: 100, verifiedVia: "HKMA — government authority" },
 ];
 
 // ── Document Upload Slots ──────────────────────────────────────
