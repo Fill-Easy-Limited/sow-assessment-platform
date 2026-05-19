@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
 			return NextResponse.json({ error: "No OpenRouter API key configured. Set OPENROUTER_API_KEY in .env.local" }, { status: 500 });
 		}
 
-		const selectedModel = model || "google/gemini-2.5-flash";
+		const selectedModel = model || "anthropic/claude-sonnet-4";
 
 		const systemPrompt = `You are a senior compliance analyst assistant at a regulated financial institution, specialising in HNW (High Net Worth) Source of Wealth assessments under MAS (Monetary Authority of Singapore) standards — specifically MAS Notice 626 §6.18–6.22.
 

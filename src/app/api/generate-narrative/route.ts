@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
 			return NextResponse.json({ error: "No OpenRouter API key configured. Set OPENROUTER_API_KEY in .env.local" }, { status: 500 });
 		}
 
-		const selectedModel = model || "google/gemini-2.5-flash";
+		const selectedModel = model || "anthropic/claude-sonnet-4";
 
 		const systemPrompt = `You are a senior compliance analyst at a regulated financial institution. You write detailed Source of Wealth (SOW) narrative reports for High Net Worth (HNW) individual assessments under MAS (Monetary Authority of Singapore) regulatory standards — specifically MAS Notice 626 §6.18–6.22.
 

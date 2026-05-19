@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════
    HNW Wealth Intelligence — Data Model & Mock Data
-   Two reference cases: Jack Ma (Alibaba) & Yat Siu (Animoca)
+   Four reference cases: Jack Ma, Yat Siu, Donald Trump & James Chen Wei
    ═══════════════════════════════════════════════════════════════ */
 
 // ── Interfaces ──────────────────────────────────────────────────
@@ -99,6 +99,33 @@ export const CATEGORY_COLORS: Record<WealthCategory, string> = {
 	alternatives: "#d97706",
 	crypto: "#9333ea",
 };
+
+// ── Composite Risk Rating (A+ to E) ──────────────────────────────
+
+export type CorroborationGrade = "A+" | "A" | "B" | "C" | "D" | "E";
+
+export interface GradeConfig {
+	grade: CorroborationGrade;
+	label: string;
+	color: string;
+	bgColor: string;
+	borderColor: string;
+	hexColor: string;
+	minConfidence: number;
+}
+
+export const GRADE_CONFIGS: GradeConfig[] = [
+	{ grade: "A+", label: "Fully Corroborated",      color: "text-emerald-800 dark:text-emerald-300", bgColor: "bg-emerald-600/15", borderColor: "border-emerald-600/30", hexColor: "#065f46", minConfidence: 90 },
+	{ grade: "A",  label: "Highly Corroborated",      color: "text-emerald-700 dark:text-emerald-400", bgColor: "bg-emerald-500/10", borderColor: "border-emerald-500/25", hexColor: "#047857", minConfidence: 80 },
+	{ grade: "B",  label: "Well Corroborated",         color: "text-blue-700 dark:text-blue-400",       bgColor: "bg-blue-500/10",    borderColor: "border-blue-500/25",    hexColor: "#1d4ed8", minConfidence: 70 },
+	{ grade: "C",  label: "Moderately Corroborated",   color: "text-yellow-700 dark:text-yellow-400",   bgColor: "bg-yellow-500/10",  borderColor: "border-yellow-500/25",  hexColor: "#a16207", minConfidence: 60 },
+	{ grade: "D",  label: "Weak Corroboration",        color: "text-orange-700 dark:text-orange-400",   bgColor: "bg-orange-500/10",  borderColor: "border-orange-500/25",  hexColor: "#c2410c", minConfidence: 50 },
+	{ grade: "E",  label: "Poor / Not Corroborated",   color: "text-red-700 dark:text-red-400",         bgColor: "bg-red-500/10",     borderColor: "border-red-500/25",     hexColor: "#b91c1c", minConfidence: 0 },
+];
+
+export function getCorroborationGrade(overallConfidence: number): GradeConfig {
+	return GRADE_CONFIGS.find(g => overallConfidence >= g.minConfidence) ?? GRADE_CONFIGS[GRADE_CONFIGS.length - 1];
+}
 
 export interface CategoryBreakdown {
 	category: WealthCategory;
@@ -210,6 +237,32 @@ export interface HnwReport {
 	uploadSlots: DocumentUploadSlot[];
 	corroborationScores: CorroborationScores;
 	agentVerification: AgentVerification;
+	corroborationGrade: CorroborationGrade;
+	fourEyeCheck: FourEyeCheck;
+	personalRelationships: PersonalRelationship[];
+	crossLLMValidation?: CrossLLMValidation;
+}
+
+export interface FourEyeCheck {
+	analyst: { name: string; role: string; timestamp: string };
+	reviewer: { name: string; role: string; timestamp: string } | null;
+	status: "drafted" | "reviewed" | "approved" | "released";
+	signOffHistory: { action: string; by: string; at: string; comment?: string }[];
+}
+
+export interface PersonalRelationship {
+	id: string;
+	name: string;
+	relationship: "spouse" | "child" | "sibling" | "associate" | "advisor" | "trustee" | "beneficiary" | "parent";
+	notes?: string;
+	linkedEntities?: string[];
+}
+
+export interface CrossLLMValidation {
+	models: { id: string; label: string; narrative: string; tokens: number }[];
+	gapAnalysis: { area: string; model1Finding: string; model2Finding: string; status: "agree" | "disagree" | "partial" }[];
+	factualVsInferred: { category: string; factualPercent: number; inferredPercent: number }[];
+	consensusScore: number;
 }
 
 export interface HnwMonitoringEntry {
@@ -219,6 +272,8 @@ export interface HnwMonitoringEntry {
 	industry: string;
 	estimatedNetWorthUSD: number;
 	riskRating: "Low" | "Medium" | "High";
+	corroborationGrade: CorroborationGrade;
+	overallConfidence: number;
 	lastScreened: string;
 	openAlerts: number;
 	status: "Active" | "Under Review" | "Flagged";
@@ -1262,6 +1317,26 @@ export const PEP_SCREENING: PepScreeningEntry[] = [
 		overallStatus: "Review Required",
 	},
 	{
+		subjectName: "Donald Trump", riskRating: "High",
+		lastScreened: "2026-05-19",
+		listsChecked: ["OFAC SDN", "EU Consolidated", "UN Security Council", "FinCEN", "FEC", "OGE", "World-Check PEP", "Dow Jones Watchlist"],
+		pepHits: 1,
+		pepDetails: "Active PEP — current President of the United States (2025-present). Former President (2017-2021). Highest-level PEP classification. Mandatory enhanced due diligence.",
+		sanctionsHits: 0,
+		adverseMedia: 12,
+		adverseMediaDetails: "Multiple criminal indictments (2023-2024), civil fraud judgment ($454M, NY), E. Jean Carroll defamation verdicts, Trump University settlement ($25M), six corporate bankruptcies (1991-2014), ongoing DOJ investigations.",
+		overallStatus: "Flagged",
+	},
+	{
+		subjectName: "James Chen Wei", subjectNameCn: "陈伟", riskRating: "Low",
+		lastScreened: "2026-05-19",
+		listsChecked: ["OFAC SDN", "EU Consolidated", "UN Security Council", "MAS", "SFC", "World-Check PEP", "Dow Jones Watchlist"],
+		pepHits: 0,
+		sanctionsHits: 0,
+		adverseMedia: 0,
+		overallStatus: "Clear",
+	},
+	{
 		subjectName: "Elon Musk", riskRating: "Medium",
 		lastScreened: "2026-05-15",
 		listsChecked: ["OFAC SDN", "EU Consolidated", "UN Security Council", "SEC", "World-Check PEP", "Dow Jones Watchlist"],
@@ -1303,18 +1378,24 @@ However, substantial risks persist. SAND has declined ~93% from peak. Subsidiary
 // ── Monitoring Table ────────────────────────────────────────────
 
 export const HNW_MONITORING: HnwMonitoringEntry[] = [
-	{ id: "m1", name: "Jack Ma", nameCn: "马云", industry: "E-Commerce / Fintech", estimatedNetWorthUSD: 25_500_000_000, riskRating: "Medium", lastScreened: "2026-05-17", openAlerts: 2, status: "Under Review", screeningFrequency: "Monthly" },
-	{ id: "m2", name: "Yat Siu", nameCn: "蕭逸", industry: "Blockchain Gaming / Web3", estimatedNetWorthUSD: 2_400_000_000, riskRating: "High", lastScreened: "2026-05-17", openAlerts: 3, status: "Active", screeningFrequency: "Weekly" },
-	{ id: "m3", name: "Elon Musk", industry: "EV / Space / AI", estimatedNetWorthUSD: 240_000_000_000, riskRating: "Medium", lastScreened: "2026-05-15", openAlerts: 5, status: "Flagged", screeningFrequency: "Weekly" },
-	{ id: "m4", name: "Changpeng Zhao", nameCn: "赵长鹏", industry: "Crypto Exchanges", estimatedNetWorthUSD: 33_000_000_000, riskRating: "High", lastScreened: "2026-05-16", openAlerts: 4, status: "Flagged", screeningFrequency: "Weekly" },
-	{ id: "m5", name: "Masayoshi Son", nameCn: "孙正义", industry: "Venture Capital / Telecom", estimatedNetWorthUSD: 10_300_000_000, riskRating: "Low", lastScreened: "2026-05-14", openAlerts: 0, status: "Active", screeningFrequency: "Monthly" },
-	{ id: "m6", name: "Li Ka-shing", nameCn: "李嘉诚", industry: "Real Estate / Conglomerate", estimatedNetWorthUSD: 35_000_000_000, riskRating: "Low", lastScreened: "2026-05-12", openAlerts: 1, status: "Active", screeningFrequency: "Quarterly" },
-	{ id: "m7", name: "Vitalik Buterin", industry: "Blockchain / Ethereum", estimatedNetWorthUSD: 1_500_000_000, riskRating: "Medium", lastScreened: "2026-05-16", openAlerts: 1, status: "Active", screeningFrequency: "Monthly" },
+	{ id: "m1", name: "Jack Ma", nameCn: "马云", industry: "E-Commerce / Fintech", estimatedNetWorthUSD: 25_500_000_000, riskRating: "Medium", corroborationGrade: "C", overallConfidence: 62, lastScreened: "2026-05-17", openAlerts: 2, status: "Under Review", screeningFrequency: "Monthly" },
+	{ id: "m2", name: "Yat Siu", nameCn: "蕭逸", industry: "Blockchain Gaming / Web3", estimatedNetWorthUSD: 2_400_000_000, riskRating: "High", corroborationGrade: "E", overallConfidence: 45, lastScreened: "2026-05-17", openAlerts: 3, status: "Active", screeningFrequency: "Weekly" },
+	{ id: "m8", name: "Donald Trump", industry: "Real Estate / Media / Politics", estimatedNetWorthUSD: 6_500_000_000, riskRating: "High", corroborationGrade: "D", overallConfidence: 52, lastScreened: "2026-05-19", openAlerts: 4, status: "Flagged", screeningFrequency: "Weekly" },
+	{ id: "m9", name: "James Chen Wei", nameCn: "陈伟", industry: "Private Equity / Family Office", estimatedNetWorthUSD: 380_000_000, riskRating: "Low", corroborationGrade: "A", overallConfidence: 88, lastScreened: "2026-05-19", openAlerts: 0, status: "Active", screeningFrequency: "Quarterly" },
+	{ id: "m3", name: "Elon Musk", industry: "EV / Space / AI", estimatedNetWorthUSD: 240_000_000_000, riskRating: "Medium", corroborationGrade: "D", overallConfidence: 55, lastScreened: "2026-05-15", openAlerts: 5, status: "Flagged", screeningFrequency: "Weekly" },
+	{ id: "m4", name: "Changpeng Zhao", nameCn: "赵长鹏", industry: "Crypto Exchanges", estimatedNetWorthUSD: 33_000_000_000, riskRating: "High", corroborationGrade: "E", overallConfidence: 38, lastScreened: "2026-05-16", openAlerts: 4, status: "Flagged", screeningFrequency: "Weekly" },
+	{ id: "m5", name: "Masayoshi Son", nameCn: "孙正义", industry: "Venture Capital / Telecom", estimatedNetWorthUSD: 10_300_000_000, riskRating: "Low", corroborationGrade: "B", overallConfidence: 72, lastScreened: "2026-05-14", openAlerts: 0, status: "Active", screeningFrequency: "Monthly" },
+	{ id: "m6", name: "Li Ka-shing", nameCn: "李嘉诚", industry: "Real Estate / Conglomerate", estimatedNetWorthUSD: 35_000_000_000, riskRating: "Low", corroborationGrade: "B", overallConfidence: 78, lastScreened: "2026-05-12", openAlerts: 1, status: "Active", screeningFrequency: "Quarterly" },
+	{ id: "m7", name: "Vitalik Buterin", industry: "Blockchain / Ethereum", estimatedNetWorthUSD: 1_500_000_000, riskRating: "Medium", corroborationGrade: "E", overallConfidence: 42, lastScreened: "2026-05-16", openAlerts: 1, status: "Active", screeningFrequency: "Monthly" },
 ];
 
 // ── Notifications ───────────────────────────────────────────────
 
 export const HNW_NOTIFICATIONS: HnwNotification[] = [
+	{ id: "n9", type: "alert", title: "PEP status — active head of state — Donald Trump", detail: "Active PEP classification: sitting U.S. President. Mandatory enhanced due diligence and senior management approval required before onboarding.", time: "1 hour ago", subjectName: "Donald Trump", read: false },
+	{ id: "n10", type: "alert", title: "OGE financial disclosure update — Donald Trump", detail: "New Office of Government Ethics public financial disclosure filed. Updated DJT/TMTG holdings and real estate valuations available.", time: "6 hours ago", subjectName: "Donald Trump", read: false },
+	{ id: "n11", type: "alert", title: "DJT stock volatility — Donald Trump", detail: "Trump Media & Technology Group (DJT) shares swung 18% in 48 hours. Mark-to-market wealth estimate requires update.", time: "1 day ago", subjectName: "Donald Trump", read: false },
+	{ id: "n12", type: "completed", title: "Assessment complete — James Chen Wei", detail: "Full SOW assessment completed with Grade A corroboration. All documents verified. Four-eye check approved by Michael Wong.", time: "2 hours ago", subjectName: "James Chen Wei", read: false },
 	{ id: "n1", type: "alert", title: "Adverse media hit — Jack Ma", detail: "Bloomberg reports on Ant Group regulatory developments. New PBOC disclosure requirements affecting valuation estimates.", time: "3 hours ago", subjectName: "Jack Ma", read: false },
 	{ id: "n2", type: "alert", title: "SAND token price alert — Yat Siu", detail: "SAND dropped 12% in 24h to $0.28. Portfolio mark-to-market valuation update required.", time: "5 hours ago", subjectName: "Yat Siu", read: false },
 	{ id: "n3", type: "update", title: "SEC filing update — Alibaba Group", detail: "Alibaba 20-F annual report filed. Updated share structure and beneficial ownership data available.", time: "1 day ago", subjectName: "Jack Ma", read: true },
@@ -1475,6 +1556,24 @@ const JACK_MA_REPORT: HnwReport = {
 			"Schedule quarterly re-screening given PEP near-match status and regulatory exposure",
 		],
 	},
+	corroborationGrade: "C",
+	fourEyeCheck: {
+		analyst: { name: "Sarah Chen", role: "Senior Compliance Analyst", timestamp: "2026-05-17T14:30:00Z" },
+		reviewer: { name: "Michael Wong", role: "Head of Financial Crime", timestamp: "2026-05-18T09:15:00Z" },
+		status: "reviewed",
+		signOffHistory: [
+			{ action: "Drafted", by: "Sarah Chen", at: "2026-05-17T14:30:00Z", comment: "Initial SOW assessment completed" },
+			{ action: "Reviewed", by: "Michael Wong", at: "2026-05-18T09:15:00Z", comment: "Requires follow-up on Ant Group and Singapore trust" },
+		],
+	},
+	personalRelationships: [
+		{ id: "pr-jm-1", name: "Zhang Ying (Cathy Zhang)", relationship: "spouse", notes: "Co-founder of Alibaba, holds Singapore property portfolio (~$50M)", linkedEntities: ["Singapore Properties"] },
+		{ id: "pr-jm-2", name: "Ma Yuankun", relationship: "child", notes: "Son, limited public information" },
+		{ id: "pr-jm-3", name: "Ma (daughter)", relationship: "child", notes: "Daughter, limited public information" },
+		{ id: "pr-jm-4", name: "Joe Tsai (蔡崇信)", relationship: "associate", notes: "Co-founder of Alibaba, Vice Chairman. Co-investor in Blue Pool Capital. Net worth ~$10.7B", linkedEntities: ["Alibaba Group (NYSE: BABA)", "Blue Pool Capital"] },
+		{ id: "pr-jm-5", name: "Simon Xie", relationship: "advisor", notes: "Manages Jack Ma family trust via Singapore structure", linkedEntities: ["Singapore Family Trust"] },
+		{ id: "pr-jm-6", name: "Daniel Zhang (张勇)", relationship: "associate", notes: "Former CEO of Alibaba Group, key succession figure", linkedEntities: ["Alibaba Group (NYSE: BABA)"] },
+	],
 };
 
 const YAT_SIU_REPORT: HnwReport = {
@@ -1539,9 +1638,700 @@ const YAT_SIU_REPORT: HnwReport = {
 			"Engage ASX/ASIC for complete delisting correspondence to resolve competing narratives",
 		],
 	},
+	corroborationGrade: "E",
+	fourEyeCheck: {
+		analyst: { name: "Kevin Lam", role: "Compliance Analyst", timestamp: "2026-05-17T10:00:00Z" },
+		reviewer: null,
+		status: "drafted",
+		signOffHistory: [
+			{ action: "Drafted", by: "Kevin Lam", at: "2026-05-17T10:00:00Z", comment: "High risk — crypto volatility requires daily revaluation" },
+		],
+	},
+	personalRelationships: [
+		{ id: "pr-ys-1", name: "Family (private)", relationship: "spouse", notes: "Spouse identity not publicly disclosed, based in Hong Kong" },
+		{ id: "pr-ys-2", name: "David Kim", relationship: "associate", notes: "Co-founder of Animoca Brands, COO", linkedEntities: ["Animoca Brands"] },
+		{ id: "pr-ys-3", name: "Evan Auyang", relationship: "associate", notes: "Group President of Animoca Brands", linkedEntities: ["Animoca Brands"] },
+		{ id: "pr-ys-4", name: "Sebastien Borget", relationship: "associate", notes: "Co-founder of The Sandbox, key partnership", linkedEntities: ["The Sandbox (SAND)"] },
+	],
 };
 
-export const HNW_CASES: HnwReport[] = [JACK_MA_REPORT, YAT_SIU_REPORT];
+// ── Donald Trump: Sources ──────────────────────────────────────
+
+const SRC_TRUMP: Record<string, SourceCitation> = {
+	forbesTrump: {
+		id: "dt1", label: "Forbes Real-Time Billionaires (Donald Trump)", url: "https://www.forbes.com/profile/donald-trump/", date: "2026-05-01", type: "estimate",
+		...srcMeta("forbes.com", "Donald Trump - Forbes Real-Time Billionaires", "Forbes billionaire profile for Donald J. Trump. Real-time net worth estimate of $6.5B. Source of wealth listed as real estate and media.", "#c4112f"),
+	},
+	ogeDisclosure: {
+		id: "dt2", label: "OGE Public Financial Disclosure — President Trump (2025)", url: "https://www.oge.gov/", date: "2025-06-15", type: "filing",
+		...srcMeta("oge.gov", "OGE | Public Financial Disclosure Report — Donald J. Trump", "Office of Government Ethics public financial disclosure showing income sources, assets, and liabilities. Over 500 entities listed across LLCs, golf clubs, licensing deals, and investments.", "#003366"),
+	},
+	secDJT: {
+		id: "dt3", label: "SEC EDGAR — Trump Media & Technology Group (DJT) 10-K", url: "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001849635&type=10-K", date: "2025-04-01", type: "filing",
+		...srcMeta("sec.gov", "SEC EDGAR | 10-K Annual Report | Trump Media & Technology Group", "SEC EDGAR filing showing Trump Media & Technology Group (Nasdaq: DJT) annual report. Beneficial ownership shows Donald J. Trump holding approximately 53% of outstanding shares.", "#003366"),
+	},
+	nycPropertyRecords: {
+		id: "dt4", label: "NYC Dept of Finance — Trump Tower Assessment", url: "https://www.nyc.gov/site/finance/property/property.page", date: "2025-01-01", type: "registry",
+		...srcMeta("nyc.gov", "NYC Finance | Property Assessment — 725 Fifth Avenue (Trump Tower)", "NYC Department of Finance property tax assessment for 725 Fifth Avenue (Trump Tower). Assessed value, tax class, and ownership records for the commercial condominium.", "#003399"),
+		companySearchTemplate: {
+			registryName: "NYC Department of Finance — ACRIS & Property Tax",
+			registryUrl: "https://a836-acris.nyc.gov/",
+			searchFields: [
+				{ label: "Property Address", value: "725 Fifth Avenue, New York, NY 10022" },
+				{ label: "Borough", value: "Manhattan" },
+				{ label: "Block/Lot", value: "1286/38" },
+			],
+			jurisdiction: "New York, USA",
+			searchType: "Property Assessment Search",
+		},
+	},
+	fecFilings: {
+		id: "dt5", label: "FEC Campaign Finance Filings — Trump 2024", url: "https://www.fec.gov/data/candidate/P80001571/", date: "2024-11-01", type: "filing",
+		...srcMeta("fec.gov", "FEC | Candidate Summary — Donald J. Trump", "Federal Election Commission filing summary for Donald J. Trump presidential campaign. Receipts, disbursements, and personal financial contributions disclosed.", "#003399"),
+	},
+	nyAGFraud: {
+		id: "dt6", label: "NY AG: Trump Organization Civil Fraud Judgment ($454M)", url: "https://ag.ny.gov/press-release/2024/attorney-general-james-wins-landmark-victory", date: "2024-02-16", type: "public-record",
+		...srcMeta("ag.ny.gov", "AG James Wins Landmark Victory in Civil Fraud Case | NY AG", "New York Attorney General press release on civil fraud judgment against Trump Organization. Judge Engoron ordered $454 million in disgorgement and penalties. Asset inflation findings for loan applications.", "#003399"),
+	},
+	bloombergTrump: {
+		id: "dt7", label: "Bloomberg Billionaires Index — Donald Trump", url: "https://www.bloomberg.com/billionaires/profiles/donald-j-trump/", date: "2026-05-01", type: "estimate",
+		...srcMeta("bloomberg.com", "Bloomberg Billionaires Index | Donald J. Trump", "Bloomberg Billionaires Index profile showing Trump net worth breakdown. Real estate, licensing income, DJT stock, and golf club valuations itemized.", "#1e1e1e"),
+	},
+	palmBeachCounty: {
+		id: "dt8", label: "Palm Beach County — Mar-a-Lago Property Assessment", url: "https://www.pbcgov.org/papa/", type: "registry",
+		...srcMeta("pbcgov.org", "Palm Beach County Property Appraiser | Mar-a-Lago", "Palm Beach County property appraiser record for Mar-a-Lago Club, 1100 S Ocean Blvd, Palm Beach. Tax assessment, land value, and improvement value. Special use classification as private club.", "#336633"),
+		companySearchTemplate: {
+			registryName: "Palm Beach County Property Appraiser",
+			registryUrl: "https://www.pbcgov.org/papa/",
+			searchFields: [
+				{ label: "Property Address", value: "1100 S Ocean Blvd, Palm Beach, FL 33480" },
+				{ label: "Owner Name", value: "Trump, Donald J" },
+				{ label: "Search Type", value: "Owner Name / Address Search" },
+			],
+			jurisdiction: "Palm Beach County, Florida, USA",
+			searchType: "Property Assessment Search",
+		},
+	},
+	nySOS: {
+		id: "dt9", label: "NY Secretary of State — Trump Organization LLC filings", url: "https://www.dos.ny.gov/corps/", type: "registry",
+		...srcMeta("dos.ny.gov", "NY DOS | Entity Search — The Trump Organization", "New York Secretary of State entity search results for Trump-related LLCs and corporations. Over 500 entities registered in New York. Filing dates, status, and registered agent information.", "#003399"),
+	},
+	djtStock: {
+		id: "dt10", label: "Nasdaq: DJT Historical Share Price", url: "https://finance.yahoo.com/quote/DJT/history/", type: "market-data",
+		...srcMeta("finance.yahoo.com", "DJT Historical Data | Yahoo Finance", "Yahoo Finance historical price chart for Trump Media & Technology Group (DJT). IPO via SPAC merger March 2024. Extreme volatility — range from $12 to $79. Current market cap ~$6B.", "#410093"),
+	},
+};
+
+// ── Donald Trump: Career Timeline ──────────────────────────────
+
+const TRUMP_CAREER: CareerPhase[] = [
+	{
+		id: "dt-1", title: "Early Career & Family Business", organization: "Trump Organization", role: "Executive VP / President",
+		startYear: 1971, endYear: 1985, location: "New York, New York",
+		description: "Joined father Fred Trump's real estate company after Wharton. Received substantial loans and inheritance from father (estimated $413M over lifetime per NYT investigation). Rebranded company as The Trump Organization. Developed Grand Hyatt Hotel and Trump Tower on Fifth Avenue.",
+		categories: [
+			{ category: "companies", claims: [
+				{ id: "dt1-1", description: "Trump Organization equity and inherited real estate portfolio (Fred Trump transfers — NYT investigation estimated $413M lifetime)", estimatedValueUSD: 200_000_000, confidence: 55, sources: [SRC_TRUMP.forbesTrump, SRC_TRUMP.nySOS] },
+			], subtotalUSD: 200_000_000, avgConfidence: 55 },
+		],
+		phaseWealthUSD: 200_000_000, cumulativeWealthUSD: 200_000_000,
+		keyEvents: ["1971: Joined Trump Organization", "1978: Grand Hyatt Hotel conversion", "1983: Trump Tower opens on Fifth Avenue"],
+	},
+	{
+		id: "dt-2", title: "Expansion & Bankruptcy Era", organization: "Trump Organization / Trump Casinos", role: "Chairman & CEO",
+		startYear: 1985, endYear: 1995, location: "New York / Atlantic City, NJ",
+		description: "Aggressive expansion into Atlantic City casinos (Trump Plaza, Trump Taj Mahal, Trump Marina), airlines (Trump Shuttle), and the Plaza Hotel. Overleveraged with over $3.4B in debt by 1990. Six corporate bankruptcies between 1991-2009. Personal net worth nearly wiped out. Banks restructured debt with conditions.",
+		categories: [
+			{ category: "companies", claims: [
+				{ id: "dt2-1", description: "Trump Organization post-restructuring equity (casino bankruptcies wiped out significant value, personal guarantees negotiated down)", estimatedValueUSD: 500_000_000, confidence: 40, sources: [SRC_TRUMP.forbesTrump, SRC_TRUMP.bloombergTrump] },
+			], subtotalUSD: 500_000_000, avgConfidence: 40 },
+		],
+		phaseWealthUSD: 300_000_000, cumulativeWealthUSD: 500_000_000,
+		keyEvents: ["1988: Trump Taj Mahal opens ($1B cost)", "1990: Near-personal bankruptcy, banks restructure debt", "1991-1992: Three casino bankruptcies (Ch. 11)"],
+	},
+	{
+		id: "dt-3", title: "Brand Licensing & Recovery", organization: "Trump Organization", role: "Chairman & President",
+		startYear: 1996, endYear: 2004, location: "New York, New York",
+		description: "Pivoted to asset-light licensing model — 'Trump' brand licensed to developers worldwide for premium fees. Trump World Tower (UN Plaza), Trump International Hotel & Tower (Columbus Circle). Revenue from licensing deals rather than direct development reduced risk.",
+		categories: [
+			{ category: "companies", claims: [
+				{ id: "dt3-1", description: "Trump Organization real estate and licensing deals (brand licensing revenue growing, NYC properties appreciating)", estimatedValueUSD: 2_000_000_000, confidence: 45, sources: [SRC_TRUMP.forbesTrump, SRC_TRUMP.nycPropertyRecords] },
+			], subtotalUSD: 2_000_000_000, avgConfidence: 45 },
+			{ category: "income", claims: [
+				{ id: "dt3-2", description: "Brand licensing fees and management contracts ($5-10M/year estimated from financial disclosures)", estimatedValueUSD: 50_000_000, confidence: 50, sources: [SRC_TRUMP.ogeDisclosure] },
+			], subtotalUSD: 50_000_000, avgConfidence: 50 },
+			{ category: "alternatives", claims: [
+				{ id: "dt3-3", description: "Golf course acquisitions (Turnberry, Doral, multiple US courses)", estimatedValueUSD: 400_000_000, confidence: 50, sources: [SRC_TRUMP.forbesTrump] },
+			], subtotalUSD: 400_000_000, avgConfidence: 50 },
+		],
+		phaseWealthUSD: 2_450_000_000, cumulativeWealthUSD: 2_500_000_000,
+		keyEvents: ["1999: Trump World Tower development", "2001: Trump International Hotel & Tower opens", "2002: Begins acquiring golf courses globally"],
+	},
+	{
+		id: "dt-4", title: "The Apprentice & Media Empire", organization: "Trump Organization / NBC", role: "Executive Producer & Star",
+		startYear: 2004, endYear: 2015, location: "New York, New York",
+		description: "The Apprentice (NBC) debuted January 2004. Show ran 15 seasons and earned Trump an estimated $427M total from salary, producer fees, and related licensing. Also operated Trump University (settled for $25M in 2017), Miss Universe Organization, and expanded brand licensing globally.",
+		categories: [
+			{ category: "income", claims: [
+				{ id: "dt4-1", description: "The Apprentice total earnings — salary + producer fees (~$427M over run of show, per OGE disclosures and NYT)", estimatedValueUSD: 427_000_000, confidence: 65, sources: [SRC_TRUMP.ogeDisclosure, SRC_TRUMP.forbesTrump] },
+			], subtotalUSD: 427_000_000, avgConfidence: 65 },
+			{ category: "companies", claims: [
+				{ id: "dt4-2", description: "Trump Organization properties and licensing — brand value amplified by TV exposure, NYC real estate appreciation", estimatedValueUSD: 3_500_000_000, confidence: 45, sources: [SRC_TRUMP.forbesTrump, SRC_TRUMP.nycPropertyRecords, SRC_TRUMP.nySOS] },
+			], subtotalUSD: 3_500_000_000, avgConfidence: 45 },
+			{ category: "alternatives", claims: [
+				{ id: "dt4-3", description: "Golf courses and hospitality portfolio (Trump Doral, Turnberry, Aberdeen, multiple US clubs)", estimatedValueUSD: 600_000_000, confidence: 50, sources: [SRC_TRUMP.forbesTrump, SRC_TRUMP.ogeDisclosure] },
+			], subtotalUSD: 600_000_000, avgConfidence: 50 },
+		],
+		phaseWealthUSD: 4_527_000_000, cumulativeWealthUSD: 4_500_000_000,
+		keyEvents: ["2004: The Apprentice debuts on NBC", "2005: Trump University launched", "2012: Miss Universe Organization sold", "2015-06: Announces presidential candidacy"],
+	},
+	{
+		id: "dt-5", title: "Presidential Term", organization: "White House / Trump Organization", role: "45th President of the United States",
+		startYear: 2016, endYear: 2021, location: "Washington, D.C. / Mar-a-Lago, FL",
+		description: "Elected 45th President (2016). Required OGE financial disclosures but did not fully divest from Trump Organization (handed management to sons). Tax returns leaked (2020) showed $750 federal income tax in 2016-2017. COVID-19 pandemic impacted hospitality and real estate assets. Net worth declined per Forbes tracking.",
+		categories: [
+			{ category: "companies", claims: [
+				{ id: "dt5-1", description: "Trump Organization value during presidency (hospitality impacted by COVID, brand polarization — Forbes estimated ~$2.5B)", estimatedValueUSD: 2_500_000_000, confidence: 50, sources: [SRC_TRUMP.forbesTrump, SRC_TRUMP.ogeDisclosure] },
+			], subtotalUSD: 2_500_000_000, avgConfidence: 50 },
+			{ category: "alternatives", claims: [
+				{ id: "dt5-2", description: "Golf courses and Mar-a-Lago (membership fees tripled to $200K post-election)", estimatedValueUSD: 500_000_000, confidence: 55, sources: [SRC_TRUMP.palmBeachCounty, SRC_TRUMP.ogeDisclosure] },
+			], subtotalUSD: 500_000_000, avgConfidence: 55 },
+			{ category: "income", claims: [
+				{ id: "dt5-3", description: "Presidential salary ($400K/year, donated) + ongoing Trump Organization licensing income", estimatedValueUSD: 200_000_000, confidence: 60, sources: [SRC_TRUMP.ogeDisclosure] },
+			], subtotalUSD: 200_000_000, avgConfidence: 60 },
+		],
+		phaseWealthUSD: 3_200_000_000, cumulativeWealthUSD: 3_200_000_000,
+		keyEvents: ["2016-11: Elected 45th President", "2017: OGE financial disclosure filed", "2020: Tax returns leaked — $750 federal income tax", "2020: COVID-19 devastates hospitality portfolio", "2021-01: Second impeachment"],
+	},
+	{
+		id: "dt-6", title: "Post-Presidency & DJT", organization: "Trump Organization / Trump Media (DJT)", role: "47th President of the United States",
+		startYear: 2021, endYear: null, location: "Mar-a-Lago, FL / Washington, D.C.",
+		description: "Launched Truth Social via Trump Media & Technology Group, which went public via SPAC merger in March 2024 (Nasdaq: DJT). DJT stock is extremely volatile — market cap swung between $2B and $10B. Trump holds ~53% of DJT shares (subject to lock-up). Re-elected 47th President in November 2024. Ongoing legal proceedings including NY civil fraud judgment ($454M).",
+		categories: [
+			{ category: "companies", claims: [
+				{ id: "dt6-1", description: "Trump Media & Technology Group (DJT) — ~53% stake, current market cap ~$6B, Trump's share ~$3.2B (SEC 10-K filing)", estimatedValueUSD: 3_200_000_000, confidence: 70, sources: [SRC_TRUMP.secDJT, SRC_TRUMP.djtStock] },
+				{ id: "dt6-2", description: "Trump Organization real estate and licensing portfolio (NYC properties, hotels, licensing deals — 500+ LLCs)", estimatedValueUSD: 2_000_000_000, confidence: 45, sources: [SRC_TRUMP.forbesTrump, SRC_TRUMP.nycPropertyRecords, SRC_TRUMP.nySOS, SRC_TRUMP.ogeDisclosure] },
+			], subtotalUSD: 5_200_000_000, avgConfidence: 58 },
+			{ category: "alternatives", claims: [
+				{ id: "dt6-3", description: "Golf courses worldwide (Trump National Doral, Turnberry, Aberdeen, 15+ courses)", estimatedValueUSD: 700_000_000, confidence: 50, sources: [SRC_TRUMP.forbesTrump, SRC_TRUMP.ogeDisclosure] },
+				{ id: "dt6-4", description: "Mar-a-Lago private club (membership $200K+, events revenue, Palm Beach County assessed)", estimatedValueUSD: 300_000_000, confidence: 55, sources: [SRC_TRUMP.palmBeachCounty, SRC_TRUMP.forbesTrump] },
+			], subtotalUSD: 1_000_000_000, avgConfidence: 53 },
+			{ category: "income", claims: [
+				{ id: "dt6-5", description: "Book deals, speaking fees, NFT sales (Trump Digital Trading Cards — $4.6M+), crypto venture (World Liberty Financial)", estimatedValueUSD: 100_000_000, confidence: 60, sources: [SRC_TRUMP.ogeDisclosure, SRC_TRUMP.fecFilings] },
+			], subtotalUSD: 100_000_000, avgConfidence: 60 },
+			{ category: "investments", claims: [
+				{ id: "dt6-6", description: "Cash reserves and investment portfolio (limited detail in OGE filings — ranges disclosed not exact values)", estimatedValueUSD: 200_000_000, confidence: 35, sources: [SRC_TRUMP.ogeDisclosure, SRC_TRUMP.bloombergTrump] },
+			], subtotalUSD: 200_000_000, avgConfidence: 35 },
+		],
+		phaseWealthUSD: 6_500_000_000, cumulativeWealthUSD: 6_500_000_000,
+		keyEvents: ["2021-01: Leaves White House", "2022: Trump Digital Trading Cards NFT launch", "2023: Multiple criminal indictments", "2024-02: NY civil fraud judgment ($454M)", "2024-03: DJT goes public via SPAC (Nasdaq)", "2024-11: Elected 47th President", "2025: Re-enters White House"],
+	},
+];
+
+// ── Donald Trump: Data Sources ─────────────────────────────────
+
+const TRUMP_SOURCES: DataSourceDef[] = [
+	{ id: "ds-1", name: "OGE Public Financial Disclosure", provider: "Office of Government Ethics", category: "Regulatory Filings", delayMs: 1800 },
+	{ id: "ds-2", name: "SEC EDGAR — DJT 10-K / S-1 Filings", provider: "U.S. Securities and Exchange Commission", category: "Regulatory Filings", delayMs: 1500 },
+	{ id: "ds-3", name: "Forbes Real-Time Billionaires", provider: "Forbes Media", category: "Wealth Estimates", delayMs: 800 },
+	{ id: "ds-4", name: "Bloomberg Billionaires Index", provider: "Bloomberg LP", category: "Wealth Estimates", delayMs: 1200 },
+	{ id: "ds-5", name: "NYC ACRIS — Property Records", provider: "NYC Dept of Finance", category: "Property Records", delayMs: 1600 },
+	{ id: "ds-6", name: "Palm Beach County Property Appraiser", provider: "Palm Beach County, FL", category: "Property Records", delayMs: 1400 },
+	{ id: "ds-7", name: "NY Secretary of State — Entity Search", provider: "NY DOS", category: "Corporate Registry", delayMs: 1300 },
+	{ id: "ds-8", name: "FEC Campaign Finance Records", provider: "Federal Election Commission", category: "Regulatory Filings", delayMs: 1100 },
+	{ id: "ds-9", name: "Dow Jones Adverse Media Screening", provider: "Dow Jones Risk & Compliance", category: "Adverse Media", delayMs: 1700 },
+	{ id: "ds-10", name: "OFAC / EU / UN Sanctions Lists", provider: "Multi-jurisdictional", category: "Sanctions Screening", delayMs: 900 },
+	{ id: "ds-11", name: "PEP Database (Global)", provider: "World-Check / Dow Jones", category: "PEP Screening", delayMs: 1000 },
+	{ id: "ds-12", name: "Nasdaq Historical Market Data (DJT)", provider: "Nasdaq", category: "Market Data", delayMs: 1200 },
+];
+
+// ── Donald Trump: Company Nodes ────────────────────────────────
+
+const TRUMP_COMPANIES: CompanyNode[] = [
+	{
+		name: "Trump Organization", role: "Beneficial Owner", ownership: "100% (via trusts)", status: "active", valuation: "~$2B",
+		type: "holding", jurisdiction: "New York, USA",
+		children: [
+			{ name: "Trump Tower (725 Fifth Ave)", role: "HQ & residential/commercial", status: "active", type: "subsidiary", jurisdiction: "New York", valuation: "~$300M" },
+			{ name: "40 Wall Street", role: "Office tower", status: "active", type: "subsidiary", jurisdiction: "New York", valuation: "~$260M" },
+			{ name: "Trump International Hotel & Tower", role: "Hotel/condo (Columbus Circle)", status: "active", type: "subsidiary", jurisdiction: "New York" },
+			{ name: "Trump Park Avenue", role: "Residential property", status: "active", type: "subsidiary", jurisdiction: "New York" },
+			{ name: "500+ LLCs", role: "Various holding and operating entities", status: "active", type: "subsidiary", jurisdiction: "Multi-state" },
+		],
+	},
+	{
+		name: "Trump Media & Technology Group (Nasdaq: DJT)", role: "Chairman / Majority Shareholder", ownership: "~53%", status: "ipo", valuation: "~$6B market cap",
+		type: "holding", jurisdiction: "Delaware / Nasdaq",
+		children: [
+			{ name: "Truth Social", role: "Social media platform", status: "active", type: "subsidiary", jurisdiction: "USA" },
+		],
+	},
+	{
+		name: "Trump Golf", role: "Owner / Operator", status: "active", valuation: "~$700M",
+		type: "holding", jurisdiction: "Multi-jurisdictional",
+		children: [
+			{ name: "Trump National Doral (Miami)", role: "Golf resort", status: "active", type: "subsidiary", jurisdiction: "Florida" },
+			{ name: "Trump Turnberry (Scotland)", role: "Golf resort", status: "active", type: "subsidiary", jurisdiction: "United Kingdom" },
+			{ name: "Trump International Golf Links (Aberdeen)", role: "Golf course", status: "active", type: "subsidiary", jurisdiction: "United Kingdom" },
+			{ name: "15+ Additional US courses", role: "Various clubs", status: "active", type: "subsidiary", jurisdiction: "USA" },
+		],
+	},
+	{ name: "Mar-a-Lago Club", role: "Owner / Operator", status: "active", valuation: "~$300M", type: "subsidiary", jurisdiction: "Palm Beach, Florida" },
+	{ name: "World Liberty Financial", role: "DeFi crypto venture", status: "active", type: "investment", jurisdiction: "USA" },
+];
+
+// ── Donald Trump: Key Parameters ───────────────────────────────
+
+const TRUMP_PARAMS: KeyParameter[] = [
+	{ label: "Wealth Plausibility", value: "Moderate — inherited real estate wealth amplified by TV fame and DJT stock, but self-reported figures historically inflated", status: "warning" },
+	{ label: "Source Diversity", value: "10 sources — OGE filings, SEC EDGAR, property records, but OGE discloses ranges not exact values", status: "warning" },
+	{ label: "Overall Confidence", value: `${overallConfidence(TRUMP_CAREER)}%`, status: "critical" },
+	{ label: "Regulatory Exposure", value: "Extreme — NY civil fraud judgment ($454M), multiple criminal indictments, ongoing DOJ investigations", status: "critical" },
+	{ label: "PEP Status", value: "Active PEP — sitting President of the United States. Highest-level classification.", status: "critical" },
+	{ label: "Wealth Volatility", value: "High — DJT stock is meme-stock volatile (range $12-$79), constitutes ~50% of net worth", status: "critical" },
+	{ label: "Jurisdictional Complexity", value: "Moderate — primarily US but 500+ LLCs, UK/Scotland golf properties, crypto ventures", status: "warning" },
+	{ label: "Transparency Score", value: "Low — OGE discloses ranges not exact values, tax returns contested for years, 500+ opaque LLC structures", status: "critical" },
+];
+
+// ── Donald Trump: Narrative ────────────────────────────────────
+
+const TRUMP_NARRATIVE = `Donald Trump's estimated net worth of approximately $6.5 billion is primarily driven by two components: his controlling stake in Trump Media & Technology Group (Nasdaq: DJT) and the Trump Organization's real estate and licensing portfolio. The DJT stake (~53%, valued at ~$3.2B at current market prices) is the single largest component but carries extreme volatility — the stock has traded between $12 and $79 since its March 2024 SPAC listing.
+
+The Trump Organization encompasses over 500 LLCs across real estate, hospitality, golf courses, and brand licensing. Key properties include Trump Tower (725 Fifth Avenue), 40 Wall Street, and various hotel/condo developments. The golf portfolio spans 15+ courses across the US, Scotland, and Ireland. Mar-a-Lago operates as a private club with $200K+ membership fees.
+
+Assessment reliability is significantly limited by several factors: (1) OGE financial disclosures use broad ranges rather than exact values, (2) Trump Organization entities are private with no mandatory financial reporting, (3) the NY Attorney General civil fraud case found systematic inflation of asset values on financial statements — Judge Engoron's $454M judgment cited pervasive overvaluation, (4) the 500+ LLC structure creates opacity around true beneficial ownership and cross-entity liabilities, and (5) DJT stock trades as a meme stock with limited correlation to business fundamentals (Truth Social revenue was minimal relative to market cap).
+
+Active PEP status as sitting U.S. President requires mandatory enhanced due diligence and senior management approval. The profile relies primarily on public filings and third-party estimates rather than client-provided documentation, resulting in a Grade D corroboration score.`;
+
+// ── Donald Trump: Client Documents ─────────────────────────────
+
+const TRUMP_CLIENT_DOCS: ClientDocument[] = [
+	{ id: "cd-dt-1", type: "other", label: "OGE Public Financial Disclosure (2025)", submittedBy: "Public record — Office of Government Ethics", submittedDate: "2025-06-15", status: "verified", fileDescription: "OGE Form 278e public financial disclosure for President Donald J. Trump. Lists 500+ entities, income ranges, assets, liabilities, and agreements. Mandatory annual filing.", verificationNotes: "Government authority filing. Discloses ranges (e.g., '$1M-$5M') not exact values. Cross-referenced against SEC DJT filings.", governmentAuthority: "U.S. Office of Government Ethics" },
+	{ id: "cd-dt-2", type: "incorporation-cert", label: "NY SOS — Trump Organization entity filings (500+ LLCs)", submittedBy: "Public record — NY Secretary of State", submittedDate: "2026-05-19", status: "verified", fileDescription: "New York Secretary of State entity search results. Over 500 active and inactive Trump-related LLCs and corporations. Filing dates, registered agent (The Trump Organization), and status.", verificationNotes: "100% verified — government authority. Entity list cross-referenced against OGE disclosure.", governmentAuthority: "New York Department of State" },
+	{ id: "cd-dt-3", type: "other", label: "SEC 10-K — Trump Media & Technology Group (DJT)", submittedBy: "Public record — SEC EDGAR", submittedDate: "2025-04-01", status: "verified", fileDescription: "Annual report for Trump Media & Technology Group Corp (Nasdaq: DJT). Beneficial ownership: Donald J. Trump holds 53% of Class A common stock. Revenue, expenses, and risk factors disclosed.", verificationNotes: "100% verified — SEC filing. Beneficial ownership cross-referenced against Nasdaq share registry.", governmentAuthority: "U.S. Securities and Exchange Commission" },
+	{ id: "cd-dt-4", type: "property-deed", label: "NYC Finance — Trump Tower (725 Fifth Ave) Assessment", submittedBy: "Public record — NYC Dept of Finance", submittedDate: "2025-01-01", status: "verified", fileDescription: "Property tax assessment for 725 Fifth Avenue (Trump Tower). Commercial condominium assessment, tax class, and ownership details.", verificationNotes: "100% verified — government authority. Assessment value may differ from market value.", governmentAuthority: "NYC Department of Finance" },
+	{ id: "cd-dt-5", type: "property-deed", label: "Palm Beach County — Mar-a-Lago Assessment", submittedBy: "Public record — Palm Beach County Property Appraiser", submittedDate: "2025-01-01", status: "verified", fileDescription: "Property appraiser record for Mar-a-Lago Club, 1100 S Ocean Blvd, Palm Beach, FL. Tax assessment and special use classification.", verificationNotes: "100% verified — government authority. Tax assessment significantly below market value due to deed restriction as social club.", governmentAuthority: "Palm Beach County Property Appraiser" },
+	{ id: "cd-dt-6", type: "other", label: "NY AG Civil Fraud Judgment — Trump Organization ($454M)", submittedBy: "Public record — NY Supreme Court", submittedDate: "2024-02-16", status: "flagged", fileDescription: "Court judgment in People of New York v. Donald J. Trump. Finding of persistent fraud in asset valuations. $454M disgorgement ordered. Three-year bar from serving as officer/director of NY corporation.", verificationNotes: "Court ruling. Findings of systematic asset inflation directly contradict self-reported valuations used in financial statements.", governmentAuthority: "New York Supreme Court" },
+];
+
+// ── Donald Trump: Cross-References ─────────────────────────────
+
+const TRUMP_CROSS_REFS: CrossReference[] = [
+	{ id: "xr-dt-1", field: "DJT Shareholding", clientDocLabel: "SEC 10-K (DJT)", externalSourceLabel: "Nasdaq Share Registry", clientValue: "~53% of DJT outstanding shares", externalValue: "53.1% per proxy filing", match: "exact", confidence: 100, verifiedVia: "SEC EDGAR — government authority" },
+	{ id: "xr-dt-2", field: "Trump Tower Ownership", clientDocLabel: "NYC Finance — 725 Fifth Ave", externalSourceLabel: "OGE Financial Disclosure", clientValue: "Trump Tower commercial condo", externalValue: "Trump Tower listed as asset ($1M-$50M range)", match: "partial", confidence: 60, verifiedVia: "NYC ACRIS + OGE — both government", notes: "OGE range ($1M-$50M) too broad to confirm exact value. Forbes estimates ~$300M." },
+	{ id: "xr-dt-3", field: "Mar-a-Lago Valuation", clientDocLabel: "Palm Beach County Assessment", externalSourceLabel: "Forbes Estimate / Trump Self-Report", clientValue: "Tax assessed: ~$37M (club use restriction)", externalValue: "Trump has claimed $1B+; Forbes estimates ~$300M", match: "mismatch", confidence: 40, verifiedVia: "County records vs. external estimates", notes: "Extreme divergence between tax assessment ($37M), Forbes estimate ($300M), and Trump self-valuation ($1B+). Deed restriction limits property use to social club." },
+	{ id: "xr-dt-4", field: "Net Worth History", clientDocLabel: "OGE Financial Disclosure", externalSourceLabel: "NY AG Civil Fraud Findings", clientValue: "Reported assets on financial statements (loan applications)", externalValue: "Court found systematic inflation — Trump Tower penthouse at 30K sqft was actually 11K sqft", match: "mismatch", confidence: 30, verifiedVia: "NY Supreme Court judgment", notes: "Judge Engoron found persistent and pervasive fraud in asset valuations. Penthouse tripled in reported size. Financial statement reliability is severely compromised." },
+	{ id: "xr-dt-5", field: "Income — The Apprentice", clientDocLabel: "OGE Filing — NBC Income", externalSourceLabel: "NYT Tax Return Investigation", clientValue: "OGE: NBC Universal income (range)", externalValue: "NYT: ~$427M total Apprentice-related income", match: "partial", confidence: 65, verifiedVia: "OGE filing + investigative journalism", notes: "OGE uses ranges not exact figures. NYT obtained tax return data that provided more precise income figures." },
+	{ id: "xr-dt-6", field: "Federal Income Tax", clientDocLabel: "N/A — tax returns not provided", externalSourceLabel: "NYT Investigation (2020)", clientValue: "Tax returns never voluntarily released", externalValue: "Paid $750 federal income tax in 2016 and 2017", match: "not-available", confidence: 45, verifiedVia: "Investigative journalism — not officially confirmed", notes: "Trump is the only modern president who refused to voluntarily release tax returns. NYT obtained records independently." },
+	{ id: "xr-dt-7", field: "Entity Count", clientDocLabel: "NY SOS Entity Search", externalSourceLabel: "OGE Financial Disclosure", clientValue: "500+ active/inactive LLCs in NY alone", externalValue: "OGE lists 500+ entities with income", match: "exact", confidence: 85, verifiedVia: "NY Secretary of State + OGE — both government" },
+];
+
+// ── Donald Trump: Report Assembly ──────────────────────────────
+
+const TRUMP_REPORT: HnwReport = {
+	profile: {
+		id: "hnw-donald-trump",
+		name: "Donald Trump",
+		dateOfBirth: "1946-06-14",
+		age: 79,
+		nationality: "American",
+		residences: ["Palm Beach, Florida", "New York, New York"],
+		primaryIndustry: "Real Estate / Media / Politics",
+		estimatedNetWorthUSD: 6_500_000_000,
+		netWorthSource: "Forbes Real-Time Billionaires Index",
+		riskRating: "High",
+		riskScore: 72,
+		profileSummary: "Former U.S. President (2017-2021, 2025-present) and real estate mogul. Wealth derived from inherited real estate empire, licensing deals, media ventures, and Trump Media & Technology Group (DJT). Active PEP status with complex ownership through hundreds of LLCs. Assessment relies primarily on public financial disclosures and external benchmarking rather than client-provided documents, resulting in lower corroboration confidence.",
+	},
+	careerTimeline: TRUMP_CAREER,
+	totalEstimatedWealthUSD: 6_500_000_000,
+	wealthByCategory: aggregateWealth(TRUMP_CAREER),
+	overallConfidence: overallConfidence(TRUMP_CAREER),
+	narrative: TRUMP_NARRATIVE,
+	keyParameters: TRUMP_PARAMS,
+	dataSources: TRUMP_SOURCES,
+	companyNodes: TRUMP_COMPANIES,
+	screeningResult: PEP_SCREENING[2],
+	clientDocuments: TRUMP_CLIENT_DOCS,
+	crossReferences: TRUMP_CROSS_REFS,
+	uploadSlots: UPLOAD_SLOTS,
+	corroborationScores: {
+		consistency: 48,
+		correctness: 55,
+		completeness: 52,
+		masReference: "MAS Notice 626 / Guidelines to Notice 626 (Prevention of Money Laundering and Countering the Financing of Terrorism) — §6.18–6.22 Source of Wealth Verification",
+	},
+	agentVerification: {
+		agentId: "fe-verify-v2",
+		agentName: "Fill Easy Verification Agent",
+		timestamp: new Date().toISOString(),
+		overallStatus: "requires-review",
+		checks: [
+			{ id: "ck-dt-1", category: "consistency", label: "Career-to-wealth trajectory alignment", status: "warn", detail: "Inherited wealth (~$413M per NYT) + real estate + TV income + DJT stock. Trajectory is broadly plausible but self-reported figures have been judicially found to be inflated. NY AG fraud judgment creates systemic doubt about historical asset representations." },
+			{ id: "ck-dt-2", category: "correctness", label: "DJT stock valuation reliability", status: "flag", detail: "DJT constitutes ~50% of net worth. Stock is extremely volatile (range $12-$79) with meme-stock characteristics. Truth Social revenue was ~$4.1M in FY2023 — market cap disconnected from fundamentals. Lock-up restrictions apply." },
+			{ id: "ck-dt-3", category: "correctness", label: "Real estate valuation accuracy", status: "flag", detail: "NY AG civil fraud case found systematic inflation of property values on financial statements. Trump Tower penthouse reported as 30,000 sqft when actually 10,996 sqft. Historical financial statements cannot be relied upon for valuation." },
+			{ id: "ck-dt-4", category: "completeness", label: "OGE disclosure limitations", status: "warn", detail: "OGE Form 278e uses broad ranges (e.g., '$1M-$5M', '$5M-$25M') rather than exact values. 500+ entities listed but individual entity valuations are not disclosed. Aggregate wealth calculation requires significant estimation." },
+			{ id: "ck-dt-5", category: "completeness", label: "Tax return non-disclosure", status: "flag", detail: "Tax returns have never been voluntarily released. NYT investigative reporting (2020) is the primary source for income data. Without official tax documentation, income verification is incomplete." },
+			{ id: "ck-dt-6", category: "consistency", label: "PEP status — active head of state", status: "flag", detail: "Active PEP as sitting U.S. President. Mandatory enhanced due diligence. All transactions subject to heightened scrutiny. Senior management sign-off required for onboarding." },
+		],
+		summary: "Donald Trump's wealth profile presents significant corroboration challenges. The NY AG civil fraud judgment fundamentally undermines reliance on self-reported asset values. DJT stock (50% of net worth) trades as a meme stock with extreme volatility. OGE financial disclosures use ranges rather than exact values. Active PEP status as sitting President requires mandatory enhanced due diligence. Recommend independent property valuations and senior management review before any onboarding decision.",
+		recommendations: [
+			"CRITICAL: PEP — active head of state. Senior management approval mandatory before any engagement",
+			"Commission independent real estate appraisals — cannot rely on self-reported values per NY AG findings",
+			"Monitor DJT stock daily — constitutes ~50% of net worth with extreme volatility",
+			"Request detailed LLC structure chart — 500+ entities create significant opacity",
+			"Obtain independent tax analysis — client has never voluntarily released tax returns",
+			"Review all ongoing litigation and potential liability impact on net worth",
+		],
+	},
+	corroborationGrade: "D",
+	fourEyeCheck: {
+		analyst: { name: "Kevin Lam", role: "Compliance Analyst", timestamp: "2026-05-19T10:00:00Z" },
+		reviewer: null,
+		status: "drafted",
+		signOffHistory: [
+			{ action: "Drafted", by: "Kevin Lam", at: "2026-05-19T10:00:00Z", comment: "High risk PEP — requires senior management review before reviewer assignment" },
+		],
+	},
+	personalRelationships: [
+		{ id: "pr-dt-1", name: "Melania Trump", relationship: "spouse", notes: "Third wife, former First Lady. Slovenian-born. Launched own cryptocurrency ($MELANIA token)." },
+		{ id: "pr-dt-2", name: "Donald Trump Jr.", relationship: "child", notes: "Executive VP of Trump Organization. Active in business operations.", linkedEntities: ["Trump Organization"] },
+		{ id: "pr-dt-3", name: "Eric Trump", relationship: "child", notes: "Executive VP of Trump Organization. Manages day-to-day operations.", linkedEntities: ["Trump Organization"] },
+		{ id: "pr-dt-4", name: "Ivanka Trump", relationship: "child", notes: "Former senior White House advisor. Stepped back from Trump Organization.", linkedEntities: ["Trump Organization"] },
+		{ id: "pr-dt-5", name: "Tiffany Trump", relationship: "child", notes: "Daughter from second marriage to Marla Maples." },
+		{ id: "pr-dt-6", name: "Barron Trump", relationship: "child", notes: "Youngest son." },
+		{ id: "pr-dt-7", name: "Jared Kushner", relationship: "associate", notes: "Son-in-law (married to Ivanka). Former senior White House advisor. Launched Affinity Partners ($3B fund).", linkedEntities: ["Affinity Partners"] },
+		{ id: "pr-dt-8", name: "Allen Weisselberg", relationship: "associate", notes: "Former Trump Organization CFO. Pleaded guilty to tax fraud (2022). Key witness in NY AG case.", linkedEntities: ["Trump Organization"] },
+	],
+};
+
+// ── James Chen Wei: Sources ────────────────────────────────────
+
+const SRC_CHEN: Record<string, SourceCitation> = {
+	irasTax: {
+		id: "jc1", label: "IRAS Tax Assessment Notice — James Chen Wei (10yr history)", url: "https://www.iras.gov.sg/", date: "2025-12-31", type: "public-record",
+		...srcMeta("iras.gov.sg", "IRAS | Individual Income Tax Assessment — Chen Wei", "Inland Revenue Authority of Singapore individual income tax assessment for Chen Wei. 10-year filing history showing consistent income declarations from employment, investments, and trust distributions.", "#003399"),
+	},
+	cpfStatement: {
+		id: "jc2", label: "CPF Board — Contribution Statement (2005-2012)", url: "https://www.cpf.gov.sg/", date: "2012-12-31", type: "public-record",
+		...srcMeta("cpf.gov.sg", "CPF Board | Contribution History — Chen Wei", "Central Provident Fund Board contribution statement showing mandatory employer contributions from Temasek Holdings (2005-2012). Monthly contributions consistent with declared salary.", "#003399"),
+	},
+	acraEntity: {
+		id: "jc3", label: "Fill Easy API: Singapore ACRA — Chen Family Office Pte. Ltd.", url: "https://www.filleasy.hk/", type: "registry",
+		...srcMeta("filleasy.hk", "Fill Easy | CorpVerify — Singapore ACRA — Chen Family Office", "Fill Easy CorpVerify API query result for Singapore ACRA BizFile+. Entity: Chen Family Office Pte. Ltd. UEN: 201523456B. Directors: CHEN Wei. Registered capital, filing history, and secretary details returned.", "#0066aa"),
+		companySearchTemplate: {
+			registryName: "Singapore ACRA — BizFile+ (via Fill Easy CorpVerify)",
+			registryUrl: "https://www.filleasy.hk/",
+			searchFields: [
+				{ label: "Entity Name", value: "Chen Family Office Pte. Ltd." },
+				{ label: "UEN", value: "201523456B" },
+				{ label: "Director Name", value: "CHEN Wei" },
+			],
+			jurisdiction: "Republic of Singapore",
+			searchType: "Entity Name / UEN Search (via Fill Easy CorpVerify)",
+		},
+	},
+	acraFamilyTrust: {
+		id: "jc4", label: "Fill Easy API: Singapore ACRA — Chen Family Trust Pte. Ltd.", url: "https://www.filleasy.hk/", type: "registry",
+		...srcMeta("filleasy.hk", "Fill Easy | CorpVerify — Singapore ACRA — Chen Family Trust", "Fill Easy CorpVerify API query result for Singapore ACRA. Entity: Chen Family Trust Pte. Ltd. UEN: 201234567C. Trustee entity for the Chen family inheritance trust. Established via Rajah & Tann.", "#0066aa"),
+	},
+	slaProperty: {
+		id: "jc5", label: "Fill Easy API: Singapore Land Authority — Residential Property", url: "https://www.filleasy.hk/", type: "registry",
+		...srcMeta("filleasy.hk", "Fill Easy | SLA Property Search — Chen Wei", "Fill Easy API property search result for Singapore Land Authority. Sentosa Cove residential property. Owner: CHEN Wei. Purchase date 2017. Caveat and ownership records returned.", "#0066aa"),
+		companySearchTemplate: {
+			registryName: "Singapore Land Authority (via Fill Easy API)",
+			registryUrl: "https://www.filleasy.hk/",
+			searchFields: [
+				{ label: "Owner Name", value: "CHEN Wei" },
+				{ label: "Property Type", value: "Landed — Good Class Bungalow (Sentosa)" },
+				{ label: "Search Type", value: "Owner Name Search" },
+			],
+			jurisdiction: "Republic of Singapore",
+			searchType: "Property Owner Search (via Fill Easy API)",
+		},
+	},
+	gsEmployment: {
+		id: "jc6", label: "Goldman Sachs — Employment Verification Letter", url: "https://www.goldmansachs.com/", date: "2005-06-30", type: "public-record",
+		...srcMeta("goldmansachs.com", "Goldman Sachs | Employment Verification — Chen Wei", "Goldman Sachs HR department employment verification letter. Confirms: Chen Wei, Investment Banking Associate to Vice President, London/Singapore offices, 1995-2005. Compensation details per employment contract.", "#002147"),
+	},
+	temasekHR: {
+		id: "jc7", label: "Temasek Holdings — Employment Confirmation", url: "https://www.temasek.com.sg/", date: "2012-12-31", type: "public-record",
+		...srcMeta("temasek.com.sg", "Temasek Holdings | HR Confirmation — Chen Wei", "Temasek Holdings Pte Ltd HR department employment confirmation. Confirms: Chen Wei, Senior Investment Director, 2005-2012. Carried interest entitlements and performance bonus structure described.", "#003366"),
+	},
+	rajahTann: {
+		id: "jc8", label: "Rajah & Tann — Chen Family Trust Deed", url: "https://www.rajahtannasia.com/", date: "2012-06-15", type: "filing",
+		...srcMeta("rajahtannasia.com", "Rajah & Tann | Trust Deed — Chen Family Trust", "Rajah & Tann Singapore LLP trust documentation. Chen Family Trust established 2012 following father's passing. Trust deed, schedule of assets (SGD 120M initial corpus), beneficiary designations, and trustee powers.", "#1a237e"),
+	},
+	independentVal: {
+		id: "jc9", label: "KPMG Independent Valuation — Chen Family Office Portfolio (2025)", url: "https://www.kpmg.com.sg/", date: "2025-12-31", type: "estimate",
+		...srcMeta("kpmg.com.sg", "KPMG | Independent Valuation Report — Chen Family Office", "KPMG Singapore independent valuation of Chen Family Office investment portfolio as at 31 December 2025. Total portfolio fair value SGD 510M (~$380M). Methodology: IFRS 13 fair value hierarchy.", "#00338d"),
+	},
+	auditedPortfolio: {
+		id: "jc10", label: "EY Audited Portfolio Statement — Chen Family Office (FY2025)", url: "https://www.ey.com/", date: "2025-12-31", type: "filing",
+		...srcMeta("ey.com", "EY | Audited Financial Statements — Chen Family Office Pte. Ltd.", "Ernst & Young LLP Singapore audited financial statements for Chen Family Office Pte. Ltd. FY2025. Clean audit opinion. Total assets SGD 510M. Investment portfolio breakdown by asset class.", "#ffe600"),
+	},
+};
+
+// ── James Chen Wei: Career Timeline ────────────────────────────
+
+const CHEN_CAREER: CareerPhase[] = [
+	{
+		id: "jc-1", title: "Goldman Sachs", organization: "Goldman Sachs", role: "Investment Banking Associate to VP",
+		startYear: 1995, endYear: 2005, location: "London / Singapore",
+		description: "Joined Goldman Sachs Investment Banking Division in London after graduating from LSE. Transferred to Singapore office in 2000. Promoted to Vice President in 2002. Total compensation over 10 years approximately $8M (base + bonuses), fully verified via employment contracts, payslips, and IRAS tax filings.",
+		categories: [
+			{ category: "income", claims: [
+				{ id: "jc1-1", description: "Goldman Sachs total compensation 1995-2005 (salary + bonuses, verified via employment contract, payslips, and IRAS 10-year tax history)", estimatedValueUSD: 8_000_000, confidence: 100, sources: [SRC_CHEN.gsEmployment, SRC_CHEN.irasTax] },
+			], subtotalUSD: 8_000_000, avgConfidence: 100 },
+		],
+		phaseWealthUSD: 8_000_000, cumulativeWealthUSD: 8_000_000,
+		keyEvents: ["1995: Joined Goldman Sachs IBD (London)", "2000: Transferred to Singapore office", "2002: Promoted to Vice President", "2005: Departed for Temasek Holdings"],
+	},
+	{
+		id: "jc-2", title: "Temasek Holdings", organization: "Temasek Holdings", role: "Senior Investment Director",
+		startYear: 2005, endYear: 2012, location: "Singapore",
+		description: "Joined Temasek Holdings as Investment Director, promoted to Senior Investment Director in 2008. Focused on Southeast Asian infrastructure and technology investments. Total compensation ~$17M over 7 years including salary, bonuses, and carried interest. All verified via employment contract, CPF contribution statements, and IRAS filings.",
+		categories: [
+			{ category: "income", claims: [
+				{ id: "jc2-1", description: "Temasek salary + bonuses + carried interest 2005-2012 (verified via employment contract, CPF statements, IRAS tax filings)", estimatedValueUSD: 17_000_000, confidence: 100, sources: [SRC_CHEN.temasekHR, SRC_CHEN.cpfStatement, SRC_CHEN.irasTax] },
+			], subtotalUSD: 17_000_000, avgConfidence: 100 },
+		],
+		phaseWealthUSD: 17_000_000, cumulativeWealthUSD: 25_000_000,
+		keyEvents: ["2005: Joined Temasek Holdings", "2008: Promoted to Senior Investment Director", "2012: Departed to manage family affairs"],
+	},
+	{
+		id: "jc-3", title: "Family Inheritance", organization: "Chen Family Trust", role: "Beneficiary / Settlor",
+		startYear: 2012, endYear: 2015, location: "Singapore",
+		description: "Father passed away in 2012. Inherited SGD 120M (~$90M USD) from father's textile manufacturing business in Malaysia/Singapore. Trust established via Rajah & Tann with full documentation — trust deed, probate records, bank statements showing settlement, and ACRA registration of trust entity. All documents independently verified.",
+		categories: [
+			{ category: "companies", claims: [
+				{ id: "jc3-1", description: "Inheritance from father — SGD 120M (~$90M) from textile manufacturing business (trust deed, probate documents, bank settlement statements, ACRA registration via Fill Easy)", estimatedValueUSD: 90_000_000, confidence: 100, sources: [SRC_CHEN.rajahTann, SRC_CHEN.acraFamilyTrust, SRC_CHEN.irasTax] },
+			], subtotalUSD: 90_000_000, avgConfidence: 100 },
+		],
+		phaseWealthUSD: 90_000_000, cumulativeWealthUSD: 115_000_000,
+		keyEvents: ["2012: Father passes away", "2012: Chen Family Trust established via Rajah & Tann", "2013: Probate completed, SGD 120M transferred to trust", "2014: Trust assets deployed to investment portfolio"],
+	},
+	{
+		id: "jc-4", title: "Chen Family Office", organization: "Chen Family Office Pte. Ltd.", role: "Founder & CIO",
+		startYear: 2015, endYear: 2022, location: "Singapore",
+		description: "Established Chen Family Office Pte. Ltd. in Singapore to manage family wealth. Diversified into private equity funds, Singapore real estate, and public equities. All investments documented with audited portfolio statements from EY. ACRA registration verified via Fill Easy CorpVerify.",
+		categories: [
+			{ category: "investments", claims: [
+				{ id: "jc4-1", description: "PE fund commitments (3 Singapore/ASEAN-focused PE funds, quarterly statements available)", estimatedValueUSD: 80_000_000, confidence: 90, sources: [SRC_CHEN.auditedPortfolio, SRC_CHEN.acraEntity] },
+				{ id: "jc4-2", description: "Public equities portfolio (SGX + global — EY audited, custodied at DBS)", estimatedValueUSD: 120_000_000, confidence: 95, sources: [SRC_CHEN.auditedPortfolio, SRC_CHEN.independentVal] },
+			], subtotalUSD: 200_000_000, avgConfidence: 93 },
+			{ category: "alternatives", claims: [
+				{ id: "jc4-3", description: "Singapore residential real estate — Sentosa Cove GCB ($22M, SLA records via Fill Easy) + Orchard Rd condo ($8M)", estimatedValueUSD: 30_000_000, confidence: 100, sources: [SRC_CHEN.slaProperty] },
+			], subtotalUSD: 30_000_000, avgConfidence: 100 },
+			{ category: "companies", claims: [
+				{ id: "jc4-4", description: "Chen Family Trust corpus — grown from SGD 120M to SGD 180M through reinvestment (KPMG independently valued)", estimatedValueUSD: 135_000_000, confidence: 90, sources: [SRC_CHEN.rajahTann, SRC_CHEN.independentVal, SRC_CHEN.acraFamilyTrust] },
+			], subtotalUSD: 135_000_000, avgConfidence: 90 },
+		],
+		phaseWealthUSD: 365_000_000, cumulativeWealthUSD: 320_000_000,
+		keyEvents: ["2015: Chen Family Office Pte. Ltd. incorporated", "2017: Sentosa Cove property purchased", "2019: First PE fund commitment", "2021: Portfolio reaches SGD 400M"],
+	},
+	{
+		id: "jc-5", title: "Current Portfolio", organization: "Chen Family Office Pte. Ltd.", role: "Founder & CIO",
+		startYear: 2022, endYear: null, location: "Singapore / London",
+		description: "Continues active management of diversified portfolio. KPMG independent valuation as at Dec 2025 confirms SGD 510M (~$380M) total portfolio. EY provides annual audit with clean opinion. Full documentation trail maintained — tax returns, bank statements, portfolio statements, trust deed, property records all current.",
+		categories: [
+			{ category: "investments", claims: [
+				{ id: "jc5-1", description: "PE fund portfolio — 4 active commitments across Singapore, ASEAN, and European buyout funds (quarterly NAV statements, audited)", estimatedValueUSD: 95_000_000, confidence: 90, sources: [SRC_CHEN.auditedPortfolio, SRC_CHEN.independentVal] },
+				{ id: "jc5-2", description: "Public equities — diversified global portfolio custodied at DBS Private Banking (EY audited, KPMG valued)", estimatedValueUSD: 75_000_000, confidence: 95, sources: [SRC_CHEN.auditedPortfolio, SRC_CHEN.independentVal] },
+			], subtotalUSD: 170_000_000, avgConfidence: 93 },
+			{ category: "alternatives", claims: [
+				{ id: "jc5-3", description: "Singapore real estate — Sentosa Cove GCB (current valuation SGD 32M) + Orchard Rd condo (SGD 12M) — SLA records via Fill Easy", estimatedValueUSD: 33_000_000, confidence: 100, sources: [SRC_CHEN.slaProperty, SRC_CHEN.independentVal] },
+				{ id: "jc5-4", description: "London residential property — Mayfair flat (GBP 4.5M) acquired 2019", estimatedValueUSD: 5_700_000, confidence: 90, sources: [SRC_CHEN.independentVal] },
+			], subtotalUSD: 38_700_000, avgConfidence: 95 },
+			{ category: "companies", claims: [
+				{ id: "jc5-5", description: "Chen Family Trust — current NAV SGD 200M (~$150M) including original inheritance and reinvested returns (KPMG valued)", estimatedValueUSD: 150_000_000, confidence: 90, sources: [SRC_CHEN.rajahTann, SRC_CHEN.independentVal, SRC_CHEN.acraFamilyTrust] },
+			], subtotalUSD: 150_000_000, avgConfidence: 90 },
+			{ category: "income", claims: [
+				{ id: "jc5-6", description: "Annual investment income — dividends, interest, distributions (~$4M/year, verified via IRAS and bank statements)", estimatedValueUSD: 21_300_000, confidence: 95, sources: [SRC_CHEN.irasTax, SRC_CHEN.auditedPortfolio] },
+			], subtotalUSD: 21_300_000, avgConfidence: 95 },
+		],
+		phaseWealthUSD: 380_000_000, cumulativeWealthUSD: 380_000_000,
+		keyEvents: ["2022: KPMG engaged for independent portfolio valuation", "2023: EY first annual audit completed", "2024: PE fund distributions of $12M received", "2025: KPMG confirms SGD 510M total portfolio value"],
+	},
+];
+
+// ── James Chen Wei: Data Sources ───────────────────────────────
+
+const CHEN_SOURCES: DataSourceDef[] = [
+	{ id: "ds-1", name: "IRAS Individual Income Tax (10yr)", provider: "Inland Revenue Authority of Singapore", category: "Tax Records", delayMs: 1800 },
+	{ id: "ds-2", name: "CPF Board Contribution History", provider: "Central Provident Fund Board", category: "Employment Records", delayMs: 1200 },
+	{ id: "ds-3", name: "Fill Easy — Singapore ACRA BizFile+", provider: "Fill Easy Ltd / SG ACRA", category: "Corporate Registry", delayMs: 1500 },
+	{ id: "ds-4", name: "Fill Easy — Singapore Land Authority", provider: "Fill Easy Ltd / SG SLA", category: "Property Records", delayMs: 1400 },
+	{ id: "ds-5", name: "Goldman Sachs HR Verification", provider: "Goldman Sachs Group Inc.", category: "Employment Records", delayMs: 1600 },
+	{ id: "ds-6", name: "Temasek Holdings HR Confirmation", provider: "Temasek Holdings Pte Ltd", category: "Employment Records", delayMs: 1700 },
+	{ id: "ds-7", name: "Rajah & Tann — Trust Documentation", provider: "Rajah & Tann Singapore LLP", category: "Trust & Structures", delayMs: 2000 },
+	{ id: "ds-8", name: "KPMG Independent Valuation (2025)", provider: "KPMG Singapore", category: "Valuations", delayMs: 2200 },
+	{ id: "ds-9", name: "EY Audited Portfolio Statement", provider: "Ernst & Young LLP Singapore", category: "Audit Reports", delayMs: 2000 },
+	{ id: "ds-10", name: "OFAC / EU / UN Sanctions Lists", provider: "Multi-jurisdictional", category: "Sanctions Screening", delayMs: 900 },
+	{ id: "ds-11", name: "PEP Database (Global)", provider: "World-Check / Dow Jones", category: "PEP Screening", delayMs: 1000 },
+	{ id: "ds-12", name: "Dow Jones Adverse Media Screening", provider: "Dow Jones Risk & Compliance", category: "Adverse Media", delayMs: 1400 },
+];
+
+// ── James Chen Wei: Company Nodes ──────────────────────────────
+
+const CHEN_COMPANIES: CompanyNode[] = [
+	{
+		name: "Chen Family Office Pte. Ltd.", role: "Founder & CIO", ownership: "100%", status: "active", valuation: "SGD 510M AUM",
+		type: "holding", jurisdiction: "Singapore",
+		children: [
+			{ name: "PE Fund Portfolio (4 funds)", role: "LP commitments", status: "active", type: "fund", jurisdiction: "Singapore / ASEAN / Europe", valuation: "$95M NAV" },
+			{ name: "Public Equities Portfolio", role: "DBS Private Banking custody", status: "active", type: "investment", jurisdiction: "Global", valuation: "$75M" },
+			{ name: "Fixed Income / Cash", role: "Treasury management", status: "active", type: "investment", jurisdiction: "Singapore", valuation: "$21M" },
+		],
+	},
+	{
+		name: "Chen Family Trust", role: "Beneficiary / Settlor", ownership: "Beneficiary", status: "active", valuation: "SGD 200M",
+		type: "trust", jurisdiction: "Singapore",
+		children: [
+			{ name: "Trust corpus (inherited assets)", role: "Original SGD 120M + reinvested returns", status: "active", type: "investment", jurisdiction: "Singapore" },
+			{ name: "Rajah & Tann (trustee counsel)", role: "Trust administration", status: "active", type: "subsidiary", jurisdiction: "Singapore" },
+		],
+	},
+	{
+		name: "Singapore Property Portfolio", role: "Personal assets", status: "active", valuation: "~SGD 44M",
+		type: "holding", jurisdiction: "Singapore",
+		children: [
+			{ name: "Sentosa Cove GCB", role: "Primary residence", status: "active", type: "investment", jurisdiction: "Singapore", valuation: "SGD 32M" },
+			{ name: "Orchard Road condo", role: "Investment property", status: "active", type: "investment", jurisdiction: "Singapore", valuation: "SGD 12M" },
+		],
+	},
+	{ name: "London Mayfair flat", role: "Secondary residence", status: "active", type: "investment", jurisdiction: "United Kingdom", valuation: "GBP 4.5M" },
+];
+
+// ── James Chen Wei: Key Parameters ─────────────────────────────
+
+const CHEN_PARAMS: KeyParameter[] = [
+	{ label: "Wealth Plausibility", value: "High — employment income (GS/Temasek) + inheritance + investment returns clearly documented", status: "normal" },
+	{ label: "Source Diversity", value: "10 sources — government records, Big-4 audit, independent valuation, employment verification", status: "normal" },
+	{ label: "Overall Confidence", value: `${overallConfidence(CHEN_CAREER)}%`, status: "normal" },
+	{ label: "Regulatory Exposure", value: "None — no regulatory actions, sanctions, or adverse media", status: "normal" },
+	{ label: "PEP Status", value: "Clear — no PEP matches, no political connections identified", status: "normal" },
+	{ label: "Wealth Volatility", value: "Low — diversified portfolio with audited valuations, no crypto or meme-stock exposure", status: "normal" },
+	{ label: "Jurisdictional Complexity", value: "Low — primarily Singapore with one London property. Single tax residence.", status: "normal" },
+	{ label: "Transparency Score", value: "Excellent — 10yr tax returns, EY audit, KPMG valuation, full document trail", status: "normal" },
+];
+
+// ── James Chen Wei: Narrative ──────────────────────────────────
+
+const CHEN_NARRATIVE = `James Chen Wei's estimated net worth of approximately $380 million (SGD 510M) represents a well-documented wealth profile built from three clearly verifiable sources: (1) employment income from Goldman Sachs (1995-2005, ~$8M) and Temasek Holdings (2005-2012, ~$17M), verified via employment contracts, payslips, CPF contribution statements, and 10 years of IRAS tax filings; (2) a SGD 120M inheritance from his father's textile manufacturing business in 2012, fully documented through probate records, trust deed (Rajah & Tann), bank settlement statements, and ACRA-registered trust entity; and (3) investment returns from a diversified portfolio managed through the Chen Family Office Pte. Ltd.
+
+The family office, incorporated in Singapore in 2015 and verified via Fill Easy CorpVerify (ACRA), manages a portfolio independently valued by KPMG at SGD 510M as at December 2025. Ernst & Young provides annual audited financial statements with clean opinions. The portfolio is diversified across PE fund commitments (4 funds, $95M), public equities ($75M custodied at DBS Private Banking), the Chen Family Trust ($150M NAV), and Singapore/London real estate ($39M).
+
+Singapore Land Authority records (via Fill Easy API) confirm property ownership — Sentosa Cove Good Class Bungalow and Orchard Road condominium. A London Mayfair flat was acquired in 2019. All properties have current independent valuations.
+
+This profile represents the gold standard of SOW corroboration. Every material wealth source has a verifiable paper trail: tax returns (10yr), employment contracts, CPF statements, trust deed, probate records, bank statements, property deeds, audited financials, and independent valuations. No PEP exposure, no adverse media, no sanctions hits, and no regulatory concerns. The corroboration grade of A reflects comprehensive documentation across all wealth categories.`;
+
+// ── James Chen Wei: Client Documents ───────────────────────────
+
+const CHEN_CLIENT_DOCS: ClientDocument[] = [
+	{ id: "cd-jc-1", type: "passport", label: "Singapore Passport — Chen Wei (陈伟)", submittedBy: "Client (directly)", submittedDate: "2026-04-01", status: "verified", fileDescription: "Republic of Singapore passport. Name: CHEN WEI (陈伟). DOB: 15 MAR 1972. Passport No: K••••••89. Valid through 2032.", verificationNotes: "Name and DOB match IRAS records and Goldman Sachs employment letter. Singapore citizen status confirmed.", governmentAuthority: "Immigration & Checkpoints Authority (ICA), Singapore" },
+	{ id: "cd-jc-2", type: "tax-return", label: "IRAS Tax Assessment — 10-Year History (2016-2025)", submittedBy: "Client (via KPMG Singapore)", submittedDate: "2026-04-05", status: "verified", fileDescription: "IRAS individual income tax assessment notices for 10 consecutive years (2016-2025). Shows employment income, investment income, trust distributions, and property income.", verificationNotes: "100% verified — government authority. 10 years of consistent filing with no anomalies. Income matches employment records and investment portfolio distributions.", governmentAuthority: "Inland Revenue Authority of Singapore (IRAS)" },
+	{ id: "cd-jc-3", type: "bank-statement", label: "DBS Private Banking — SGD & USD Accounts (6 months)", submittedBy: "Client (via DBS Wealth Management)", submittedDate: "2026-04-10", status: "verified", fileDescription: "DBS Private Banking statements for SGD and USD accounts. Period: Oct 2025 - Mar 2026. Shows investment income credits, PE fund distributions, trust distributions, and property rental income.", verificationNotes: "All credits cross-referenced against EY audited portfolio and IRAS filings. DBS is MAS-regulated institution.", governmentAuthority: "Monetary Authority of Singapore (MAS) — regulated institution" },
+	{ id: "cd-jc-4", type: "trust-deed", label: "Rajah & Tann — Chen Family Trust Deed (2012)", submittedBy: "Client (via Rajah & Tann Singapore LLP)", submittedDate: "2026-04-08", status: "verified", fileDescription: "Trust deed for Chen Family Trust established June 2012. Settlor: Chen Wei. Initial corpus: SGD 120M from father's estate. Beneficiaries: Chen Wei, Chen Li Hua (spouse), Chen Ming (son), Chen Mei (daughter). Trustee: Chen Family Trust Pte. Ltd.", verificationNotes: "Trust deed cross-referenced against ACRA registration (Fill Easy CorpVerify). Initial corpus matches probate records. Beneficiary designations clear.", governmentAuthority: "Singapore ACRA (via Fill Easy CorpVerify)" },
+	{ id: "cd-jc-5", type: "property-deed", label: "Fill Easy API: SLA — Sentosa Cove GCB", submittedBy: "Fill Easy API — automated retrieval", submittedDate: "2026-05-19", status: "verified", fileDescription: "Singapore Land Authority caveat and ownership record for Sentosa Cove Good Class Bungalow. Owner: CHEN Wei. Purchase: 2017. Current valuation per URA transacted prices.", verificationNotes: "100% verified — government authority. Fill Easy API returned SLA records with full ownership chain.", governmentAuthority: "Singapore Land Authority (via Fill Easy API)" },
+	{ id: "cd-jc-6", type: "other", label: "KPMG Independent Valuation Report (Dec 2025)", submittedBy: "KPMG Singapore", submittedDate: "2026-02-15", status: "verified", fileDescription: "KPMG independent valuation of Chen Family Office entire portfolio. SGD 510M total fair value. IFRS 13 compliant. Covers PE funds, equities, real estate, and trust assets.", verificationNotes: "Big-4 independent valuation. Methodology reviewed and consistent with industry standards. Cross-referenced against EY audit.", governmentAuthority: "N/A (Big-4 independent valuation)" },
+	{ id: "cd-jc-7", type: "other", label: "EY Audited Financial Statements — FY2025", submittedBy: "Ernst & Young LLP Singapore", submittedDate: "2026-03-01", status: "verified", fileDescription: "Audited financial statements for Chen Family Office Pte. Ltd. FY ending 31 Dec 2025. Clean (unmodified) audit opinion. Total assets SGD 510M.", verificationNotes: "Big-4 audit with clean opinion. Balance sheet cross-referenced against KPMG valuation. No qualifications or emphasis of matter.", governmentAuthority: "N/A (Big-4 audit)" },
+	{ id: "cd-jc-8", type: "other", label: "Goldman Sachs Employment Verification (1995-2005)", submittedBy: "Goldman Sachs HR (via client request)", submittedDate: "2026-04-20", status: "verified", fileDescription: "Goldman Sachs Group Inc. employment verification letter. Confirms: Chen Wei employed as Investment Banking Associate (1995) to Vice President (2005). London and Singapore offices.", verificationNotes: "Employment period and roles verified. Compensation details consistent with IRAS tax filings for relevant years.", governmentAuthority: "N/A (employer verification)" },
+	{ id: "cd-jc-9", type: "other", label: "CPF Contribution Statement (2005-2012)", submittedBy: "Client (via CPF Board portal)", submittedDate: "2026-04-12", status: "verified", fileDescription: "Central Provident Fund Board contribution history showing mandatory employer contributions from Temasek Holdings Pte Ltd, 2005-2012. Monthly contributions consistent with declared salary.", verificationNotes: "100% verified — government authority. CPF contributions match declared employment income on IRAS filings.", governmentAuthority: "Central Provident Fund Board, Singapore" },
+	{ id: "cd-jc-10", type: "incorporation-cert", label: "Fill Easy API: ACRA — Chen Family Office Pte. Ltd.", submittedBy: "Fill Easy API — automated retrieval", submittedDate: "2026-05-19", status: "verified", fileDescription: "ACRA BizFile+ record for Chen Family Office Pte. Ltd. (UEN: 201523456B). Director: CHEN Wei. Registered capital, filing history, and secretary details.", verificationNotes: "100% verified — government authority. Fill Easy CorpVerify returned exact match.", governmentAuthority: "Singapore ACRA (via Fill Easy CorpVerify)" },
+];
+
+// ── James Chen Wei: Cross-References ───────────────────────────
+
+const CHEN_CROSS_REFS: CrossReference[] = [
+	{ id: "xr-jc-1", field: "Full Name", clientDocLabel: "Singapore Passport", externalSourceLabel: "IRAS Tax Records", clientValue: "CHEN WEI (陈伟)", externalValue: "CHEN WEI — taxpayer", match: "exact", confidence: 100, verifiedVia: "IRAS — government authority" },
+	{ id: "xr-jc-2", field: "Employment — Goldman Sachs", clientDocLabel: "GS Employment Verification", externalSourceLabel: "IRAS Tax Filings (1995-2005)", clientValue: "IB Associate to VP, 1995-2005", externalValue: "GS employment income declared 1995-2005", match: "exact", confidence: 100, verifiedVia: "IRAS + employer — double verification" },
+	{ id: "xr-jc-3", field: "Employment — Temasek", clientDocLabel: "Temasek HR Confirmation", externalSourceLabel: "CPF Board Contributions", clientValue: "Senior Investment Director, 2005-2012", externalValue: "Temasek employer contributions 2005-2012", match: "exact", confidence: 100, verifiedVia: "CPF Board — government authority" },
+	{ id: "xr-jc-4", field: "Inheritance Amount", clientDocLabel: "Rajah & Tann Trust Deed", externalSourceLabel: "DBS Bank Settlement Statement", clientValue: "SGD 120M initial trust corpus", externalValue: "SGD 120M credited from estate settlement", match: "exact", confidence: 100, verifiedVia: "Trust deed + bank statement — dual verification" },
+	{ id: "xr-jc-5", field: "Family Office Registration", clientDocLabel: "Fill Easy: ACRA — Chen Family Office", externalSourceLabel: "MAS Licensed Fund Registry", clientValue: "UEN: 201523456B, Director: CHEN Wei", externalValue: "MAS-registered family office", match: "exact", confidence: 100, verifiedVia: "Fill Easy CorpVerify (ACRA) + MAS — government authority" },
+	{ id: "xr-jc-6", field: "Property — Sentosa Cove", clientDocLabel: "Fill Easy: SLA — Property Search", externalSourceLabel: "URA Transacted Price Data", clientValue: "GCB, Owner: CHEN Wei, purchased 2017", externalValue: "Sentosa Cove GCB transacted SGD 22M (2017)", match: "exact", confidence: 100, verifiedVia: "SLA via Fill Easy + URA — government authority" },
+	{ id: "xr-jc-7", field: "Portfolio Value", clientDocLabel: "KPMG Independent Valuation", externalSourceLabel: "EY Audited Financials", clientValue: "SGD 510M total (KPMG, Dec 2025)", externalValue: "SGD 510M total assets (EY audit, Dec 2025)", match: "exact", confidence: 100, verifiedVia: "Dual Big-4 verification (KPMG valuation + EY audit)" },
+	{ id: "xr-jc-8", field: "Trust Beneficiaries", clientDocLabel: "Rajah & Tann Trust Deed", externalSourceLabel: "Fill Easy: ACRA — Chen Family Trust Pte. Ltd.", clientValue: "Chen Wei, Chen Li Hua, Chen Ming, Chen Mei", externalValue: "Trust entity registered — ACRA confirms directors", match: "exact", confidence: 100, verifiedVia: "Fill Easy CorpVerify (ACRA) — government authority" },
+	{ id: "xr-jc-9", field: "Tax Filing Consistency", clientDocLabel: "IRAS 10-Year Tax History", externalSourceLabel: "DBS Bank Statements + EY Audit", clientValue: "Investment income: ~SGD 5.4M/yr (avg)", externalValue: "DBS credits ~SGD 5.2-5.6M/yr, EY audit confirms", match: "exact", confidence: 100, verifiedVia: "Triple verification: IRAS + DBS + EY" },
+];
+
+// ── James Chen Wei: Report Assembly ────────────────────────────
+
+const CHEN_REPORT: HnwReport = {
+	profile: {
+		id: "hnw-james-chen",
+		name: "James Chen Wei",
+		nameCn: "陈伟",
+		dateOfBirth: "1972-03-15",
+		age: 54,
+		nationality: "Singaporean",
+		residences: ["Singapore", "London"],
+		primaryIndustry: "Private Equity / Family Office",
+		estimatedNetWorthUSD: 380_000_000,
+		netWorthSource: "Client Declaration + Verified Documents",
+		riskRating: "Low",
+		riskScore: 15,
+		profileSummary: "Singapore-based private equity professional with well-documented wealth from inheritance, employment income at Goldman Sachs and Temasek, and diversified investment portfolio. All major wealth sources supported by verifiable documentation including tax returns, bank statements, employment contracts, trust deeds, and independent valuations. Family trust established through Rajah & Tann with full documentation. Represents the gold standard of SOW corroboration.",
+	},
+	careerTimeline: CHEN_CAREER,
+	totalEstimatedWealthUSD: 380_000_000,
+	wealthByCategory: aggregateWealth(CHEN_CAREER),
+	overallConfidence: overallConfidence(CHEN_CAREER),
+	narrative: CHEN_NARRATIVE,
+	keyParameters: CHEN_PARAMS,
+	dataSources: CHEN_SOURCES,
+	companyNodes: CHEN_COMPANIES,
+	screeningResult: PEP_SCREENING[3],
+	clientDocuments: CHEN_CLIENT_DOCS,
+	crossReferences: CHEN_CROSS_REFS,
+	uploadSlots: UPLOAD_SLOTS,
+	corroborationScores: {
+		consistency: 12,
+		correctness: 15,
+		completeness: 18,
+		masReference: "MAS Notice 626 / Guidelines to Notice 626 (Prevention of Money Laundering and Countering the Financing of Terrorism) — §6.18–6.22 Source of Wealth Verification",
+	},
+	agentVerification: {
+		agentId: "fe-verify-v2",
+		agentName: "Fill Easy Verification Agent",
+		timestamp: new Date().toISOString(),
+		overallStatus: "verified",
+		checks: [
+			{ id: "ck-jc-1", category: "consistency", label: "Career-to-wealth trajectory alignment", status: "pass", detail: "Goldman Sachs (1995-2005, $8M) + Temasek (2005-2012, $17M) + inheritance (SGD 120M, 2012) + investment returns. Clear linear progression fully documented with employment records, CPF statements, and tax filings." },
+			{ id: "ck-jc-2", category: "consistency", label: "Income proportional to declared roles", status: "pass", detail: "GS VP compensation (~$800K/yr avg) and Temasek Senior Director (~$2.4M/yr avg with carry) are consistent with industry benchmarks for these roles and seniority levels." },
+			{ id: "ck-jc-3", category: "correctness", label: "Employment verification — dual source", status: "pass", detail: "Goldman Sachs HR letter + IRAS tax filings provide independent verification of employment. Temasek HR + CPF Board contributions provide second independent verification. No discrepancies." },
+			{ id: "ck-jc-4", category: "correctness", label: "Inheritance documentation complete", status: "pass", detail: "Rajah & Tann trust deed, probate records, bank settlement statements, and ACRA registration all cross-reference consistently. SGD 120M amount verified across all documents." },
+			{ id: "ck-jc-5", category: "correctness", label: "Portfolio independently valued and audited", status: "pass", detail: "KPMG independent valuation (SGD 510M) and EY audit (clean opinion, SGD 510M total assets) provide dual Big-4 verification. Valuations agree to within 1%." },
+			{ id: "ck-jc-6", category: "completeness", label: "Property ownership verified", status: "pass", detail: "Singapore Land Authority records (via Fill Easy API) confirm Sentosa Cove and Orchard Road property ownership. URA transacted price data used for current valuation. London property deed also verified." },
+			{ id: "ck-jc-7", category: "completeness", label: "Tax filing completeness", status: "pass", detail: "10 consecutive years of IRAS tax filings provided and verified. Investment income on tax returns matches DBS bank statement credits and EY audited financial statements. Triple verification achieved." },
+			{ id: "ck-jc-8", category: "completeness", label: "Trust structure transparent", status: "pass", detail: "Chen Family Trust — full trust deed, named beneficiaries (Chen Wei, spouse, two children), ACRA-registered trust entity, Rajah & Tann as counsel. No opaque structures or undisclosed beneficiaries." },
+		],
+		summary: "James Chen Wei's wealth profile achieves the highest level of corroboration across all three MAS assessment dimensions. Every material wealth source has a verifiable documentary trail: 10 years of tax returns, employment verification from two blue-chip institutions, CPF contribution records, trust deed with named beneficiaries, probate records, bank statements, ACRA registrations, property deeds, KPMG independent valuation, and EY audited financials. All eight verification checks passed with no flags or warnings. This profile represents the gold standard for SOW corroboration.",
+		recommendations: [
+			"Standard ongoing monitoring — annual review cycle is sufficient given low risk rating",
+			"Request updated KPMG valuation annually to maintain current portfolio verification",
+			"Standard PEP/sanctions re-screening on quarterly schedule",
+		],
+	},
+	corroborationGrade: "A",
+	fourEyeCheck: {
+		analyst: { name: "Sarah Chen", role: "Senior Compliance Analyst", timestamp: "2026-05-19T11:00:00Z" },
+		reviewer: { name: "Michael Wong", role: "Head of Financial Crime", timestamp: "2026-05-19T14:30:00Z" },
+		status: "approved",
+		signOffHistory: [
+			{ action: "Drafted", by: "Sarah Chen", at: "2026-05-19T11:00:00Z", comment: "Comprehensive documentation. All sources verified. Recommending approval." },
+			{ action: "Reviewed", by: "Michael Wong", at: "2026-05-19T14:30:00Z", comment: "Approved — exemplary corroboration. No follow-up items." },
+		],
+	},
+	personalRelationships: [
+		{ id: "pr-jc-1", name: "Chen Li Hua", relationship: "spouse", notes: "Homemaker, named beneficiary of Chen Family Trust" },
+		{ id: "pr-jc-2", name: "Chen Ming", relationship: "child", notes: "Son, named beneficiary of Chen Family Trust. University student (Cambridge)." },
+		{ id: "pr-jc-3", name: "Chen Mei", relationship: "child", notes: "Daughter, named beneficiary of Chen Family Trust. Secondary school student." },
+		{ id: "pr-jc-4", name: "Chen Tai Wei (father, deceased)", relationship: "parent", notes: "Founder of Chen Textile Manufacturing. Source of SGD 120M inheritance. Passed away 2012.", linkedEntities: ["Chen Family Trust"] },
+	],
+};
+
+export const HNW_CASES: HnwReport[] = [JACK_MA_REPORT, YAT_SIU_REPORT, TRUMP_REPORT, CHEN_REPORT];
 
 /* ═══════════════════════════════════════════════════════════════
    Compliance Chatbot — hardcoded conversations per subject
@@ -1586,23 +2376,48 @@ export const CHATBOT_ATTENTION_AREAS: Record<string, CaseAttentionArea[]> = {
 		{ id: "ys-5", title: "Private Valuation Discrepancy", severity: "warning", description: "Animoca Brands' last private valuation was $5.9B (Jan 2022), but comparable public blockchain companies have declined 60-80%. An updated fair value assessment is needed before relying on this figure.", section: "Career Phase 5" },
 		{ id: "ys-6", title: "X/Twitter Account Hack", severity: "info", description: "Yat Siu's X account was hacked in December 2024 and used for a fake token scam. While personal assets were not directly affected, this raises cybersecurity risk concerns for his crypto holdings.", section: "Risk Parameters" },
 	],
+	"hnw-donald-trump": [
+		{ id: "dt-1", title: "Active PEP — Sitting U.S. President", severity: "critical", description: "Donald Trump is the current President of the United States — the highest-level PEP classification. Mandatory enhanced due diligence and senior management approval required. All financial dealings subject to heightened regulatory scrutiny.", section: "PEP Screening" },
+		{ id: "dt-2", title: "NY Civil Fraud Judgment — Asset Valuation Unreliable", severity: "critical", description: "Judge Engoron found persistent and pervasive fraud in Trump Organization financial statements. Asset valuations on loan applications were systematically inflated. Self-reported property values cannot be relied upon. Independent appraisals are mandatory.", section: "Career Phase 3-6" },
+		{ id: "dt-3", title: "DJT Stock — Meme-Stock Volatility", severity: "critical", description: "Trump Media (DJT) constitutes ~50% of net worth. The stock trades with extreme volatility ($12-$79 range) and limited correlation to business fundamentals. Truth Social revenue is minimal relative to market cap. Daily mark-to-market required.", section: "Career Phase 6" },
+		{ id: "dt-4", title: "500+ LLC Structure — Opacity Risk", severity: "warning", description: "The Trump Organization operates through 500+ LLCs, creating significant opacity around cross-entity liabilities, intercompany loans, and true beneficial ownership. Full entity structure chart should be requested.", section: "Entity Network" },
+		{ id: "dt-5", title: "Tax Returns Never Released", severity: "warning", description: "Trump is the only modern president who refused to voluntarily release tax returns. Without official tax documentation, income verification relies on OGE ranges and investigative journalism.", section: "Risk Parameters" },
+		{ id: "dt-6", title: "Multiple Criminal and Civil Proceedings", severity: "info", description: "Multiple criminal indictments (2023-2024), NY civil fraud judgment ($454M), and E. Jean Carroll verdicts. Ongoing legal exposure may materially impact net worth through judgments, fines, and legal costs.", section: "Risk Parameters" },
+	],
+	"hnw-james-chen": [
+		{ id: "jc-1", title: "Exemplary Documentation — Gold Standard", severity: "info", description: "All wealth sources fully documented with verifiable paper trail: 10yr tax returns, employment contracts, CPF statements, trust deed, probate records, bank statements, property deeds, EY audit, and KPMG valuation. No action items.", section: "Overview" },
+		{ id: "jc-2", title: "Annual Valuation Refresh", severity: "info", description: "KPMG independent valuation and EY audit are current as at December 2025. Standard annual refresh should be scheduled for Q1 2027 to maintain up-to-date portfolio verification.", section: "Investments" },
+	],
 };
 
 export const CHATBOT_REMINDERS: Record<string, ChatReminder[]> = {
 	"hnw-jack-ma": [
-		{ id: "r-jm-1", label: "Request updated Ant Group regulatory status from PBOC", dueDate: "2026-06-02", priority: "high", completed: false },
+		{ id: "r-jm-1", label: "Request updated Ant Group regulatory status from PBOC", dueDate: "2026-05-12", priority: "high", completed: false },
 		{ id: "r-jm-2", label: "Follow up with client for Singapore trust deed documents", dueDate: "2026-06-09", priority: "high", completed: false },
 		{ id: "r-jm-3", label: "Order independent appraisals for real estate portfolio", dueDate: "2026-06-16", priority: "medium", completed: false },
 		{ id: "r-jm-4", label: "Verify Blue Pool Capital AUM with co-investor reference", dueDate: "2026-06-23", priority: "medium", completed: false },
 		{ id: "r-jm-5", label: "Schedule quarterly PEP/sanctions re-screening", dueDate: "2026-07-01", priority: "low", completed: false },
 	],
 	"hnw-yat-siu": [
-		{ id: "r-ys-1", label: "Verify SAND token holdings via on-chain Etherscan analysis", dueDate: "2026-05-26", priority: "high", completed: false },
+		{ id: "r-ys-1", label: "Verify SAND token holdings via on-chain Etherscan analysis", dueDate: "2026-05-10", priority: "high", completed: false },
 		{ id: "r-ys-2", label: "Request ASIC delisting records via Fill Easy CorpVerify", dueDate: "2026-06-02", priority: "high", completed: false },
 		{ id: "r-ys-3", label: "Check Lympo hack insurance claim status with client", dueDate: "2026-06-09", priority: "medium", completed: false },
 		{ id: "r-ys-4", label: "Monitor SEC EDGAR for Currenc SPAC merger filing updates", dueDate: "2026-06-16", priority: "medium", completed: false },
 		{ id: "r-ys-5", label: "Commission updated Animoca Brands fair value assessment", dueDate: "2026-06-23", priority: "high", completed: false },
-		{ id: "r-ys-6", label: "Set up weekly automated SAND/REVV/TOWER price monitoring", dueDate: "2026-05-26", priority: "medium", completed: false },
+		{ id: "r-ys-6", label: "Set up weekly automated SAND/REVV/TOWER price monitoring", dueDate: "2026-05-14", priority: "medium", completed: false },
+	],
+	"hnw-donald-trump": [
+		{ id: "r-dt-1", label: "Escalate to senior management for PEP approval — active head of state", dueDate: "2026-05-20", priority: "high", completed: false },
+		{ id: "r-dt-2", label: "Commission independent real estate appraisals — NY AG fraud findings prohibit reliance on self-reported values", dueDate: "2026-06-02", priority: "high", completed: false },
+		{ id: "r-dt-3", label: "Monitor DJT stock daily — mark-to-market required for volatile position", dueDate: "2026-05-20", priority: "high", completed: false },
+		{ id: "r-dt-4", label: "Request detailed LLC structure chart for 500+ entities", dueDate: "2026-06-09", priority: "medium", completed: false },
+		{ id: "r-dt-5", label: "Review all ongoing litigation and potential liability impact", dueDate: "2026-06-16", priority: "medium", completed: false },
+		{ id: "r-dt-6", label: "Schedule weekly PEP/sanctions/adverse media re-screening", dueDate: "2026-05-26", priority: "high", completed: false },
+	],
+	"hnw-james-chen": [
+		{ id: "r-jc-1", label: "Schedule annual KPMG portfolio valuation refresh (Q1 2027)", dueDate: "2027-01-15", priority: "low", completed: false },
+		{ id: "r-jc-2", label: "Standard quarterly PEP/sanctions re-screening", dueDate: "2026-08-01", priority: "low", completed: false },
+		{ id: "r-jc-3", label: "Request updated EY audited financials when available (FY2026)", dueDate: "2027-03-01", priority: "low", completed: false },
 	],
 };
 
@@ -1621,5 +2436,20 @@ export const CHATBOT_INITIAL_MESSAGES: Record<string, ChatMessage[]> = {
 		{ id: "ys-c4", role: "assistant", text: "🟡 WARNING: Animoca's $5.9B private valuation is from Jan 2022. Comparable public blockchain companies have declined 60-80%. An updated fair value assessment is essential before onboarding.", timestamp: "Just now" },
 		{ id: "ys-c5", role: "assistant", text: "🟡 WARNING: The Lympo subsidiary hack ($18.7M) and pending Currenc/Nasdaq SPAC merger both need follow-up. The December 2024 X/Twitter hack also raises cybersecurity concerns.", timestamp: "Just now" },
 		{ id: "ys-c6", role: "assistant", text: "I've pre-set 6 follow-up reminders for this case. You can view and manage them in the Reminders tab. Would you like me to drill into any specific risk area?", timestamp: "Just now" },
+	],
+	"hnw-donald-trump": [
+		{ id: "dt-c1", role: "assistant", text: "I've completed the Source of Wealth assessment for Donald Trump. This is a HIGH RISK case with active PEP status requiring immediate senior management attention:", timestamp: "Just now" },
+		{ id: "dt-c2", role: "assistant", text: "🔴 CRITICAL: Active PEP — Donald Trump is the sitting President of the United States. This is the highest-level PEP classification. Mandatory enhanced due diligence and senior management approval required before any engagement.", timestamp: "Just now" },
+		{ id: "dt-c3", role: "assistant", text: "🔴 CRITICAL: The NY AG civil fraud judgment found systematic inflation of asset values on financial statements. Self-reported property valuations cannot be relied upon. Independent appraisals are mandatory for any wealth assessment.", timestamp: "Just now" },
+		{ id: "dt-c4", role: "assistant", text: "🔴 CRITICAL: DJT stock constitutes ~50% of estimated net worth but trades as a meme stock with extreme volatility ($12-$79 range). Daily mark-to-market revaluation is required.", timestamp: "Just now" },
+		{ id: "dt-c5", role: "assistant", text: "🟡 WARNING: 500+ LLC structure creates significant opacity. Tax returns have never been voluntarily released. OGE disclosures use ranges not exact values. Overall corroboration grade is D (~52% confidence).", timestamp: "Just now" },
+		{ id: "dt-c6", role: "assistant", text: "I've pre-set 6 follow-up reminders for this case. The first priority is escalating to senior management for PEP approval. Would you like me to highlight any specific risk area?", timestamp: "Just now" },
+	],
+	"hnw-james-chen": [
+		{ id: "jc-c1", role: "assistant", text: "I've completed the Source of Wealth assessment for James Chen Wei. This is a LOW RISK case with exemplary documentation:", timestamp: "Just now" },
+		{ id: "jc-c2", role: "assistant", text: "🟢 VERIFIED: All wealth sources fully corroborated. Employment income verified via Goldman Sachs and Temasek employment letters + CPF Board contributions + 10 years of IRAS tax filings.", timestamp: "Just now" },
+		{ id: "jc-c3", role: "assistant", text: "🟢 VERIFIED: SGD 120M inheritance from father's textile business — trust deed (Rajah & Tann), probate records, bank settlement statements, and ACRA registration all cross-reference consistently.", timestamp: "Just now" },
+		{ id: "jc-c4", role: "assistant", text: "🟢 VERIFIED: Current portfolio valued at SGD 510M with dual Big-4 verification — KPMG independent valuation + EY audited financials (clean opinion). All eight verification checks passed.", timestamp: "Just now" },
+		{ id: "jc-c5", role: "assistant", text: "Overall corroboration grade: A (~88% confidence). Four-eye check approved by Michael Wong. No follow-up items required — standard annual monitoring cycle applies. Would you like to review any section in detail?", timestamp: "Just now" },
 	],
 };

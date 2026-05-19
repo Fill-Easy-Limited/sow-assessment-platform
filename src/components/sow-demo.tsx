@@ -66,6 +66,9 @@ import {
 	RotateCwIcon,
 	AlertCircleIcon,
 	CpuIcon,
+	MailIcon,
+	CopyIcon,
+	CheckCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -107,6 +110,12 @@ import {
 	type CaseAttentionArea,
 	type CorroborationScores,
 	type AgentVerification,
+	type CorroborationGrade,
+	type GradeConfig,
+	type FourEyeCheck,
+	type PersonalRelationship,
+	GRADE_CONFIGS,
+	getCorroborationGrade,
 	CHATBOT_ATTENTION_AREAS,
 	CHATBOT_REMINDERS,
 	CHATBOT_INITIAL_MESSAGES,
@@ -263,6 +272,8 @@ function Dashboard({ onNewAssessment, onSelectMonitoring }: { onNewAssessment: (
 	const underReview = monitoring.filter((m) => m.status === "Under Review" || m.status === "Flagged").length;
 	const highRisk = monitoring.filter((m) => m.riskRating === "High").length;
 	const totalAlerts = monitoring.reduce((sum, m) => sum + m.openAlerts, 0);
+	const avgConfidence = Math.round(monitoring.reduce((sum, m) => sum + m.overallConfidence, 0) / monitoring.length);
+	const avgGrade = getCorroborationGrade(avgConfidence);
 
 	return (
 		<div className="space-y-6">
@@ -293,8 +304,10 @@ function Dashboard({ onNewAssessment, onSelectMonitoring }: { onNewAssessment: (
 				</div>
 				<div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
 					<div>
-						<div className="text-[11px] font-heading text-muted-foreground uppercase tracking-widest">Avg. Confidence</div>
-						<div className="mt-0.5 font-heading font-semibold">62%</div>
+						<div className="text-[11px] font-heading text-muted-foreground uppercase tracking-widest">Avg. Grade</div>
+						<div className="mt-0.5 flex items-center gap-2">
+							<GradeBadge grade={avgGrade.grade} confidence={avgConfidence} />
+						</div>
 					</div>
 					<div>
 						<div className="text-[11px] font-heading text-muted-foreground uppercase tracking-widest">Profiles Verified</div>
@@ -395,6 +408,7 @@ function HnwMonitoringTable({ entries, onSelect }: { entries: HnwMonitoringEntry
 							<th className="text-left px-4 py-3 font-medium text-xs tracking-wide hidden sm:table-cell">Industry</th>
 							<th className="text-right px-4 py-3 font-medium text-xs tracking-wide hidden sm:table-cell">Net Worth</th>
 							<th className="text-center px-4 py-3 font-medium text-xs tracking-wide">Risk</th>
+							<th className="text-center px-4 py-3 font-medium text-xs tracking-wide">Grade</th>
 							<th className="text-center px-4 py-3 font-medium text-xs tracking-wide hidden sm:table-cell">Last Screened</th>
 							<th className="text-center px-4 py-3 font-medium text-xs tracking-wide">Alerts</th>
 							<th className="text-center px-4 py-3 font-medium text-xs tracking-wide hidden sm:table-cell">Status</th>
@@ -413,6 +427,9 @@ function HnwMonitoringTable({ entries, onSelect }: { entries: HnwMonitoringEntry
 								</td>
 								<td className="px-4 py-3 text-center">
 									<RiskBadge rating={entry.riskRating} />
+								</td>
+								<td className="px-4 py-3 text-center">
+									<GradeBadge grade={entry.corroborationGrade} confidence={entry.overallConfidence} />
 								</td>
 								<td className="px-4 py-3 text-center hidden sm:table-cell">
 									<span className="text-xs text-muted-foreground">{entry.lastScreened}</span>
@@ -795,6 +812,7 @@ function PersonSelector({ selectedCase, onSelectCase, onBegin, onBack }: {
 									</div>
 								</div>
 								<div className="flex items-center gap-2">
+									<GradeBadge grade={report.corroborationGrade} confidence={report.overallConfidence} />
 									<RiskBadge rating={p.riskRating} />
 									{isSelected && (
 										<div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center shadow-md shadow-primary/30">
@@ -944,15 +962,18 @@ function ReportView({ report, onReset }: { report: HnwReport; onReset: () => voi
 				</div>
 			</div>
 
-			<HnwProfileCard profile={p} />
-			<CorroborationRiskScore profile={p} scores={report.corroborationScores} />
+			<HnwProfileCard profile={p} grade={report.corroborationGrade} confidence={report.overallConfidence} />
+			<FourEyeCheckSection check={report.fourEyeCheck} />
+			<CorroborationRiskScore profile={p} scores={report.corroborationScores} grade={report.corroborationGrade} />
 			<KeyParameters params={report.keyParameters} />
 			<CareerTimeline phases={report.careerTimeline} />
 			<WealthAccumulationChart phases={report.careerTimeline} />
 			<WealthDonutChart wealthByCategory={report.wealthByCategory} totalWealth={report.totalEstimatedWealthUSD} overallConfidence={report.overallConfidence} />
 			<CareerPhaseCards phases={report.careerTimeline} onSourceClick={setSelectedSource} />
+			<PersonalRelationshipsSection relationships={report.personalRelationships} profileName={p.name} />
 			<CompanyNetworkGraph nodes={report.companyNodes} profileName={p.name} />
 			<NarrativeSection narrative={report.narrative} report={report} />
+			<CrossLLMValidationSection report={report} />
 			<SourceCitationsAggregate phases={report.careerTimeline} onSourceClick={setSelectedSource} />
 			<ClientDocumentsSection documents={report.clientDocuments} />
 			<CrossReferenceTable crossRefs={report.crossReferences} />
@@ -1005,7 +1026,7 @@ function ReportView({ report, onReset }: { report: HnwReport; onReset: () => voi
 
 /* ─── HNW Profile Card ─── */
 
-function HnwProfileCard({ profile: p }: { profile: HnwProfile }) {
+function HnwProfileCard({ profile: p, grade, confidence }: { profile: HnwProfile; grade?: CorroborationGrade; confidence?: number }) {
 	return (
 		<div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
 			<div className="flex items-start justify-between mb-5">
@@ -1018,7 +1039,10 @@ function HnwProfileCard({ profile: p }: { profile: HnwProfile }) {
 						{p.nameCn && <div className="text-sm text-muted-foreground">{p.nameCn}</div>}
 					</div>
 				</div>
-				<RiskBadge rating={p.riskRating} size="lg" />
+				<div className="flex items-center gap-2">
+					{grade && <GradeBadge grade={grade} confidence={confidence} size="lg" />}
+					<RiskBadge rating={p.riskRating} size="lg" />
+				</div>
 			</div>
 			<div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
 				<InfoField label="Date of Birth" value={p.dateOfBirth} />
@@ -1043,9 +1067,106 @@ function InfoField({ label, value, mono }: { label: string; value: string; mono?
 	);
 }
 
+/* ─── 4-Eye Check ─── */
+
+function FourEyeCheckSection({ check }: { check: FourEyeCheck }) {
+	const steps = ["drafted", "reviewed", "approved", "released"] as const;
+	const stepLabels = { drafted: "Drafted", reviewed: "Reviewed", approved: "Approved", released: "Released" };
+	const currentIdx = steps.indexOf(check.status);
+
+	return (
+		<div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+			<div className="flex items-center gap-2 mb-5">
+				<div className="h-8 w-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
+					<ShieldCheckIcon className="size-4 text-primary" />
+				</div>
+				<div>
+					<p className="text-xs font-heading font-semibold text-muted-foreground uppercase tracking-widest">4-Eye Check</p>
+				</div>
+			</div>
+
+			{/* Status pipeline */}
+			<div className="flex items-center justify-between mb-6 px-2">
+				{steps.map((step, idx) => {
+					const isCompleted = idx <= currentIdx;
+					const isCurrent = idx === currentIdx;
+					return (
+						<div key={step} className="flex items-center flex-1">
+							<div className="flex flex-col items-center gap-1.5">
+								<div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+									isCompleted ? (isCurrent ? "bg-primary text-primary-foreground ring-4 ring-primary/20" : "bg-primary/80 text-primary-foreground") : "bg-muted border-2 border-border text-muted-foreground"
+								}`}>
+									{isCompleted && !isCurrent ? <CheckIcon className="size-4" /> : idx + 1}
+								</div>
+								<span className={`text-[10px] font-heading font-semibold uppercase tracking-wider ${isCurrent ? "text-primary" : isCompleted ? "text-foreground" : "text-muted-foreground"}`}>
+									{stepLabels[step]}
+								</span>
+							</div>
+							{idx < steps.length - 1 && (
+								<div className={`flex-1 h-0.5 mx-2 rounded-full ${idx < currentIdx ? "bg-primary/60" : "bg-border"}`} />
+							)}
+						</div>
+					);
+				})}
+			</div>
+
+			{/* Analyst & Reviewer cards */}
+			<div className="grid grid-cols-2 gap-4 mb-5">
+				<div className="rounded-xl border border-border bg-muted/30 p-4">
+					<div className="flex items-center gap-2 mb-2">
+						<UserIcon className="size-4 text-primary" />
+						<span className="text-[10px] font-heading font-semibold uppercase tracking-widest text-muted-foreground">Analyst</span>
+					</div>
+					<div className="font-heading font-semibold text-sm">{check.analyst.name}</div>
+					<div className="text-xs text-muted-foreground mt-0.5">{check.analyst.role}</div>
+					<div className="text-[10px] text-muted-foreground mt-1.5 flex items-center gap-1">
+						<ClockIcon className="size-3" />{check.analyst.timestamp}
+					</div>
+				</div>
+				<div className="rounded-xl border border-border bg-muted/30 p-4">
+					<div className="flex items-center gap-2 mb-2">
+						<ShieldCheckIcon className="size-4 text-primary" />
+						<span className="text-[10px] font-heading font-semibold uppercase tracking-widest text-muted-foreground">Reviewer</span>
+					</div>
+					{check.reviewer ? (
+						<>
+							<div className="font-heading font-semibold text-sm">{check.reviewer.name}</div>
+							<div className="text-xs text-muted-foreground mt-0.5">{check.reviewer.role}</div>
+							<div className="text-[10px] text-muted-foreground mt-1.5 flex items-center gap-1">
+								<ClockIcon className="size-3" />{check.reviewer.timestamp}
+							</div>
+						</>
+					) : (
+						<div className="text-sm text-muted-foreground italic">Pending reviewer assignment</div>
+					)}
+				</div>
+			</div>
+
+			{/* Sign-off history */}
+			{check.signOffHistory.length > 0 && (
+				<div>
+					<p className="text-[10px] font-heading font-semibold uppercase tracking-widest text-muted-foreground mb-3">Sign-off History</p>
+					<div className="space-y-2">
+						{check.signOffHistory.map((entry, idx) => (
+							<div key={idx} className="flex items-start gap-3 text-xs">
+								<div className="mt-1 h-2 w-2 rounded-full bg-primary/60 shrink-0" />
+								<div className="flex-1">
+									<span className="font-semibold">{entry.action}</span>
+									<span className="text-muted-foreground"> by {entry.by} &middot; {entry.at}</span>
+									{entry.comment && <p className="text-muted-foreground mt-0.5 italic">&ldquo;{entry.comment}&rdquo;</p>}
+								</div>
+							</div>
+						))}
+					</div>
+				</div>
+			)}
+		</div>
+	);
+}
+
 /* ─── Risk Score Gauge ─── */
 
-function CorroborationRiskScore({ profile: p, scores }: { profile: HnwProfile; scores: CorroborationScores }) {
+function CorroborationRiskScore({ profile: p, scores, grade }: { profile: HnwProfile; scores: CorroborationScores; grade: CorroborationGrade }) {
 	const score = p.riskScore;
 	const angle = (score / 100) * 180;
 	const color = score >= 60 ? "#ef4444" : score >= 40 ? "#f59e0b" : "#10b981";
@@ -1068,12 +1189,13 @@ function CorroborationRiskScore({ profile: p, scores }: { profile: HnwProfile; s
 				<div className="flex items-center gap-2">
 					<GaugeIcon className="size-4 text-muted-foreground" />
 					<p className="text-xs font-heading font-semibold text-muted-foreground uppercase tracking-widest">Corroboration Risk Score</p>
+					<GradeBadge grade={grade} size="sm" />
 				</div>
 				<span className="text-[9px] font-heading font-medium text-muted-foreground/70 tracking-wide">MAS Notice 626 §6.18–6.22</span>
 			</div>
 			<div className="flex items-start gap-8">
 				<div className="shrink-0">
-					<svg width="160" height="90" viewBox="0 0 160 90">
+					<svg width="160" height="100" viewBox="0 0 160 100">
 						<defs>
 							<linearGradient id="gaugeTrack" x1="0%" y1="0%" x2="100%" y2="0%">
 								<stop offset="0%" stopColor="#10b981" stopOpacity="0.3" />
@@ -1081,19 +1203,19 @@ function CorroborationRiskScore({ profile: p, scores }: { profile: HnwProfile; s
 								<stop offset="100%" stopColor="#ef4444" stopOpacity="0.3" />
 							</linearGradient>
 						</defs>
-						<path d="M 15 80 A 65 65 0 0 1 145 80" fill="none" stroke="url(#gaugeTrack)" strokeWidth="10" strokeLinecap="round" />
+						<path d="M 15 75 A 65 65 0 0 1 145 75" fill="none" stroke="url(#gaugeTrack)" strokeWidth="10" strokeLinecap="round" />
 						<path
-							d="M 15 80 A 65 65 0 0 1 145 80"
+							d="M 15 75 A 65 65 0 0 1 145 75"
 							fill="none"
 							stroke={color}
 							strokeWidth="10"
 							strokeLinecap="round"
 							strokeDasharray={`${(angle / 180) * 204} 204`}
 						/>
-						<text x="80" y="72" textAnchor="middle" className="font-heading" style={{ fontSize: "28px", fontWeight: 700, fill: color }}>{score}</text>
-						<text x="80" y="88" textAnchor="middle" style={{ fontSize: "12px", fill: "#9ca3af" }}>/ 100</text>
-						<text x="15" y="88" textAnchor="start" style={{ fontSize: "10px", fill: "#10b981" }}>LOW</text>
-						<text x="145" y="88" textAnchor="end" style={{ fontSize: "10px", fill: "#ef4444" }}>HIGH</text>
+						<text x="80" y="68" textAnchor="middle" className="font-heading" style={{ fontSize: "28px", fontWeight: 700, fill: color }}>{score}</text>
+						<text x="80" y="84" textAnchor="middle" style={{ fontSize: "12px", fill: "#9ca3af" }}>/ 100</text>
+						<text x="8" y="96" textAnchor="start" style={{ fontSize: "10px", fontWeight: 600, fill: "#10b981" }}>LOW</text>
+						<text x="152" y="96" textAnchor="end" style={{ fontSize: "10px", fontWeight: 600, fill: "#ef4444" }}>HIGH</text>
 					</svg>
 				</div>
 				<div className="flex-1 space-y-3">
@@ -1642,6 +1764,75 @@ function EntityNodeCard({ node, depth, expanded, onToggle }: {
 	);
 }
 
+/* ─── Personal & Family Network ─── */
+
+function PersonalRelationshipsSection({ relationships, profileName }: { relationships: PersonalRelationship[]; profileName: string }) {
+	const relationshipIcons: Record<string, typeof UserIcon> = {
+		spouse: UserIcon, child: UserIcon, sibling: UserIcon, parent: UserIcon,
+		associate: BriefcaseIcon, advisor: ShieldIcon, trustee: ShieldIcon, beneficiary: UserIcon,
+	};
+	const relationshipColors: Record<string, string> = {
+		spouse: "bg-pink-500/10 text-pink-700 border-pink-500/20",
+		child: "bg-sky-500/10 text-sky-700 border-sky-500/20",
+		sibling: "bg-violet-500/10 text-violet-700 border-violet-500/20",
+		parent: "bg-indigo-500/10 text-indigo-700 border-indigo-500/20",
+		associate: "bg-amber-500/10 text-amber-700 border-amber-500/20",
+		advisor: "bg-emerald-500/10 text-emerald-700 border-emerald-500/20",
+		trustee: "bg-teal-500/10 text-teal-700 border-teal-500/20",
+		beneficiary: "bg-orange-500/10 text-orange-700 border-orange-500/20",
+	};
+
+	if (!relationships || relationships.length === 0) return null;
+
+	return (
+		<div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+			<div className="flex items-center gap-2 mb-5">
+				<div className="h-8 w-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
+					<NetworkIcon className="size-4 text-primary" />
+				</div>
+				<div>
+					<p className="text-xs font-heading font-semibold text-muted-foreground uppercase tracking-widest">Personal & Family Network</p>
+					<p className="text-[10px] text-muted-foreground mt-0.5">{relationships.length} known connections for {profileName}</p>
+				</div>
+			</div>
+
+			<div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+				{relationships.map((rel) => {
+					const Icon = relationshipIcons[rel.relationship] ?? UserIcon;
+					const colorClass = relationshipColors[rel.relationship] ?? "bg-muted text-muted-foreground border-border";
+					return (
+						<div key={rel.id} className="rounded-xl border border-border bg-muted/30 p-4 flex items-start gap-3">
+							<div className={`h-9 w-9 rounded-lg flex items-center justify-center shrink-0 ${colorClass.split(" ")[0]} border ${colorClass.split(" ")[2] ?? "border-border"}`}>
+								<Icon className={`size-4 ${colorClass.split(" ")[1]}`} />
+							</div>
+							<div className="flex-1 min-w-0">
+								<div className="flex items-center gap-2 mb-1">
+									<span className="font-heading font-semibold text-sm truncate">{rel.name}</span>
+									<span className={`text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded border ${colorClass}`}>
+										{rel.relationship}
+									</span>
+								</div>
+								{rel.notes && <p className="text-xs text-muted-foreground leading-relaxed">{rel.notes}</p>}
+								{rel.linkedEntities && rel.linkedEntities.length > 0 && (
+									<div className="flex flex-wrap gap-1 mt-2">
+										{rel.linkedEntities.map((entity) => (
+											<span key={entity} className="text-[10px] px-1.5 py-0.5 rounded bg-primary/5 border border-primary/15 text-primary font-medium">
+												{entity}
+											</span>
+										))}
+									</div>
+								)}
+							</div>
+						</div>
+					);
+				})}
+			</div>
+		</div>
+	);
+}
+
+/* ─── Company Network ─── */
+
 function CompanyNetworkGraph({ nodes, profileName }: { nodes: CompanyNode[]; profileName: string }) {
 	const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
 
@@ -1724,7 +1915,7 @@ function NarrativeSection({ narrative, report }: { narrative: string; report: Hn
 	const [aiNarrative, setAiNarrative] = useState<string | null>(null);
 	const [generating, setGenerating] = useState(false);
 	const [error, setError] = useState<string | null>(null);
-	const [selectedModel, setSelectedModel] = useState("google/gemini-2.5-flash");
+	const [selectedModel, setSelectedModel] = useState("anthropic/claude-sonnet-4");
 	const [usageInfo, setUsageInfo] = useState<{ promptTokens?: number; completionTokens?: number; model?: string } | null>(null);
 
 	const activeNarrative = aiNarrative ?? narrative;
@@ -1732,9 +1923,9 @@ function NarrativeSection({ narrative, report }: { narrative: string; report: Hn
 	const preview = paragraphs.slice(0, 2);
 
 	const MODELS = [
+		{ id: "anthropic/claude-sonnet-4", label: "Claude Sonnet 4" },
 		{ id: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash" },
 		{ id: "google/gemini-2.5-pro", label: "Gemini 2.5 Pro" },
-		{ id: "anthropic/claude-sonnet-4", label: "Claude Sonnet 4" },
 		{ id: "openai/gpt-4o", label: "GPT-4o" },
 		{ id: "openai/gpt-4.1-mini", label: "GPT-4.1 Mini" },
 		{ id: "deepseek/deepseek-r1", label: "DeepSeek R1" },
@@ -1799,22 +1990,25 @@ function NarrativeSection({ narrative, report }: { narrative: string; report: Hn
 							<RotateCwIcon className="size-3" /> Revert
 						</button>
 					)}
-					<select
-						value={selectedModel}
-						onChange={(e) => setSelectedModel(e.target.value)}
-						className="text-[10px] px-2 py-1.5 rounded-lg border border-border bg-background focus:outline-none focus:ring-1 focus:ring-primary font-heading text-muted-foreground"
-					>
-						{MODELS.map((m) => (
-							<option key={m.id} value={m.id}>{m.label}</option>
-						))}
-					</select>
+					<div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-border bg-muted/40">
+						<CpuIcon className="size-3 text-muted-foreground" />
+						<select
+							value={selectedModel}
+							onChange={(e) => setSelectedModel(e.target.value)}
+							className="text-[11px] bg-transparent focus:outline-none font-heading font-medium text-foreground cursor-pointer"
+						>
+							{MODELS.map((m) => (
+								<option key={m.id} value={m.id}>{m.label}</option>
+							))}
+						</select>
+					</div>
 					<button
 						onClick={generateNarrative}
 						disabled={generating}
 						className="text-xs font-heading font-medium flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-500/10 to-violet-500/10 text-purple-700 border border-purple-500/20 hover:from-purple-500/15 hover:to-violet-500/15 transition-all disabled:opacity-50"
 					>
 						{generating ? <LoaderIcon className="size-3 animate-spin" /> : <SparklesIcon className="size-3" />}
-						{generating ? "Generating…" : aiNarrative ? "Regenerate" : "Generate with AI"}
+						{generating ? "Generating…" : aiNarrative ? "Rephrase with Model" : "Generate with AI"}
 					</button>
 				</div>
 			</div>
@@ -1843,6 +2037,377 @@ function NarrativeSection({ narrative, report }: { narrative: string; report: Hn
 					<span className="flex items-center gap-1"><CpuIcon className="size-3" /> {usageInfo.model}</span>
 					{usageInfo.promptTokens && <span>{usageInfo.promptTokens} prompt tokens</span>}
 					{usageInfo.completionTokens && <span>{usageInfo.completionTokens} completion tokens</span>}
+				</div>
+			)}
+		</div>
+	);
+}
+
+/* ─── Cross-LLM Validation ─── */
+
+type GapStatus = "agree" | "partial" | "disagree";
+
+interface ModelFinding {
+	model: string;
+	icon: string;
+	totalWealth: string;
+	riskRating: string;
+	keyFindings: string[];
+}
+
+interface GapAnalysisRow {
+	area: string;
+	status: GapStatus;
+	detail: string;
+}
+
+interface FactualInferredRow {
+	category: string;
+	factualPct: number;
+	inferredPct: number;
+}
+
+interface CrossValidationData {
+	models: ModelFinding[];
+	gapAnalysis: GapAnalysisRow[];
+	factualVsInferred: FactualInferredRow[];
+	consensusScore: number;
+}
+
+const CROSS_VALIDATION_MOCK: Record<string, CrossValidationData> = {
+	"hnw-jack-ma": {
+		models: [
+			{
+				model: "Claude Sonnet",
+				icon: "C",
+				totalWealth: "$22.8B",
+				riskRating: "Medium-High",
+				keyFindings: [
+					"Ant Group stake valued at ~$8.1B post-restructuring",
+					"Singapore family office managing $2.4B+",
+					"Blue Pool Capital co-founder with $800M AUM",
+				],
+			},
+			{
+				model: "Gemini 2.5 Flash",
+				icon: "G",
+				totalWealth: "$25.1B",
+				riskRating: "Medium",
+				keyFindings: [
+					"Ant Group stake valued higher at $10.2B",
+					"Real estate portfolio across 4 jurisdictions",
+					"Philanthropic commitments reduce liquid wealth by ~15%",
+				],
+			},
+			{
+				model: "GPT-4o",
+				icon: "O",
+				totalWealth: "$21.5B",
+				riskRating: "Medium-High",
+				keyFindings: [
+					"Conservative Ant Group valuation at $7.8B",
+					"Trust structures in Singapore and Cayman Islands",
+					"Pre-IPO wealth accumulation timeline verified",
+				],
+			},
+		],
+		gapAnalysis: [
+			{ area: "Ant Group Valuation", status: "partial", detail: "Range: $7.8B–$10.2B across models. Post-restructuring valuation methodology differs." },
+			{ area: "Singapore Trust Structure", status: "disagree", detail: "Claude and GPT identify trust; Gemini finds no public record of trust entity." },
+			{ area: "Real Estate Portfolio", status: "agree", detail: "All models corroborate multi-jurisdiction real estate holdings above $500M." },
+			{ area: "Pre-IPO Wealth Origins", status: "agree", detail: "Consistent timeline of Alibaba founding through 2014 IPO across all models." },
+			{ area: "Blue Pool Capital AUM", status: "partial", detail: "AUM estimates range $600M–$1.2B. Limited public disclosure on fund performance." },
+		],
+		factualVsInferred: [
+			{ category: "Income", factualPct: 95, inferredPct: 5 },
+			{ category: "Companies", factualPct: 78, inferredPct: 22 },
+			{ category: "Investments", factualPct: 45, inferredPct: 55 },
+			{ category: "Alternatives", factualPct: 30, inferredPct: 70 },
+		],
+		consensusScore: 72,
+	},
+	"hnw-yat-siu": {
+		models: [
+			{
+				model: "Claude Sonnet",
+				icon: "C",
+				totalWealth: "$1.1B",
+				riskRating: "High",
+				keyFindings: [
+					"Animoca Brands valued at $5.9B (2022 peak)",
+					"SAND token holdings volatile, estimated $120M–$400M",
+					"IBM acquisition of Outblaze division at undisclosed price",
+				],
+			},
+			{
+				model: "Gemini 2.5 Flash",
+				icon: "G",
+				totalWealth: "$680M",
+				riskRating: "Very High",
+				keyFindings: [
+					"Post-crypto-winter Animoca revaluation at $2.2B",
+					"NFT portfolio largely illiquid, marked at $45M",
+					"ASX delisting reduced corporate governance transparency",
+				],
+			},
+			{
+				model: "GPT-4o",
+				icon: "O",
+				totalWealth: "$920M",
+				riskRating: "High",
+				keyFindings: [
+					"Animoca valuation between peak and current at $3.8B",
+					"Significant SAND token dilution since TGE",
+					"Multiple Web3 investments with uncertain liquidity",
+				],
+			},
+		],
+		gapAnalysis: [
+			{ area: "SAND Token Valuation", status: "disagree", detail: "Estimates range $120M–$400M. Token price volatility and vesting schedule assumptions differ." },
+			{ area: "Animoca Private Valuation", status: "disagree", detail: "Range: $2.2B–$5.9B. No consensus on post-2022 fair value without public listing." },
+			{ area: "IBM Acquisition Price", status: "agree", detail: "All models confirm IBM acquired Outblaze messaging division; exact price undisclosed." },
+			{ area: "NFT Portfolio", status: "partial", detail: "Existence confirmed; valuation methodology for illiquid NFTs varies significantly." },
+			{ area: "ASX Delisting Impact", status: "agree", detail: "All models note TelBio/Animoca ASX delisting reduced disclosure requirements." },
+		],
+		factualVsInferred: [
+			{ category: "Income", factualPct: 85, inferredPct: 15 },
+			{ category: "Companies", factualPct: 35, inferredPct: 65 },
+			{ category: "Investments", factualPct: 20, inferredPct: 80 },
+			{ category: "Crypto", factualPct: 15, inferredPct: 85 },
+		],
+		consensusScore: 48,
+	},
+};
+
+function CrossLLMValidationSection({ report }: { report: HnwReport }) {
+	const [crossValidationRun, setCrossValidationRun] = useState(false);
+	const [crossValidating, setCrossValidating] = useState(false);
+
+	const profileId = report.profile.id;
+	const data = CROSS_VALIDATION_MOCK[profileId] ?? CROSS_VALIDATION_MOCK["hnw-jack-ma"];
+
+	const runCrossValidation = () => {
+		setCrossValidating(true);
+		setTimeout(() => {
+			setCrossValidating(false);
+			setCrossValidationRun(true);
+		}, 2000);
+	};
+
+	const statusColor = (s: GapStatus) =>
+		s === "agree" ? "bg-emerald-500/10 text-emerald-700 border-emerald-500/20" :
+		s === "partial" ? "bg-amber-500/10 text-amber-700 border-amber-500/20" :
+		"bg-red-500/10 text-red-700 border-red-500/20";
+
+	const statusIcon = (s: GapStatus) =>
+		s === "agree" ? <CheckCircle2Icon className="size-3" /> :
+		s === "partial" ? <AlertTriangleIcon className="size-3" /> :
+		<XCircleIcon className="size-3" />;
+
+	const consensusColor = data.consensusScore >= 70 ? "#10b981" : data.consensusScore >= 50 ? "#f59e0b" : "#ef4444";
+
+	/* Circular gauge for consensus */
+	const radius = 40;
+	const circumference = 2 * Math.PI * radius;
+	const dashOffset = circumference - (data.consensusScore / 100) * circumference;
+
+	return (
+		<div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+			{/* Header */}
+			<div className="flex items-center justify-between mb-4">
+				<div className="flex items-center gap-2">
+					<RadarIcon className="size-4 text-muted-foreground" />
+					<p className="text-xs font-heading font-semibold text-muted-foreground uppercase tracking-widest">Cross-LLM Validation</p>
+				</div>
+				{!crossValidationRun && !crossValidating && (
+					<button
+						onClick={runCrossValidation}
+						className="text-xs font-heading font-medium flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-blue-500/10 to-indigo-500/10 text-blue-700 border border-blue-500/20 hover:from-blue-500/15 hover:to-indigo-500/15 transition-all"
+					>
+						<RadarIcon className="size-3" /> Run Cross-Validation
+					</button>
+				)}
+				{crossValidating && (
+					<span className="text-xs font-heading font-medium flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-500/5 text-blue-600 border border-blue-500/20">
+						<LoaderIcon className="size-3 animate-spin" /> Validating across 3 models…
+					</span>
+				)}
+			</div>
+
+			{/* Pre-validation CTA */}
+			{!crossValidationRun && !crossValidating && (
+				<div className="rounded-xl border border-dashed border-blue-500/30 bg-gradient-to-br from-blue-500/[0.03] to-indigo-500/[0.03] p-8 flex flex-col items-center text-center">
+					<div className="h-12 w-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mb-4">
+						<RadarIcon className="size-6 text-blue-600" />
+					</div>
+					<h4 className="font-heading font-semibold text-sm mb-1">Compare AI Model Assessments</h4>
+					<p className="text-xs text-muted-foreground max-w-md mb-5">
+						Run parallel assessments across multiple LLMs to identify consensus, gaps, and areas where AI inference vs. factual corroboration differ
+					</p>
+					<button
+						onClick={runCrossValidation}
+						className="text-sm font-heading font-semibold flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 hover:from-blue-700 hover:to-indigo-700 transition-all"
+					>
+						<RadarIcon className="size-4" /> Run Cross-Validation (3 Models)
+					</button>
+				</div>
+			)}
+
+			{/* Loading animation */}
+			{crossValidating && (
+				<div className="rounded-xl border border-blue-500/20 bg-blue-500/[0.03] p-8 flex flex-col items-center text-center">
+					<div className="flex items-center gap-6 mb-4">
+						{["Claude Sonnet", "Gemini 2.5 Flash", "GPT-4o"].map((m, i) => (
+							<div key={m} className="flex flex-col items-center gap-2">
+								<div className={`h-10 w-10 rounded-lg border flex items-center justify-center text-xs font-heading font-bold ${i === 0 ? "bg-orange-500/10 border-orange-500/20 text-orange-700" : i === 1 ? "bg-blue-500/10 border-blue-500/20 text-blue-700" : "bg-emerald-500/10 border-emerald-500/20 text-emerald-700"}`}>
+									{m[0]}
+								</div>
+								<span className="text-[10px] text-muted-foreground">{m}</span>
+								<LoaderIcon className="size-3 animate-spin text-muted-foreground" />
+							</div>
+						))}
+					</div>
+					<p className="text-xs text-muted-foreground">Running parallel assessments across 3 models…</p>
+				</div>
+			)}
+
+			{/* Results */}
+			{crossValidationRun && (
+				<div className="space-y-6">
+					{/* Model Comparison Panels */}
+					<div>
+						<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest mb-3">Model Comparison</p>
+						<div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+							{data.models.map((m, i) => (
+								<div key={m.model} className={`rounded-xl border p-4 ${i === 0 ? "border-orange-500/20 bg-orange-500/[0.02]" : i === 1 ? "border-blue-500/20 bg-blue-500/[0.02]" : "border-emerald-500/20 bg-emerald-500/[0.02]"}`}>
+									<div className="flex items-center gap-2 mb-3">
+										<div className={`h-7 w-7 rounded-md flex items-center justify-center text-xs font-heading font-bold ${i === 0 ? "bg-orange-500/10 text-orange-700" : i === 1 ? "bg-blue-500/10 text-blue-700" : "bg-emerald-500/10 text-emerald-700"}`}>
+											{m.icon}
+										</div>
+										<span className="text-xs font-heading font-semibold">{m.model}</span>
+									</div>
+									<div className="flex items-center gap-3 mb-3">
+										<div>
+											<span className="text-[9px] text-muted-foreground uppercase tracking-wide">Est. Wealth</span>
+											<p className="text-sm font-heading font-bold">{m.totalWealth}</p>
+										</div>
+										<div className="h-8 w-px bg-border" />
+										<div>
+											<span className="text-[9px] text-muted-foreground uppercase tracking-wide">Risk</span>
+											<p className="text-xs font-heading font-semibold">{m.riskRating}</p>
+										</div>
+									</div>
+									<div className="space-y-1.5">
+										{m.keyFindings.map((f, fi) => (
+											<p key={fi} className="text-[11px] text-muted-foreground leading-snug flex items-start gap-1.5">
+												<span className="text-muted-foreground/40 mt-0.5">•</span> {f}
+											</p>
+										))}
+									</div>
+								</div>
+							))}
+						</div>
+					</div>
+
+					{/* Gap Analysis Table */}
+					<div>
+						<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest mb-3">Gap Analysis</p>
+						<div className="rounded-xl border border-border overflow-hidden">
+							<table className="w-full text-xs">
+								<thead>
+									<tr className="border-b border-border bg-muted/30">
+										<th className="text-left px-4 py-2.5 font-heading font-semibold text-muted-foreground">Area</th>
+										<th className="text-left px-4 py-2.5 font-heading font-semibold text-muted-foreground">Status</th>
+										<th className="text-left px-4 py-2.5 font-heading font-semibold text-muted-foreground">Detail</th>
+									</tr>
+								</thead>
+								<tbody>
+									{data.gapAnalysis.map((row, i) => (
+										<tr key={row.area} className={i < data.gapAnalysis.length - 1 ? "border-b border-border/50" : ""}>
+											<td className="px-4 py-3 font-heading font-medium whitespace-nowrap">{row.area}</td>
+											<td className="px-4 py-3">
+												<span className={`inline-flex items-center gap-1 text-[10px] font-heading font-semibold px-2 py-0.5 rounded-full border ${statusColor(row.status)}`}>
+													{statusIcon(row.status)} {row.status}
+												</span>
+											</td>
+											<td className="px-4 py-3 text-muted-foreground leading-snug">{row.detail}</td>
+										</tr>
+									))}
+								</tbody>
+							</table>
+						</div>
+					</div>
+
+					{/* Factual vs Inferred + Consensus Score */}
+					<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+						{/* Factual vs Inferred Bars */}
+						<div className="md:col-span-2">
+							<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest mb-3">Factual vs Inferred Breakdown</p>
+							<div className="rounded-xl border border-border p-4 space-y-3">
+								{data.factualVsInferred.map((row) => (
+									<div key={row.category}>
+										<div className="flex items-center justify-between mb-1">
+											<span className="text-xs font-heading font-medium">{row.category}</span>
+											<div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+												<span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-sm bg-emerald-500" /> {row.factualPct}% factual</span>
+												<span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-sm bg-amber-500" /> {row.inferredPct}% inferred</span>
+											</div>
+										</div>
+										<div className="h-5 rounded-md overflow-hidden flex bg-muted/30 border border-border/50">
+											<div
+												className="bg-emerald-500/80 flex items-center justify-center"
+												style={{ width: `${row.factualPct}%` }}
+											>
+												{row.factualPct >= 20 && <span className="text-[9px] font-heading font-bold text-white">{row.factualPct}%</span>}
+											</div>
+											<div
+												className="bg-amber-500/70 flex items-center justify-center"
+												style={{ width: `${row.inferredPct}%` }}
+											>
+												{row.inferredPct >= 20 && <span className="text-[9px] font-heading font-bold text-white">{row.inferredPct}%</span>}
+											</div>
+										</div>
+									</div>
+								))}
+								<div className="flex items-center gap-4 pt-2 border-t border-border/50">
+									<span className="flex items-center gap-1.5 text-[10px] text-muted-foreground"><span className="inline-block w-2.5 h-2.5 rounded-sm bg-emerald-500/80" /> Factual Corroboration</span>
+									<span className="flex items-center gap-1.5 text-[10px] text-muted-foreground"><span className="inline-block w-2.5 h-2.5 rounded-sm bg-amber-500/70" /> AI-Inferred Estimate</span>
+								</div>
+							</div>
+						</div>
+
+						{/* Consensus Score */}
+						<div>
+							<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest mb-3">Consensus Score</p>
+							<div className="rounded-xl border border-border p-4 flex flex-col items-center justify-center h-[calc(100%-28px)]">
+								<svg width="100" height="100" viewBox="0 0 100 100" className="mb-2">
+									<circle cx="50" cy="50" r={radius} fill="none" stroke="currentColor" strokeWidth="6" className="text-muted/30" />
+									<circle
+										cx="50" cy="50" r={radius}
+										fill="none"
+										stroke={consensusColor}
+										strokeWidth="6"
+										strokeLinecap="round"
+										strokeDasharray={circumference}
+										strokeDashoffset={dashOffset}
+										transform="rotate(-90 50 50)"
+										className="transition-all duration-1000"
+									/>
+									<text x="50" y="46" textAnchor="middle" className="fill-current text-xl font-bold" style={{ fontFamily: "var(--font-heading)" }}>
+										{data.consensusScore}%
+									</text>
+									<text x="50" y="60" textAnchor="middle" className="fill-muted-foreground text-[8px]" style={{ fontFamily: "var(--font-heading)" }}>
+										consensus
+									</text>
+								</svg>
+								<p className="text-[10px] text-muted-foreground text-center leading-snug">
+									{data.consensusScore >= 70 ? "High agreement across models. Findings are well-corroborated." :
+									 data.consensusScore >= 50 ? "Moderate agreement. Some areas need additional verification." :
+									 "Low consensus. Significant divergence between model assessments."}
+								</p>
+							</div>
+						</div>
+					</div>
 				</div>
 			)}
 		</div>
@@ -2876,6 +3441,7 @@ ${(() => {
    ═══════════════════════════════════════════════════════════════ */
 
 function ComplianceChatbot({ profileId, profileName, riskRating, report }: { profileId: string; profileName: string; riskRating: "Low" | "Medium" | "High"; report: HnwReport }) {
+	const [isOpen, setIsOpen] = useState(false);
 	const [activeTab, setActiveTab] = useState<"chat" | "attention" | "reminders">("chat");
 	const [messages, setMessages] = useState<ChatMessage[]>(CHATBOT_INITIAL_MESSAGES[profileId] ?? []);
 	const [reminders, setReminders] = useState<ChatReminder[]>(CHATBOT_REMINDERS[profileId] ?? []);
@@ -2954,6 +3520,49 @@ Agent Summary: ${report.agentVerification.summary}`;
 		setReminders((prev) => prev.filter((r) => r.id !== id));
 	};
 
+	/* ─── Auto-draft email for reminders ─── */
+	const [draftingId, setDraftingId] = useState<string | null>(null);
+	const [emailDrafts, setEmailDrafts] = useState<Record<string, string>>({});
+	const [expandedDraft, setExpandedDraft] = useState<string | null>(null);
+	const [copiedId, setCopiedId] = useState<string | null>(null);
+
+	const handleDraftEmail = async (reminder: ChatReminder) => {
+		if (draftingId) return;
+		setDraftingId(reminder.id);
+		setExpandedDraft(reminder.id);
+		try {
+			const res = await fetch("/api/compliance-chat", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					messages: [{ role: "user", text: `Draft a professional follow-up email for this compliance action item:\n\nAction: ${reminder.label}\nDue Date: ${reminder.dueDate}\nPriority: ${reminder.priority}\nSubject: ${profileName}\n\nWrite a concise, professional email that a compliance officer would send to the relevant party (client, regulator, or internal team) requesting the information or action described. Include:\n- Professional subject line (on its own line prefixed with "Subject: ")\n- Appropriate salutation\n- Clear request referencing the HNW assessment for ${profileName}\n- Specific deadline (${reminder.dueDate})\n- Professional sign-off as "Compliance Team, [Institution Name]"\n\nKeep it under 200 words. Do not use markdown formatting.` }],
+					profileName,
+					profileContext,
+				}),
+			});
+			const data = await res.json();
+			if (res.ok && data.reply) {
+				setEmailDrafts((prev) => ({ ...prev, [reminder.id]: data.reply }));
+			} else {
+				setEmailDrafts((prev) => ({ ...prev, [reminder.id]: `Error: ${data.error ?? "Failed to generate email draft"}` }));
+			}
+		} catch {
+			setEmailDrafts((prev) => ({ ...prev, [reminder.id]: "Network error — unable to reach the AI service." }));
+		} finally {
+			setDraftingId(null);
+		}
+	};
+
+	const copyDraft = async (id: string) => {
+		const draft = emailDrafts[id];
+		if (!draft) return;
+		try {
+			await navigator.clipboard.writeText(draft);
+			setCopiedId(id);
+			setTimeout(() => setCopiedId(null), 2000);
+		} catch { /* clipboard not available */ }
+	};
+
 	const severityStyle = {
 		critical: { bg: "bg-red-500/10", border: "border-red-500/30", dot: "bg-red-500", text: "text-red-700", badge: "Critical" },
 		warning: { bg: "bg-amber-500/10", border: "border-amber-500/30", dot: "bg-amber-500", text: "text-amber-700", badge: "Warning" },
@@ -2966,155 +3575,220 @@ Agent Summary: ${report.agentVerification.summary}`;
 		low: "bg-sky-500/15 text-sky-700 border-sky-500/20",
 	};
 
+	const overdueCount = reminders.filter(r => !r.completed && new Date(r.dueDate) < new Date()).length;
+
 	return (
-		<div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
-			{/* Header */}
-			<div className="bg-gradient-to-r from-primary/10 to-transparent px-5 py-4 border-b border-border">
-				<div className="flex items-center gap-3">
-					<div className="h-9 w-9 rounded-xl bg-primary/15 flex items-center justify-center">
-						<SparklesIcon className="size-5 text-primary" />
-					</div>
-					<div>
-						<div className="font-heading font-semibold text-sm">Compliance Assistant</div>
-						<div className="text-xs text-muted-foreground">{profileName} — AI-Powered Case Analysis</div>
-					</div>
-					<span className="ml-auto text-[9px] font-heading font-bold tracking-wider uppercase px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-600 border border-purple-500/20">AI · Gemini 2.5 Flash</span>
-				</div>
-				{/* Tabs */}
-				<div className="flex gap-1 mt-3">
-					{(["chat", "attention", "reminders"] as const).map((tab) => (
-						<button
-							key={tab}
-							onClick={() => setActiveTab(tab)}
-							className={`px-3 py-1.5 rounded-lg text-xs font-heading font-medium transition-colors ${
-								activeTab === tab ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"
-							}`}
-						>
-							{tab === "chat" ? "Chat" : tab === "attention" ? `Attention (${attentionAreas.length})` : `Reminders (${reminders.filter(r => !r.completed).length})`}
-						</button>
-					))}
-				</div>
-			</div>
+		<>
+			{/* Floating trigger button */}
+			<button
+				onClick={() => setIsOpen(!isOpen)}
+				className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/25 flex items-center justify-center hover:scale-105 hover:shadow-xl hover:shadow-primary/30 active:scale-95 transition-all duration-200"
+			>
+				{isOpen ? <XIcon className="size-6" /> : <MessageSquareIcon className="size-6" />}
+				{!isOpen && (attentionAreas.length + overdueCount) > 0 && (
+					<span className={`absolute -top-1 -right-1 h-5 w-5 rounded-full text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-background ${overdueCount > 0 ? "bg-red-500 animate-pulse" : "bg-red-500"}`}>
+						{attentionAreas.length + overdueCount}
+					</span>
+				)}
+			</button>
 
-			{/* Content */}
-			<div className="overflow-y-auto" style={{ maxHeight: "480px", minHeight: "320px" }}>
-				{activeTab === "chat" && (
-					<div className="p-4 space-y-3">
-						{messages.map((msg) => (
-							<div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-								<div className={`max-w-[85%] rounded-xl px-4 py-2.5 ${
-									msg.role === "user"
-										? "bg-primary text-primary-foreground rounded-br-sm"
-										: "bg-muted/60 text-foreground rounded-bl-sm"
-								}`}>
-									<p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.text}</p>
-									<p className={`text-[10px] mt-1 ${msg.role === "user" ? "text-primary-foreground/60" : "text-muted-foreground/60"}`}>{msg.timestamp}</p>
+			{/* Popup overlay */}
+			{isOpen && (
+				<div className="fixed inset-0 z-40 flex items-center justify-center p-4">
+					{/* Backdrop */}
+					<div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setIsOpen(false)} />
+
+					{/* Panel */}
+					<div className="relative z-10 w-full max-w-xl rounded-2xl border border-border bg-card shadow-2xl overflow-hidden flex flex-col" style={{ maxHeight: "min(720px, 85vh)" }}>
+						{/* Header */}
+						<div className="bg-gradient-to-r from-primary/10 to-transparent px-5 py-4 border-b border-border shrink-0">
+							<div className="flex items-center gap-3">
+								<div className="h-9 w-9 rounded-xl bg-primary/15 flex items-center justify-center">
+									<SparklesIcon className="size-5 text-primary" />
 								</div>
+								<div>
+									<div className="font-heading font-semibold text-sm">Compliance Assistant</div>
+									<div className="text-xs text-muted-foreground">{profileName} — AI-Powered Case Analysis</div>
+								</div>
+								<span className="ml-auto text-[9px] font-heading font-bold tracking-wider uppercase px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-600 border border-purple-500/20">AI · Claude Sonnet</span>
+								<button onClick={() => setIsOpen(false)} className="ml-2 h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
+									<XIcon className="size-4" />
+								</button>
 							</div>
-						))}
-						{isTyping && (
-							<div className="flex justify-start">
-								<div className="bg-muted/60 rounded-xl rounded-bl-sm px-4 py-3">
-									<div className="flex items-center gap-1.5">
-										<div className="h-2 w-2 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: "0ms" }} />
-										<div className="h-2 w-2 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: "150ms" }} />
-										<div className="h-2 w-2 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: "300ms" }} />
-									</div>
+							{/* Tabs */}
+							<div className="flex gap-1 mt-3">
+								{(["chat", "attention", "reminders"] as const).map((tab) => (
+									<button
+										key={tab}
+										onClick={() => setActiveTab(tab)}
+										className={`px-3 py-1.5 rounded-lg text-xs font-heading font-medium transition-colors ${
+											activeTab === tab ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"
+										}`}
+									>
+										{tab === "chat" ? "Chat" : tab === "attention" ? `Attention (${attentionAreas.length})` : `Reminders (${reminders.filter(r => !r.completed).length})`}
+									</button>
+								))}
+							</div>
+						</div>
+
+						{/* Content */}
+						<div className="overflow-y-auto flex-1">
+							{activeTab === "chat" && (
+								<div className="p-4 space-y-3">
+									{messages.map((msg) => (
+										<div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+											<div className={`max-w-[85%] rounded-xl px-4 py-2.5 ${
+												msg.role === "user"
+													? "bg-primary text-primary-foreground rounded-br-sm"
+													: "bg-muted/60 text-foreground rounded-bl-sm"
+											}`}>
+												<p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.text}</p>
+												<p className={`text-[10px] mt-1 ${msg.role === "user" ? "text-primary-foreground/60" : "text-muted-foreground/60"}`}>{msg.timestamp}</p>
+											</div>
+										</div>
+									))}
+									{isTyping && (
+										<div className="flex justify-start">
+											<div className="bg-muted/60 rounded-xl rounded-bl-sm px-4 py-3">
+												<div className="flex items-center gap-1.5">
+													<div className="h-2 w-2 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: "0ms" }} />
+													<div className="h-2 w-2 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: "150ms" }} />
+													<div className="h-2 w-2 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: "300ms" }} />
+												</div>
+											</div>
+										</div>
+									)}
+									<div ref={messagesEndRef} />
+								</div>
+							)}
+
+							{activeTab === "attention" && (
+								<div className="p-4 space-y-3">
+									{attentionAreas.map((area) => {
+										const s = severityStyle[area.severity];
+										return (
+											<div key={area.id} className={`rounded-xl border ${s.border} ${s.bg} p-4`}>
+												<div className="flex items-center gap-2 mb-2">
+													<div className={`h-2 w-2 rounded-full ${s.dot}`} />
+													<span className={`text-xs font-heading font-semibold ${s.text}`}>{s.badge}</span>
+													<span className="text-xs text-muted-foreground ml-auto">{area.section}</span>
+												</div>
+												<div className="font-heading font-semibold text-sm mb-1">{area.title}</div>
+												<p className="text-sm text-muted-foreground leading-relaxed">{area.description}</p>
+											</div>
+										);
+									})}
+								</div>
+							)}
+
+							{activeTab === "reminders" && (
+								<div className="p-4 space-y-2">
+									{reminders.map((reminder) => {
+										const isOverdue = !reminder.completed && new Date(reminder.dueDate) < new Date();
+										return (
+										<div key={reminder.id} className={`rounded-xl border transition-all ${isOverdue ? "border-red-500/30 bg-red-500/5" : "border-border"} ${reminder.completed ? "opacity-50" : ""}`}>
+											<div className="flex items-start gap-3 p-3">
+												<button
+													onClick={() => toggleReminder(reminder.id)}
+													className={`mt-0.5 h-5 w-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all ${
+														reminder.completed ? "bg-emerald-500 border-emerald-500" : "border-border hover:border-primary/50"
+													}`}
+												>
+													{reminder.completed && <CheckIcon className="size-3 text-white" />}
+												</button>
+												<div className="flex-1 min-w-0">
+													<p className={`text-sm leading-snug ${reminder.completed ? "line-through text-muted-foreground" : ""}`}>{reminder.label}</p>
+													<div className="flex items-center gap-2 mt-1.5">
+														<span className={`text-xs font-semibold rounded-md border px-1.5 py-0.5 ${priorityStyle[reminder.priority]}`}>{reminder.priority}</span>
+														<span className="text-xs text-muted-foreground flex items-center gap-1">
+															<CalendarIcon className="size-3" />{reminder.dueDate}
+														</span>
+														{isOverdue && <span className="text-[10px] font-bold text-red-600 bg-red-500/10 px-1.5 py-0.5 rounded border border-red-500/20 animate-pulse">OVERDUE</span>}
+														{!reminder.completed && (
+															<button
+																onClick={() => emailDrafts[reminder.id] ? setExpandedDraft(expandedDraft === reminder.id ? null : reminder.id) : handleDraftEmail(reminder)}
+																disabled={draftingId === reminder.id}
+																className="ml-auto flex items-center gap-1 text-xs px-2 py-0.5 rounded-md border border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 transition-colors disabled:opacity-50"
+															>
+																{draftingId === reminder.id ? (
+																	<><LoaderIcon className="size-3 animate-spin" />Drafting...</>
+																) : emailDrafts[reminder.id] ? (
+																	<><MailIcon className="size-3" />{expandedDraft === reminder.id ? "Hide Email" : "View Email"}</>
+																) : (
+																	<><MailIcon className="size-3" />Draft Email</>
+																)}
+															</button>
+														)}
+													</div>
+												</div>
+												<button onClick={() => deleteReminder(reminder.id)} className="text-muted-foreground/40 hover:text-red-500 transition-colors p-1">
+													<Trash2Icon className="size-3.5" />
+												</button>
+											</div>
+											{/* Expanded email draft */}
+											{expandedDraft === reminder.id && emailDrafts[reminder.id] && (
+												<div className="mx-3 mb-3 rounded-lg bg-muted/40 border border-border/60 overflow-hidden">
+													<div className="flex items-center justify-between px-3 py-1.5 bg-muted/60 border-b border-border/40">
+														<span className="text-[10px] font-heading font-semibold uppercase tracking-wider text-muted-foreground">AI-Generated Email Draft</span>
+														<button
+															onClick={() => copyDraft(reminder.id)}
+															className="flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded text-muted-foreground hover:text-foreground transition-colors"
+														>
+															{copiedId === reminder.id ? <><CheckCheck className="size-3 text-emerald-500" />Copied</> : <><CopyIcon className="size-3" />Copy</>}
+														</button>
+													</div>
+													<pre className="px-3 py-2 text-xs leading-relaxed whitespace-pre-wrap font-sans text-foreground/90 max-h-48 overflow-y-auto">{emailDrafts[reminder.id]}</pre>
+												</div>
+											)}
+										</div>
+									);
+									})}
+									{reminders.length === 0 && (
+										<div className="text-center py-8 text-sm text-muted-foreground">No reminders set for this case.</div>
+									)}
+								</div>
+							)}
+						</div>
+
+						{/* Input (only for chat tab) */}
+						{activeTab === "chat" && (
+							<div className="px-4 py-3 border-t border-border bg-muted/20 shrink-0">
+								<div className="flex items-center gap-2">
+									<input
+										type="text"
+										value={inputValue}
+										onChange={(e) => setInputValue(e.target.value)}
+										onKeyDown={(e) => e.key === "Enter" && handleSend()}
+										placeholder="Ask about risks, entities, wealth claims..."
+										disabled={isTyping}
+										className="flex-1 bg-card border border-border rounded-xl px-4 py-2.5 text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 disabled:opacity-50"
+									/>
+									<button
+										onClick={handleSend}
+										disabled={!inputValue.trim() || isTyping}
+										className="h-10 w-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-40 hover:bg-primary/90 transition-colors"
+									>
+										<SendIcon className="size-4" />
+									</button>
+								</div>
+								<div className="flex flex-wrap gap-1.5 mt-2">
+									{["What are the next actions?", "Explain the risk score", "Summarise key risks"].map((q) => (
+										<button
+											key={q}
+											onClick={() => { setInputValue(q); }}
+											disabled={isTyping}
+											className="text-xs px-2.5 py-1 rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground hover:border-primary/30 transition-colors disabled:opacity-50"
+										>
+											{q}
+										</button>
+									))}
 								</div>
 							</div>
 						)}
-						<div ref={messagesEndRef} />
-					</div>
-				)}
-
-				{activeTab === "attention" && (
-					<div className="p-4 space-y-3">
-						{attentionAreas.map((area) => {
-							const s = severityStyle[area.severity];
-							return (
-								<div key={area.id} className={`rounded-xl border ${s.border} ${s.bg} p-4`}>
-									<div className="flex items-center gap-2 mb-2">
-										<div className={`h-2 w-2 rounded-full ${s.dot}`} />
-										<span className={`text-xs font-heading font-semibold ${s.text}`}>{s.badge}</span>
-										<span className="text-xs text-muted-foreground ml-auto">{area.section}</span>
-									</div>
-									<div className="font-heading font-semibold text-sm mb-1">{area.title}</div>
-									<p className="text-sm text-muted-foreground leading-relaxed">{area.description}</p>
-								</div>
-							);
-						})}
-					</div>
-				)}
-
-				{activeTab === "reminders" && (
-					<div className="p-4 space-y-2">
-						{reminders.map((reminder) => (
-							<div key={reminder.id} className={`flex items-start gap-3 rounded-xl border border-border p-3 transition-all ${reminder.completed ? "opacity-50" : ""}`}>
-								<button
-									onClick={() => toggleReminder(reminder.id)}
-									className={`mt-0.5 h-5 w-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all ${
-										reminder.completed ? "bg-emerald-500 border-emerald-500" : "border-border hover:border-primary/50"
-									}`}
-								>
-									{reminder.completed && <CheckIcon className="size-3 text-white" />}
-								</button>
-								<div className="flex-1 min-w-0">
-									<p className={`text-sm leading-snug ${reminder.completed ? "line-through text-muted-foreground" : ""}`}>{reminder.label}</p>
-									<div className="flex items-center gap-2 mt-1.5">
-										<span className={`text-xs font-semibold rounded-md border px-1.5 py-0.5 ${priorityStyle[reminder.priority]}`}>{reminder.priority}</span>
-										<span className="text-xs text-muted-foreground flex items-center gap-1">
-											<CalendarIcon className="size-3" />{reminder.dueDate}
-										</span>
-									</div>
-								</div>
-								<button onClick={() => deleteReminder(reminder.id)} className="text-muted-foreground/40 hover:text-red-500 transition-colors p-1">
-									<Trash2Icon className="size-3.5" />
-								</button>
-							</div>
-						))}
-						{reminders.length === 0 && (
-							<div className="text-center py-8 text-sm text-muted-foreground">No reminders set for this case.</div>
-						)}
-					</div>
-				)}
-			</div>
-
-			{/* Input (only for chat tab) */}
-			{activeTab === "chat" && (
-				<div className="px-4 py-3 border-t border-border bg-muted/20">
-					<div className="flex items-center gap-2">
-						<input
-							type="text"
-							value={inputValue}
-							onChange={(e) => setInputValue(e.target.value)}
-							onKeyDown={(e) => e.key === "Enter" && handleSend()}
-							placeholder="Ask about risks, entities, wealth claims..."
-							disabled={isTyping}
-							className="flex-1 bg-card border border-border rounded-xl px-4 py-2.5 text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 disabled:opacity-50"
-						/>
-						<button
-							onClick={handleSend}
-							disabled={!inputValue.trim() || isTyping}
-							className="h-10 w-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-40 hover:bg-primary/90 transition-colors"
-						>
-							<SendIcon className="size-4" />
-						</button>
-					</div>
-					<div className="flex flex-wrap gap-1.5 mt-2">
-						{["What are the next actions?", "Explain the risk score", "Summarise key risks"].map((q) => (
-							<button
-								key={q}
-								onClick={() => { setInputValue(q); }}
-								disabled={isTyping}
-								className="text-xs px-2.5 py-1 rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground hover:border-primary/30 transition-colors disabled:opacity-50"
-							>
-								{q}
-							</button>
-						))}
 					</div>
 				</div>
 			)}
-		</div>
+		</>
 	);
 }
 
@@ -3130,6 +3804,17 @@ function RiskBadge({ rating, size = "sm" }: { rating: "Low" | "Medium" | "High";
 	};
 	const sizeClass = size === "lg" ? "text-xs px-3 py-1" : "text-xs px-1.5 py-0.5";
 	return <span className={`font-semibold rounded-md border ${colors[rating]} ${sizeClass}`}>{rating} Risk</span>;
+}
+
+function GradeBadge({ grade, confidence, size = "sm" }: { grade: CorroborationGrade; confidence?: number; size?: "sm" | "lg" }) {
+	const cfg = GRADE_CONFIGS.find(g => g.grade === grade) ?? GRADE_CONFIGS[GRADE_CONFIGS.length - 1];
+	const sizeClass = size === "lg" ? "text-sm px-3 py-1.5 gap-2" : "text-xs px-2 py-0.5 gap-1.5";
+	return (
+		<span className={`inline-flex items-center font-heading font-bold rounded-lg border ${cfg.bgColor} ${cfg.borderColor} ${cfg.color} ${sizeClass}`}>
+			<span className={size === "lg" ? "text-base" : "text-xs"}>{grade}</span>
+			{confidence !== undefined && <span className="font-normal opacity-70 text-[10px]">{confidence}%</span>}
+		</span>
+	);
 }
 
 function MonitoringStatusBadge({ status }: { status: "Active" | "Under Review" | "Flagged" }) {
