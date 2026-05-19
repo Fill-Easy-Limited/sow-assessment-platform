@@ -177,6 +177,23 @@ export interface PepScreeningEntry {
 	overallStatus: "Clear" | "Review Required" | "Flagged";
 }
 
+export interface CorroborationScores {
+	consistency: number;  // 0-100: risk that wealth trajectory is inconsistent with career
+	correctness: number;  // 0-100: risk that data points are factually inaccurate
+	completeness: number; // 0-100: risk that material wealth sources are unaccounted for
+	masReference: string; // MAS Notice/Guideline reference
+}
+
+export interface AgentVerification {
+	agentId: string;
+	agentName: string;
+	timestamp: string;
+	overallStatus: "verified" | "flagged" | "requires-review";
+	checks: { id: string; category: "consistency" | "correctness" | "completeness"; label: string; status: "pass" | "flag" | "warn"; detail: string }[];
+	summary: string;
+	recommendations: string[];
+}
+
 export interface HnwReport {
 	profile: HnwProfile;
 	careerTimeline: CareerPhase[];
@@ -191,6 +208,8 @@ export interface HnwReport {
 	clientDocuments: ClientDocument[];
 	crossReferences: CrossReference[];
 	uploadSlots: DocumentUploadSlot[];
+	corroborationScores: CorroborationScores;
+	agentVerification: AgentVerification;
 }
 
 export interface HnwMonitoringEntry {
@@ -1424,6 +1443,38 @@ const JACK_MA_REPORT: HnwReport = {
 	clientDocuments: JACK_MA_CLIENT_DOCS,
 	crossReferences: JACK_MA_CROSS_REFS,
 	uploadSlots: UPLOAD_SLOTS,
+	corroborationScores: {
+		consistency: 28,
+		correctness: 42,
+		completeness: 55,
+		masReference: "MAS Notice 626 / Guidelines to Notice 626 (Prevention of Money Laundering and Countering the Financing of Terrorism) — §6.18–6.22 Source of Wealth Verification",
+	},
+	agentVerification: {
+		agentId: "fe-verify-v2",
+		agentName: "Fill Easy Verification Agent",
+		timestamp: new Date().toISOString(),
+		overallStatus: "requires-review",
+		checks: [
+			{ id: "ck-jm-1", category: "consistency", label: "Career-to-wealth trajectory alignment", status: "pass", detail: "Alibaba founding (1999) → Goldman/SoftBank/Yahoo funding rounds → NYSE IPO (2014) → wealth crystallisation. Career timeline is internally consistent and corroborated by 8+ independent sources." },
+			{ id: "ck-jm-2", category: "consistency", label: "Income proportional to declared roles", status: "pass", detail: "Teaching salary ($20/mo, 1988–1995), Alibaba CEO compensation, post-retirement advisory income — all proportional to career stage. No unexplained income spikes." },
+			{ id: "ck-jm-3", category: "correctness", label: "SEC filings cross-reference", status: "pass", detail: "F-1 filing confirms 6.2% ownership at IPO. 20-F beneficial ownership tables confirm current ~4.5% stake. Morgan Stanley custody confirmation matches SEC disclosure." },
+			{ id: "ck-jm-4", category: "correctness", label: "Property valuations verified", status: "pass", detail: "Victoria Peak residence (HK$1.5B) confirmed via Fill Easy Land Registry API. Adirondack estate ($23M) confirmed via CNBC reporting and property records." },
+			{ id: "ck-jm-5", category: "correctness", label: "Ant Group valuation accuracy", status: "flag", detail: "Ant Group stake valued at ~$5.6B (8% of ~$70B). Post-restructuring valuation uncertain — ranges from $60B to $150B across analyst estimates. PBOC regulatory status pending." },
+			{ id: "ck-jm-6", category: "completeness", label: "Singapore trust structure", status: "warn", detail: "ACRA registration confirmed for Ma Family Trust Pte. Ltd. but trust deed beneficiaries and full asset schedule not independently verified. $2.4B BABA shares transfer reported but settlement details pending." },
+			{ id: "ck-jm-7", category: "completeness", label: "Blue Pool Capital AUM", status: "warn", detail: "Family office co-founded with Joe Tsai. AUM estimated at ~$50B based on media reports. No regulatory filings available — SFC Type 9 licence held but AUM not disclosed. Ma's personal share of AUM unknown." },
+			{ id: "ck-jm-8", category: "completeness", label: "Spousal and family assets", status: "warn", detail: "Wife Zhang Ying holds Singapore properties (Good Class Bungalow ~S$40M, Duxton Road shophouses ~S$50M). Family beneficial ownership structure partially documented. Daughter's holdings not assessed." },
+			{ id: "ck-jm-9", category: "consistency", label: "Lifestyle assets proportional to net worth", status: "pass", detail: "Superyacht Zen (~$200M), Gulfstream G650ER (~$65M), Bordeaux vineyards — consistent with $25B+ net worth. Total lifestyle assets <2% of declared wealth." },
+			{ id: "ck-jm-10", category: "correctness", label: "PEP/Sanctions screening accuracy", status: "pass", detail: "CPPCC 12th National Committee membership (2013–2018) correctly identified as near-match PEP. Current status: former PEP with residual connections. 7 sanctions lists checked — no hits." },
+		],
+		summary: "Jack Ma's wealth profile demonstrates strong consistency between career trajectory and wealth accumulation, with high correctness for SEC-filed equity holdings. However, three areas require further review: (1) Ant Group post-restructuring valuation carries significant uncertainty, (2) Singapore trust structure beneficiaries are not fully transparent, and (3) Blue Pool Capital AUM allocation is not independently verified. Recommend requesting updated PBOC regulatory status and Singapore trust deed documentation before finalising assessment.",
+		recommendations: [
+			"Request updated Ant Group valuation from PBOC or independent auditor — current $70B estimate has ±50% uncertainty",
+			"Obtain full Singapore trust deed via ACRA to verify beneficiaries and asset schedule",
+			"Verify Blue Pool Capital AUM allocation — request SFC regulatory returns if available",
+			"Commission independent appraisal of lifestyle assets (superyacht, vineyards) for completeness",
+			"Schedule quarterly re-screening given PEP near-match status and regulatory exposure",
+		],
+	},
 };
 
 const YAT_SIU_REPORT: HnwReport = {
@@ -1454,6 +1505,40 @@ const YAT_SIU_REPORT: HnwReport = {
 	clientDocuments: YAT_SIU_CLIENT_DOCS,
 	crossReferences: YAT_SIU_CROSS_REFS,
 	uploadSlots: UPLOAD_SLOTS,
+	corroborationScores: {
+		consistency: 55,
+		correctness: 82,
+		completeness: 75,
+		masReference: "MAS Notice 626 / Guidelines to Notice 626 (Prevention of Money Laundering and Countering the Financing of Terrorism) — §6.18–6.22 Source of Wealth Verification",
+	},
+	agentVerification: {
+		agentId: "fe-verify-v2",
+		agentName: "Fill Easy Verification Agent",
+		timestamp: new Date().toISOString(),
+		overallStatus: "flagged",
+		checks: [
+			{ id: "ck-ys-1", category: "consistency", label: "Career-to-wealth trajectory alignment", status: "warn", detail: "Atari (1990) → Outblaze founding → IBM exit (~$15M) → Animoca Brands. Career is credible, but the jump from ~$120M (2020) to $3.8B (2022) is entirely driven by crypto token appreciation — not operational income. Rapid wealth accumulation lacks traditional business fundamentals." },
+			{ id: "ck-ys-2", category: "consistency", label: "Net worth vs. last funding round", status: "flag", detail: "Claimed $2.4B net worth, but Animoca filed for Nasdaq listing at ~$1B valuation (Nov 2025) — significantly below $5.9B last private round. If company is worth $1B and Siu holds 25-30%, equity component is $250-300M — not $1.6B. Material inconsistency requiring resolution." },
+			{ id: "ck-ys-3", category: "correctness", label: "SAND token valuation reliability", status: "flag", detail: "SAND token at ~$0.30-0.60, down ~93% from $8.40 ATH. Token holdings estimated at 150-200M tokens but exact amount is unverified — no public wallet disclosure. On-chain verification not completed. Valuation swings of ±50% possible within weeks." },
+			{ id: "ck-ys-4", category: "correctness", label: "NFT portfolio valuation", status: "flag", detail: "Client claims NFT portfolio worth $50M. DappRadar floor price analysis suggests $12-18M. NFT market is highly illiquid — last comparable sales may be months old. Spread between claimed and estimated value: 3-4x." },
+			{ id: "ck-ys-5", category: "correctness", label: "Animoca FY2024 financials", status: "warn", detail: "Animoca reported total assets of $4.3B including $2.9B in off-balance sheet token reserves. Unaudited. Token reserves not subject to independent valuation. Balance sheet structure unusual for pre-IPO company." },
+			{ id: "ck-ys-6", category: "completeness", label: "Personal crypto wallet verification", status: "flag", detail: "No on-chain verification of personal BTC/ETH holdings ($170M claimed). Siu is a known crypto advocate but has not provided wallet addresses for verification. X/Twitter account was compromised Dec 2024 — raises security and custody concerns." },
+			{ id: "ck-ys-7", category: "completeness", label: "Off-balance sheet token reserves", status: "flag", detail: "$2.9B in off-balance sheet token reserves reported in FY2024 investor update. Composition, custody arrangements, and Siu's personal entitlement to these reserves are not documented. Material gap in wealth attribution." },
+			{ id: "ck-ys-8", category: "completeness", label: "Lympo hack loss recovery", status: "warn", detail: "$18.7M stolen from Lympo subsidiary (Jan 2022). Recovery status unknown. Loss represents 6.5x the acquisition cost ($2.88M). Insurance and clawback status not verified." },
+			{ id: "ck-ys-9", category: "consistency", label: "ASX delisting circumstances", status: "warn", detail: "ASIC cited repeated compliance failures. Animoca claims voluntary delisting. Both narratives present in public record. Post-delisting, no mandatory financial disclosure — creates transparency gap from 2020 to present." },
+			{ id: "ck-ys-10", category: "correctness", label: "IBM Outblaze acquisition proceeds", status: "pass", detail: "RTTNews confirms IBM acquisition of Outblaze messaging division (Jan 2009). Estimated $10-20M. HK Companies Registry confirms Siu retained majority of Outblaze gaming division. Transaction is well-corroborated." },
+		],
+		summary: "Yat Siu's wealth profile presents significant corroboration challenges. While the career trajectory from Outblaze to Animoca Brands is credible, the current net worth estimate relies heavily on volatile crypto assets, unverified personal token holdings, and a private company valuation that may be materially overstated (Nasdaq filing at $1B vs. $5.9B last round). Five of ten verification checks are flagged. On-chain wallet verification has not been completed, and off-balance sheet reserves of $2.9B lack independent audit. Enhanced Due Diligence is mandatory before onboarding.",
+		recommendations: [
+			"CRITICAL: Complete on-chain verification of all declared crypto/token holdings — require wallet addresses",
+			"Request independent valuation of Animoca Brands from Nasdaq reverse merger advisors (Currenc Group filings)",
+			"Obtain audited FY2024/25 financials — unaudited $4.3B balance sheet is insufficient for HNW onboarding",
+			"Commission independent NFT portfolio valuation — client claims 3-4x above floor estimates",
+			"Verify custody arrangements for off-balance sheet token reserves ($2.9B)",
+			"Request full Lympo hack incident report and insurance/recovery status",
+			"Engage ASX/ASIC for complete delisting correspondence to resolve competing narratives",
+		],
+	},
 };
 
 export const HNW_CASES: HnwReport[] = [JACK_MA_REPORT, YAT_SIU_REPORT];

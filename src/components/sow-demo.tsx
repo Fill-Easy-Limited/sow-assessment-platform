@@ -61,6 +61,11 @@ import {
 	SendIcon,
 	XIcon,
 	Trash2Icon,
+	BotIcon,
+	ZapIcon,
+	RotateCwIcon,
+	AlertCircleIcon,
+	CpuIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -100,6 +105,8 @@ import {
 	type ChatMessage,
 	type ChatReminder,
 	type CaseAttentionArea,
+	type CorroborationScores,
+	type AgentVerification,
 	CHATBOT_ATTENTION_AREAS,
 	CHATBOT_REMINDERS,
 	CHATBOT_INITIAL_MESSAGES,
@@ -938,14 +945,14 @@ function ReportView({ report, onReset }: { report: HnwReport; onReset: () => voi
 			</div>
 
 			<HnwProfileCard profile={p} />
-			<RiskScoreGauge profile={p} />
+			<CorroborationRiskScore profile={p} scores={report.corroborationScores} />
 			<KeyParameters params={report.keyParameters} />
 			<CareerTimeline phases={report.careerTimeline} />
 			<WealthAccumulationChart phases={report.careerTimeline} />
 			<WealthDonutChart wealthByCategory={report.wealthByCategory} totalWealth={report.totalEstimatedWealthUSD} overallConfidence={report.overallConfidence} />
 			<CareerPhaseCards phases={report.careerTimeline} onSourceClick={setSelectedSource} />
 			<CompanyNetworkGraph nodes={report.companyNodes} profileName={p.name} />
-			<NarrativeSection narrative={report.narrative} />
+			<NarrativeSection narrative={report.narrative} report={report} />
 			<SourceCitationsAggregate phases={report.careerTimeline} onSourceClick={setSelectedSource} />
 			<ClientDocumentsSection documents={report.clientDocuments} />
 			<CrossReferenceTable crossRefs={report.crossReferences} />
@@ -981,6 +988,7 @@ function ReportView({ report, onReset }: { report: HnwReport; onReset: () => voi
 				</div>
 			</div>
 			<FollowUpActions riskRating={p.riskRating} />
+			<AgentVerifySection verification={report.agentVerification} corroborationScores={report.corroborationScores} />
 
 			{/* Source Detail Modal */}
 			<SourceDetailModal source={selectedSource} onClose={() => setSelectedSource(null)} />
@@ -1037,20 +1045,33 @@ function InfoField({ label, value, mono }: { label: string; value: string; mono?
 
 /* ─── Risk Score Gauge ─── */
 
-function RiskScoreGauge({ profile: p }: { profile: HnwProfile }) {
+function CorroborationRiskScore({ profile: p, scores }: { profile: HnwProfile; scores: CorroborationScores }) {
 	const score = p.riskScore;
 	const angle = (score / 100) * 180;
 	const color = score >= 60 ? "#ef4444" : score >= 40 ? "#f59e0b" : "#10b981";
 	const riskLabel = score >= 60 ? "High" : score >= 40 ? "Medium" : "Low";
 	const bgColor = score >= 60 ? "from-red-500/5 to-red-500/[0.02]" : score >= 40 ? "from-amber-500/5 to-amber-500/[0.02]" : "from-emerald-500/5 to-emerald-500/[0.02]";
 
+	const subScoreColor = (v: number) => v >= 60 ? "#ef4444" : v >= 40 ? "#f59e0b" : "#10b981";
+	const subScoreBg = (v: number) => v >= 60 ? "bg-red-500" : v >= 40 ? "bg-amber-500" : "bg-emerald-500";
+	const subScoreLabel = (v: number) => v >= 60 ? "High Risk" : v >= 40 ? "Moderate" : "Low Risk";
+
+	const pillars = [
+		{ key: "consistency", label: "Consistency", value: scores.consistency, desc: "Career-to-wealth trajectory alignment" },
+		{ key: "correctness", label: "Correctness", value: scores.correctness, desc: "Factual accuracy of data points" },
+		{ key: "completeness", label: "Completeness", value: scores.completeness, desc: "Coverage of material wealth sources" },
+	];
+
 	return (
 		<div className={`rounded-2xl border border-border bg-gradient-to-br ${bgColor} p-6 shadow-sm`}>
-			<div className="flex items-center gap-2 mb-4">
-				<GaugeIcon className="size-4 text-muted-foreground" />
-				<p className="text-xs font-heading font-semibold text-muted-foreground uppercase tracking-widest">Composite Risk Score</p>
+			<div className="flex items-center justify-between mb-4">
+				<div className="flex items-center gap-2">
+					<GaugeIcon className="size-4 text-muted-foreground" />
+					<p className="text-xs font-heading font-semibold text-muted-foreground uppercase tracking-widest">Corroboration Risk Score</p>
+				</div>
+				<span className="text-[9px] font-heading font-medium text-muted-foreground/70 tracking-wide">MAS Notice 626 §6.18–6.22</span>
 			</div>
-			<div className="flex items-center gap-8">
+			<div className="flex items-start gap-8">
 				<div className="shrink-0">
 					<svg width="160" height="90" viewBox="0 0 160 90">
 						<defs>
@@ -1072,17 +1093,30 @@ function RiskScoreGauge({ profile: p }: { profile: HnwProfile }) {
 						<text x="80" y="72" textAnchor="middle" className="font-heading" style={{ fontSize: "28px", fontWeight: 700, fill: color }}>{score}</text>
 						<text x="80" y="88" textAnchor="middle" style={{ fontSize: "12px", fill: "#9ca3af" }}>/ 100</text>
 						<text x="15" y="88" textAnchor="start" style={{ fontSize: "10px", fill: "#10b981" }}>LOW</text>
-						<text x="80" y="88" textAnchor="middle" style={{ fontSize: "10px", fill: "#f59e0b" }}></text>
 						<text x="145" y="88" textAnchor="end" style={{ fontSize: "10px", fill: "#ef4444" }}>HIGH</text>
 					</svg>
 				</div>
-				<div className="flex-1 space-y-2">
+				<div className="flex-1 space-y-3">
 					<div className="text-sm font-heading font-semibold" style={{ color }}>
-						{riskLabel} Risk — {score >= 60 ? "Enhanced Due Diligence Required" : score >= 40 ? "Heightened Monitoring Recommended" : "Standard Onboarding Eligible"}
+						{riskLabel} Corroboration Risk — {score >= 60 ? "Enhanced Due Diligence Required" : score >= 40 ? "Heightened Monitoring Recommended" : "Standard Onboarding Eligible"}
 					</div>
 					<p className="text-xs text-muted-foreground leading-relaxed">
 						{p.profileSummary}
 					</p>
+					{/* 3C Pillar Bars */}
+					<div className="space-y-2 pt-2 border-t border-border/50">
+						<p className="text-[10px] font-heading font-semibold text-muted-foreground/70 uppercase tracking-widest">MAS 3C Framework — Consistency, Correctness &amp; Completeness</p>
+						{pillars.map((pillar) => (
+							<div key={pillar.key} className="flex items-center gap-3">
+								<div className="w-24 text-[11px] font-heading font-medium text-muted-foreground">{pillar.label}</div>
+								<div className="flex-1 h-2.5 rounded-full bg-muted/50 overflow-hidden">
+									<div className={`h-full rounded-full transition-all ${subScoreBg(pillar.value)}`} style={{ width: `${pillar.value}%` }} />
+								</div>
+								<div className="w-8 text-right text-[11px] font-heading font-bold" style={{ color: subScoreColor(pillar.value) }}>{pillar.value}</div>
+								<div className="w-16 text-[9px] font-heading text-muted-foreground/60">{subScoreLabel(pillar.value)}</div>
+							</div>
+						))}
+					</div>
 				</div>
 			</div>
 		</div>
@@ -1685,17 +1719,142 @@ function CompanyNetworkGraph({ nodes, profileName }: { nodes: CompanyNode[]; pro
 
 /* ─── Narrative Section ─── */
 
-function NarrativeSection({ narrative }: { narrative: string }) {
+function NarrativeSection({ narrative, report }: { narrative: string; report: HnwReport }) {
 	const [expanded, setExpanded] = useState(false);
-	const paragraphs = narrative.split("\n\n");
+	const [aiNarrative, setAiNarrative] = useState<string | null>(null);
+	const [generating, setGenerating] = useState(false);
+	const [error, setError] = useState<string | null>(null);
+	const [showApiKeyInput, setShowApiKeyInput] = useState(false);
+	const [apiKey, setApiKey] = useState("");
+	const [selectedModel, setSelectedModel] = useState("google/gemini-2.5-flash");
+	const [usageInfo, setUsageInfo] = useState<{ promptTokens?: number; completionTokens?: number; model?: string } | null>(null);
+
+	const activeNarrative = aiNarrative ?? narrative;
+	const paragraphs = activeNarrative.split("\n\n").filter(Boolean);
 	const preview = paragraphs.slice(0, 2);
+
+	const MODELS = [
+		{ id: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash" },
+		{ id: "google/gemini-2.5-pro", label: "Gemini 2.5 Pro" },
+		{ id: "anthropic/claude-sonnet-4", label: "Claude Sonnet 4" },
+		{ id: "openai/gpt-4o", label: "GPT-4o" },
+		{ id: "openai/gpt-4.1-mini", label: "GPT-4.1 Mini" },
+		{ id: "deepseek/deepseek-r1", label: "DeepSeek R1" },
+	];
+
+	const generateNarrative = async () => {
+		setGenerating(true);
+		setError(null);
+		try {
+			const p = report.profile;
+			const res = await fetch("/api/generate-narrative", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					profileName: p.name,
+					profileSummary: p.profileSummary,
+					netWorth: report.totalEstimatedWealthUSD,
+					riskRating: p.riskRating,
+					riskScore: p.riskScore,
+					overallConfidence: report.overallConfidence,
+					corroborationScores: report.corroborationScores,
+					careerPhases: report.careerTimeline.map((ph) => ({
+						title: ph.title, startYear: ph.startYear, endYear: ph.endYear,
+						organization: ph.organization, location: ph.location,
+						cumulativeWealthUSD: ph.cumulativeWealthUSD, description: ph.description,
+					})),
+					wealthCategories: report.wealthByCategory.map((w) => ({
+						category: w.category, totalUSD: w.totalUSD, percentage: w.percentage, avgConfidence: w.avgConfidence,
+					})),
+					keyRiskFactors: report.keyParameters.filter((kp) => kp.status !== "normal").map((kp) => `${kp.label}: ${kp.value}`).join("; "),
+					apiKey: apiKey || undefined,
+					model: selectedModel,
+				}),
+			});
+			const data = await res.json();
+			if (!res.ok) {
+				setError(data.error || "Failed to generate narrative");
+				if (data.error?.includes("API key")) setShowApiKeyInput(true);
+			} else {
+				setAiNarrative(data.narrative);
+				setUsageInfo({ promptTokens: data.usage?.promptTokens, completionTokens: data.usage?.completionTokens, model: data.model });
+				setExpanded(true);
+			}
+		} catch (err) {
+			setError(err instanceof Error ? err.message : "Network error");
+		} finally {
+			setGenerating(false);
+		}
+	};
 
 	return (
 		<div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-			<div className="flex items-center gap-2 mb-4">
-				<FileTextIcon className="size-4 text-muted-foreground" />
-				<p className="text-xs font-heading font-semibold text-muted-foreground uppercase tracking-widest">Wealth Narrative</p>
+			<div className="flex items-center justify-between mb-4">
+				<div className="flex items-center gap-2">
+					<FileTextIcon className="size-4 text-muted-foreground" />
+					<p className="text-xs font-heading font-semibold text-muted-foreground uppercase tracking-widest">Wealth Narrative</p>
+					{aiNarrative && (
+						<span className="text-[9px] font-heading font-bold tracking-wider uppercase px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-600 border border-purple-500/20">AI Generated</span>
+					)}
+				</div>
+				<div className="flex items-center gap-2">
+					{aiNarrative && (
+						<button onClick={() => { setAiNarrative(null); setUsageInfo(null); }} className="text-[10px] text-muted-foreground hover:text-foreground font-heading font-medium flex items-center gap-1 transition-colors">
+							<RotateCwIcon className="size-3" /> Revert
+						</button>
+					)}
+					<button
+						onClick={() => showApiKeyInput || apiKey ? generateNarrative() : setShowApiKeyInput(true)}
+						disabled={generating}
+						className="text-xs font-heading font-medium flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-500/10 to-violet-500/10 text-purple-700 border border-purple-500/20 hover:from-purple-500/15 hover:to-violet-500/15 transition-all disabled:opacity-50"
+					>
+						{generating ? <LoaderIcon className="size-3 animate-spin" /> : <SparklesIcon className="size-3" />}
+						{generating ? "Generating…" : aiNarrative ? "Regenerate" : "Generate with AI"}
+					</button>
+				</div>
 			</div>
+
+			{/* API Key Input & Model Selector */}
+			{showApiKeyInput && !generating && (
+				<div className="mb-4 p-3 rounded-xl bg-muted/30 border border-border space-y-2">
+					<div className="flex items-center gap-2">
+						<input
+							type="password"
+							value={apiKey}
+							onChange={(e) => setApiKey(e.target.value)}
+							placeholder="Enter OpenRouter API key (sk-or-...)"
+							className="flex-1 text-xs px-3 py-2 rounded-lg border border-border bg-background focus:outline-none focus:ring-1 focus:ring-primary font-mono"
+						/>
+						<select
+							value={selectedModel}
+							onChange={(e) => setSelectedModel(e.target.value)}
+							className="text-xs px-2 py-2 rounded-lg border border-border bg-background focus:outline-none focus:ring-1 focus:ring-primary font-heading"
+						>
+							{MODELS.map((m) => (
+								<option key={m.id} value={m.id}>{m.label}</option>
+							))}
+						</select>
+					</div>
+					<div className="flex items-center justify-between">
+						<p className="text-[10px] text-muted-foreground">Get a key at <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">openrouter.ai/keys</a> — or set <code className="text-[9px] bg-muted px-1 py-0.5 rounded">OPENROUTER_API_KEY</code> env var</p>
+						<button
+							onClick={generateNarrative}
+							disabled={!apiKey && !generating}
+							className="text-xs font-heading font-semibold px-4 py-1.5 rounded-lg bg-purple-600 text-white hover:bg-purple-700 transition-colors disabled:opacity-50"
+						>
+							Generate
+						</button>
+					</div>
+				</div>
+			)}
+
+			{error && (
+				<div className="mb-4 p-3 rounded-xl bg-red-500/5 border border-red-500/20 flex items-start gap-2">
+					<AlertCircleIcon className="size-4 text-red-500 shrink-0 mt-0.5" />
+					<p className="text-xs text-red-700">{error}</p>
+				</div>
+			)}
+
 			<div className="space-y-3">
 				{(expanded ? paragraphs : preview).map((para, i) => (
 					<p key={i} className="text-sm text-muted-foreground leading-relaxed">{para}</p>
@@ -1706,6 +1865,14 @@ function NarrativeSection({ narrative }: { narrative: string }) {
 					{expanded ? "Show less" : `Show more (${paragraphs.length - 2} more paragraphs)`}
 					<ChevronDownIcon className={`size-3 transition-transform ${expanded ? "rotate-180" : ""}`} />
 				</button>
+			)}
+
+			{usageInfo && (
+				<div className="mt-3 pt-3 border-t border-border/50 flex items-center gap-3 text-[10px] text-muted-foreground/60">
+					<span className="flex items-center gap-1"><CpuIcon className="size-3" /> {usageInfo.model}</span>
+					{usageInfo.promptTokens && <span>{usageInfo.promptTokens} prompt tokens</span>}
+					{usageInfo.completionTokens && <span>{usageInfo.completionTokens} completion tokens</span>}
+				</div>
 			)}
 		</div>
 	);
@@ -2251,6 +2418,104 @@ function FollowUpActions({ riskRating }: { riskRating: "Low" | "Medium" | "High"
 	);
 }
 
+/* ─── Agent Verify Section ─── */
+
+function AgentVerifySection({ verification: v, corroborationScores: cs }: { verification: AgentVerification; corroborationScores: CorroborationScores }) {
+	const [expanded, setExpanded] = useState(false);
+	const statusConfig = {
+		verified: { label: "Verified", color: "text-emerald-700", bg: "bg-emerald-500/10", border: "border-emerald-500/30", icon: "✓" },
+		"requires-review": { label: "Requires Review", color: "text-amber-700", bg: "bg-amber-500/10", border: "border-amber-500/30", icon: "⚠" },
+		flagged: { label: "Flagged", color: "text-red-700", bg: "bg-red-500/10", border: "border-red-500/30", icon: "✗" },
+	};
+	const checkStatus = { pass: { color: "text-emerald-600", bg: "bg-emerald-500/10", icon: "✓", label: "Pass" }, warn: { color: "text-amber-600", bg: "bg-amber-500/10", icon: "⚠", label: "Warning" }, flag: { color: "text-red-600", bg: "bg-red-500/10", icon: "✗", label: "Flag" } };
+	const categoryLabels = { consistency: "Consistency", correctness: "Correctness", completeness: "Completeness" };
+	const categoryColors = { consistency: "bg-sky-500", correctness: "bg-violet-500", completeness: "bg-amber-500" };
+
+	const sc = statusConfig[v.overallStatus];
+	const passCount = v.checks.filter((c) => c.status === "pass").length;
+	const warnCount = v.checks.filter((c) => c.status === "warn").length;
+	const flagCount = v.checks.filter((c) => c.status === "flag").length;
+
+	return (
+		<div className={`rounded-2xl border ${sc.border} ${sc.bg} p-6 shadow-sm`}>
+			{/* Header */}
+			<div className="flex items-center justify-between mb-5">
+				<div className="flex items-center gap-3">
+					<div className="h-11 w-11 rounded-xl bg-gradient-to-br from-violet-500/20 to-purple-500/10 border border-violet-500/20 flex items-center justify-center">
+						<BotIcon className="size-5 text-violet-600" />
+					</div>
+					<div>
+						<div className="font-heading font-semibold text-sm flex items-center gap-2">
+							{v.agentName}
+							<span className={`text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full border ${sc.bg} ${sc.border} ${sc.color}`}>
+								{sc.icon} {sc.label}
+							</span>
+						</div>
+						<p className="text-[11px] text-muted-foreground">Agent ID: {v.agentId} · Verified {new Date(v.timestamp).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</p>
+					</div>
+				</div>
+				<div className="hidden sm:flex items-center gap-3 text-xs font-heading">
+					<span className="flex items-center gap-1 text-emerald-600"><CheckCircle2Icon className="size-3.5" /> {passCount} Pass</span>
+					<span className="flex items-center gap-1 text-amber-600"><AlertTriangleIcon className="size-3.5" /> {warnCount} Warn</span>
+					<span className="flex items-center gap-1 text-red-600"><XCircleIcon className="size-3.5" /> {flagCount} Flag</span>
+				</div>
+			</div>
+
+			{/* Summary */}
+			<div className="rounded-xl bg-background/50 border border-border/50 p-4 mb-4">
+				<p className="text-sm text-foreground leading-relaxed">{v.summary}</p>
+			</div>
+
+			{/* MAS Reference */}
+			<div className="rounded-lg bg-muted/30 px-3 py-2 mb-4 flex items-center gap-2">
+				<BookOpenIcon className="size-3.5 text-muted-foreground shrink-0" />
+				<p className="text-[10px] text-muted-foreground leading-snug">{cs.masReference}</p>
+			</div>
+
+			{/* Verification Checks */}
+			<button onClick={() => setExpanded(!expanded)} className="w-full flex items-center justify-between mb-3 group">
+				<p className="text-xs font-heading font-semibold text-muted-foreground uppercase tracking-widest">Verification Checks ({v.checks.length})</p>
+				<ChevronDownIcon className={`size-4 text-muted-foreground transition-transform ${expanded ? "rotate-180" : ""}`} />
+			</button>
+
+			{expanded && (
+				<div className="space-y-2 mb-5">
+					{v.checks.map((check) => {
+						const cs2 = checkStatus[check.status];
+						return (
+							<div key={check.id} className={`rounded-xl border border-border/50 bg-background/40 p-3`}>
+								<div className="flex items-center gap-3 mb-1.5">
+									<span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${cs2.bg} ${cs2.color}`}>{cs2.icon} {cs2.label}</span>
+									<span className={`text-[9px] font-heading font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-full text-white ${categoryColors[check.category]}`}>{categoryLabels[check.category]}</span>
+									<span className="text-xs font-heading font-medium">{check.label}</span>
+								</div>
+								<p className="text-[11px] text-muted-foreground leading-relaxed pl-1">{check.detail}</p>
+							</div>
+						);
+					})}
+				</div>
+			)}
+
+			{/* Recommendations */}
+			{v.recommendations.length > 0 && (
+				<div>
+					<p className="text-xs font-heading font-semibold text-muted-foreground uppercase tracking-widest mb-3">Agent Recommendations</p>
+					<div className="space-y-2">
+						{v.recommendations.map((rec, i) => (
+							<div key={i} className="flex items-start gap-2.5 rounded-lg bg-background/50 border border-border/50 px-3 py-2.5">
+								<div className="flex items-center justify-center h-5 w-5 rounded-md bg-violet-500/15 text-violet-600 shrink-0 mt-0.5">
+									<span className="text-[10px] font-heading font-bold">{i + 1}</span>
+								</div>
+								<p className="text-xs text-foreground leading-relaxed">{rec}</p>
+							</div>
+						))}
+					</div>
+				</div>
+			)}
+		</div>
+	);
+}
+
 /* ─── Download Report Button ─── */
 
 function DownloadReportButton({ report }: { report: HnwReport }) {
@@ -2455,6 +2720,35 @@ a{color:#0891b2}
 	</div>
 </div>
 
+<!-- Corroboration Risk Score -->
+<div style="margin-bottom:24px;padding:20px;border-radius:10px;border:1px solid #d1d5db;background:#f8fafc;">
+	<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+		<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#374151;">Corroboration Risk Score</div>
+		<div style="font-size:10px;padding:2px 8px;border-radius:4px;background:#0891b215;color:#0891b2;font-weight:600;">MAS 3C Framework</div>
+	</div>
+	<div style="font-size:10px;color:#6b7280;margin-bottom:14px;">MAS Notice 626 §6.18–6.22 — Consistency, Correctness &amp; Completeness</div>
+	<div style="display:flex;gap:16px;">
+		<div style="flex:1;padding:10px 14px;border-radius:8px;background:white;border:1px solid #e5e7eb;">
+			<div style="font-size:10px;text-transform:uppercase;color:#6b7280;letter-spacing:.04em;">Consistency Risk</div>
+			<div style="font-size:22px;font-weight:700;color:${report.corroborationScores.consistency >= 60 ? "#dc2626" : report.corroborationScores.consistency >= 40 ? "#d97706" : "#16a34a"};margin:4px 0 6px">${report.corroborationScores.consistency}/100</div>
+			<div style="height:6px;border-radius:3px;background:#e5e7eb;overflow:hidden;"><div style="height:100%;border-radius:3px;background:${report.corroborationScores.consistency >= 60 ? "#dc2626" : report.corroborationScores.consistency >= 40 ? "#d97706" : "#16a34a"};width:${report.corroborationScores.consistency}%"></div></div>
+			<div style="font-size:10px;color:#6b7280;margin-top:4px;">Career-to-wealth trajectory alignment</div>
+		</div>
+		<div style="flex:1;padding:10px 14px;border-radius:8px;background:white;border:1px solid #e5e7eb;">
+			<div style="font-size:10px;text-transform:uppercase;color:#6b7280;letter-spacing:.04em;">Correctness Risk</div>
+			<div style="font-size:22px;font-weight:700;color:${report.corroborationScores.correctness >= 60 ? "#dc2626" : report.corroborationScores.correctness >= 40 ? "#d97706" : "#16a34a"};margin:4px 0 6px">${report.corroborationScores.correctness}/100</div>
+			<div style="height:6px;border-radius:3px;background:#e5e7eb;overflow:hidden;"><div style="height:100%;border-radius:3px;background:${report.corroborationScores.correctness >= 60 ? "#dc2626" : report.corroborationScores.correctness >= 40 ? "#d97706" : "#16a34a"};width:${report.corroborationScores.correctness}%"></div></div>
+			<div style="font-size:10px;color:#6b7280;margin-top:4px;">Factual accuracy of data points</div>
+		</div>
+		<div style="flex:1;padding:10px 14px;border-radius:8px;background:white;border:1px solid #e5e7eb;">
+			<div style="font-size:10px;text-transform:uppercase;color:#6b7280;letter-spacing:.04em;">Completeness Risk</div>
+			<div style="font-size:22px;font-weight:700;color:${report.corroborationScores.completeness >= 60 ? "#dc2626" : report.corroborationScores.completeness >= 40 ? "#d97706" : "#16a34a"};margin:4px 0 6px">${report.corroborationScores.completeness}/100</div>
+			<div style="height:6px;border-radius:3px;background:#e5e7eb;overflow:hidden;"><div style="height:100%;border-radius:3px;background:${report.corroborationScores.completeness >= 60 ? "#dc2626" : report.corroborationScores.completeness >= 40 ? "#d97706" : "#16a34a"};width:${report.corroborationScores.completeness}%"></div></div>
+			<div style="font-size:10px;color:#6b7280;margin-top:4px;">Material wealth source coverage</div>
+		</div>
+	</div>
+</div>
+
 <h2>1. Subject Profile</h2>
 <table>
 	<tr><td style="padding:4px 0;font-size:13px;color:#6b7280;width:160px">Full Name</td><td style="padding:4px 0;font-size:13px">${p.name}${p.nameCn ? ` (${p.nameCn})` : ""}</td></tr>
@@ -2529,6 +2823,45 @@ ${verificationNotes ? `<div style="margin-top:12px;padding:10px 14px;border-radi
 
 <h2>13. Recommended Actions</h2>
 ${actionsHtml}
+
+<div class="page-break"></div>
+
+<h2>14. Fill Easy Verification Agent</h2>
+${(() => {
+	const av = report.agentVerification;
+	const avStatusColor = av.overallStatus === "verified" ? "#16a34a" : av.overallStatus === "flagged" ? "#dc2626" : "#d97706";
+	const avStatusLabel = av.overallStatus === "verified" ? "VERIFIED" : av.overallStatus === "flagged" ? "FLAGGED" : "REQUIRES REVIEW";
+	const avPassCount = av.checks.filter((c) => c.status === "pass").length;
+	const avWarnCount = av.checks.filter((c) => c.status === "warn").length;
+	const avFlagCount = av.checks.filter((c) => c.status === "flag").length;
+	const checkStatusIcon = (s: string) => s === "pass" ? "&#10003;" : s === "warn" ? "&#9888;" : "&#10007;";
+	const checkStatusColor = (s: string) => s === "pass" ? "#16a34a" : s === "warn" ? "#d97706" : "#dc2626";
+	const catLabel = (c: string) => c === "consistency" ? "Consistency" : c === "correctness" ? "Correctness" : "Completeness";
+	const checksHtml = av.checks.map((ch) =>
+		`<tr><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;font-size:12px;text-align:center;"><span style="color:${checkStatusColor(ch.status)};font-weight:700;">${checkStatusIcon(ch.status)}</span></td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;font-size:12px;"><span style="display:inline-block;font-size:9px;padding:1px 6px;border-radius:3px;background:#f3f4f6;border:1px solid #e5e7eb;margin-right:6px;text-transform:uppercase;letter-spacing:.04em;">${catLabel(ch.category)}</span>${ch.label}</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;font-size:11px;color:#6b7280;">${ch.detail}</td></tr>`
+	).join("");
+	const recsHtml = av.recommendations.map((r, i) =>
+		`<div style="padding:6px 12px;border:1px solid #e5e7eb;border-radius:6px;margin-bottom:4px;font-size:12px;display:flex;gap:8px;"><span style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#0891b215;color:#0891b2;font-size:10px;font-weight:700;flex-shrink:0;">${i + 1}</span><span>${r}</span></div>`
+	).join("");
+	return `<div style="padding:16px 20px;border-radius:10px;border:1px solid ${avStatusColor}33;background:${avStatusColor}08;margin-bottom:16px;">
+		<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+			<div style="display:flex;align-items:center;gap:8px;">
+				<div style="font-size:14px;font-weight:700;">Fill Easy Verification Agent</div>
+				<span style="font-size:10px;padding:2px 8px;border-radius:4px;background:${avStatusColor}15;color:${avStatusColor};font-weight:700;text-transform:uppercase;letter-spacing:.06em;">${avStatusLabel}</span>
+			</div>
+			<div style="font-size:11px;color:#6b7280;">
+				<span style="color:#16a34a;font-weight:600;">${avPassCount} Pass</span> · <span style="color:#d97706;font-weight:600;">${avWarnCount} Warn</span> · <span style="color:#dc2626;font-weight:600;">${avFlagCount} Flag</span>
+			</div>
+		</div>
+		<div style="font-size:11px;color:#6b7280;margin-bottom:8px;">Agent ID: ${av.agentId} · Verified ${av.timestamp}</div>
+		<p style="font-size:12px;color:#374151;line-height:1.6;margin:8px 0;">${av.summary}</p>
+		<div style="font-size:10px;color:#6b7280;margin-top:8px;padding:6px 10px;border-radius:6px;background:white;border:1px solid #e5e7eb;">${report.corroborationScores.masReference}</div>
+	</div>
+	<h3>Verification Checks (${av.checks.length})</h3>
+	<table><tr><th style="text-align:center;width:40px">Status</th><th>Check</th><th>Detail</th></tr>${checksHtml}</table>
+	<h3>Agent Recommendations</h3>
+	${recsHtml}`;
+})()}
 
 <!-- Footer -->
 <div style="border-top:3px solid #1e3a5f;margin-top:40px;padding-top:16px;">
