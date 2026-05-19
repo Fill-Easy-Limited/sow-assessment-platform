@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
 	CheckCircle2Icon,
 	AlertTriangleIcon,
@@ -994,7 +994,7 @@ function ReportView({ report, onReset }: { report: HnwReport; onReset: () => voi
 			<SourceDetailModal source={selectedSource} onClose={() => setSelectedSource(null)} />
 
 			{/* Compliance Chatbot */}
-			<ComplianceChatbot profileId={p.id} profileName={p.name} riskRating={p.riskRating} />
+			<ComplianceChatbot profileId={p.id} profileName={p.name} riskRating={p.riskRating} report={report} />
 		</div>
 	);
 }
@@ -1724,8 +1724,6 @@ function NarrativeSection({ narrative, report }: { narrative: string; report: Hn
 	const [aiNarrative, setAiNarrative] = useState<string | null>(null);
 	const [generating, setGenerating] = useState(false);
 	const [error, setError] = useState<string | null>(null);
-	const [showApiKeyInput, setShowApiKeyInput] = useState(false);
-	const [apiKey, setApiKey] = useState("");
 	const [selectedModel, setSelectedModel] = useState("google/gemini-2.5-flash");
 	const [usageInfo, setUsageInfo] = useState<{ promptTokens?: number; completionTokens?: number; model?: string } | null>(null);
 
@@ -1767,14 +1765,12 @@ function NarrativeSection({ narrative, report }: { narrative: string; report: Hn
 						category: w.category, totalUSD: w.totalUSD, percentage: w.percentage, avgConfidence: w.avgConfidence,
 					})),
 					keyRiskFactors: report.keyParameters.filter((kp) => kp.status !== "normal").map((kp) => `${kp.label}: ${kp.value}`).join("; "),
-					apiKey: apiKey || undefined,
 					model: selectedModel,
 				}),
 			});
 			const data = await res.json();
 			if (!res.ok) {
 				setError(data.error || "Failed to generate narrative");
-				if (data.error?.includes("API key")) setShowApiKeyInput(true);
 			} else {
 				setAiNarrative(data.narrative);
 				setUsageInfo({ promptTokens: data.usage?.promptTokens, completionTokens: data.usage?.completionTokens, model: data.model });
@@ -1803,8 +1799,17 @@ function NarrativeSection({ narrative, report }: { narrative: string; report: Hn
 							<RotateCwIcon className="size-3" /> Revert
 						</button>
 					)}
+					<select
+						value={selectedModel}
+						onChange={(e) => setSelectedModel(e.target.value)}
+						className="text-[10px] px-2 py-1.5 rounded-lg border border-border bg-background focus:outline-none focus:ring-1 focus:ring-primary font-heading text-muted-foreground"
+					>
+						{MODELS.map((m) => (
+							<option key={m.id} value={m.id}>{m.label}</option>
+						))}
+					</select>
 					<button
-						onClick={() => showApiKeyInput || apiKey ? generateNarrative() : setShowApiKeyInput(true)}
+						onClick={generateNarrative}
 						disabled={generating}
 						className="text-xs font-heading font-medium flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-500/10 to-violet-500/10 text-purple-700 border border-purple-500/20 hover:from-purple-500/15 hover:to-violet-500/15 transition-all disabled:opacity-50"
 					>
@@ -1813,40 +1818,6 @@ function NarrativeSection({ narrative, report }: { narrative: string; report: Hn
 					</button>
 				</div>
 			</div>
-
-			{/* API Key Input & Model Selector */}
-			{showApiKeyInput && !generating && (
-				<div className="mb-4 p-3 rounded-xl bg-muted/30 border border-border space-y-2">
-					<div className="flex items-center gap-2">
-						<input
-							type="password"
-							value={apiKey}
-							onChange={(e) => setApiKey(e.target.value)}
-							placeholder="Enter OpenRouter API key (sk-or-...)"
-							className="flex-1 text-xs px-3 py-2 rounded-lg border border-border bg-background focus:outline-none focus:ring-1 focus:ring-primary font-mono"
-						/>
-						<select
-							value={selectedModel}
-							onChange={(e) => setSelectedModel(e.target.value)}
-							className="text-xs px-2 py-2 rounded-lg border border-border bg-background focus:outline-none focus:ring-1 focus:ring-primary font-heading"
-						>
-							{MODELS.map((m) => (
-								<option key={m.id} value={m.id}>{m.label}</option>
-							))}
-						</select>
-					</div>
-					<div className="flex items-center justify-between">
-						<p className="text-[10px] text-muted-foreground">Get a key at <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">openrouter.ai/keys</a> — or set <code className="text-[9px] bg-muted px-1 py-0.5 rounded">OPENROUTER_API_KEY</code> env var</p>
-						<button
-							onClick={generateNarrative}
-							disabled={!apiKey && !generating}
-							className="text-xs font-heading font-semibold px-4 py-1.5 rounded-lg bg-purple-600 text-white hover:bg-purple-700 transition-colors disabled:opacity-50"
-						>
-							Generate
-						</button>
-					</div>
-				</div>
-			)}
 
 			{error && (
 				<div className="mb-4 p-3 rounded-xl bg-red-500/5 border border-red-500/20 flex items-start gap-2">
@@ -2904,59 +2875,75 @@ ${(() => {
    Compliance Chatbot
    ═══════════════════════════════════════════════════════════════ */
 
-function ComplianceChatbot({ profileId, profileName, riskRating }: { profileId: string; profileName: string; riskRating: "Low" | "Medium" | "High" }) {
-	const [isOpen, setIsOpen] = useState(false);
+function ComplianceChatbot({ profileId, profileName, riskRating, report }: { profileId: string; profileName: string; riskRating: "Low" | "Medium" | "High"; report: HnwReport }) {
 	const [activeTab, setActiveTab] = useState<"chat" | "attention" | "reminders">("chat");
 	const [messages, setMessages] = useState<ChatMessage[]>(CHATBOT_INITIAL_MESSAGES[profileId] ?? []);
 	const [reminders, setReminders] = useState<ChatReminder[]>(CHATBOT_REMINDERS[profileId] ?? []);
 	const [inputValue, setInputValue] = useState("");
+	const [isTyping, setIsTyping] = useState(false);
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 	const attentionAreas = CHATBOT_ATTENTION_AREAS[profileId] ?? [];
 
 	useEffect(() => {
 		messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-	}, [messages]);
+	}, [messages, isTyping]);
 
-	const handleSend = () => {
-		if (!inputValue.trim()) return;
+	/* Build context string for the LLM from the report data */
+	const profileContext = useMemo(() => {
+		const p = report.profile;
+		const cs = report.corroborationScores;
+		const phases = report.careerTimeline.map((ph) => `${ph.startYear}–${ph.endYear ?? "Present"}: ${ph.title} (${ph.organization ?? ""}, ${ph.location}) — ${formatUSD(ph.cumulativeWealthUSD)} cumulative`).join("\n");
+		const wealth = report.wealthByCategory.map((w) => `${CATEGORY_LABELS[w.category]}: ${formatUSD(w.totalUSD)} (${w.percentage.toFixed(1)}%, ${w.avgConfidence}% confidence)`).join("\n");
+		const riskParams = report.keyParameters.map((kp) => `${kp.label}: ${kp.value} (${kp.status})`).join("\n");
+		return `Name: ${p.name}${p.nameCn ? ` (${p.nameCn})` : ""}
+Net Worth: ${formatUSD(report.totalEstimatedWealthUSD)}
+Risk Rating: ${p.riskRating} (${p.riskScore}/100)
+Overall Confidence: ${report.overallConfidence}%
+Corroboration Scores: Consistency ${cs.consistency}/100, Correctness ${cs.correctness}/100, Completeness ${cs.completeness}/100
+Nationality: ${p.nationality} | Residences: ${p.residences.join(", ")}
+Industry: ${p.primaryIndustry}
+
+Career Phases:
+${phases}
+
+Wealth Composition:
+${wealth}
+
+Key Risk Parameters:
+${riskParams}
+
+Agent Verification Status: ${report.agentVerification.overallStatus}
+Agent Summary: ${report.agentVerification.summary}`;
+	}, [report]);
+
+	const handleSend = async () => {
+		if (!inputValue.trim() || isTyping) return;
 		const userMsg: ChatMessage = { id: `user-${Date.now()}`, role: "user", text: inputValue, timestamp: "Just now" };
-		setMessages((prev) => [...prev, userMsg]);
+		const updatedMessages = [...messages, userMsg];
+		setMessages(updatedMessages);
 		setInputValue("");
+		setIsTyping(true);
 
-		// Hardcoded bot responses based on keywords
-		setTimeout(() => {
-			let reply = "I can help you navigate this assessment. Try asking about specific risk areas, entity structures, or wealth claims. You can also switch to the Attention or Reminders tab for a structured overview.";
-
-			const lower = inputValue.toLowerCase();
-			if (lower.includes("risk") || lower.includes("score")) {
-				reply = profileId === "hnw-jack-ma"
-					? "Jack Ma's risk score is 45/100 (Medium). The primary risk drivers are: (1) Ant Group restructuring uncertainty, (2) opaque Singapore trust structures, and (3) PEP classification as a former CPC member. The wealth plausibility score is high, but source diversity is moderate due to concentration in Alibaba equity."
-					: "Yat Siu's risk score is 72/100 (High). Key risk drivers: (1) extreme crypto token volatility with SAND down ~90%, (2) ASX regulatory delisting, (3) $18.7M subsidiary hack, and (4) highly concentrated holdings in unregulated digital assets. Enhanced Due Diligence is required before onboarding.";
-			} else if (lower.includes("ant") || lower.includes("restructur")) {
-				reply = "The Ant Group restructuring is one of the most significant risk factors. The IPO was halted by regulators in November 2020. The company was forced to restructure into a financial holding company under PBOC supervision. Current valuation estimates range from $60B to $150B — I recommend requesting an official regulatory status update from the PBOC before finalizing wealth figures.";
-			} else if (lower.includes("trust") || lower.includes("singapore")) {
-				reply = "In 2023, Jack Ma transferred approximately $2.4B in Alibaba shares to a Singapore-based family trust. The trust structure and beneficiaries have not been publicly disclosed. I recommend requesting the trust deed through Fill Easy CorpVerify (ACRA registry) and verifying the transfer with the client directly.";
-			} else if (lower.includes("sand") || lower.includes("token") || lower.includes("crypto")) {
-				reply = profileId === "hnw-yat-siu"
-					? "SAND token holdings are the single largest risk factor. The token peaked at $8.40 in November 2021 and currently trades around $0.30-0.60 — a ~90% decline. I recommend: (1) On-chain verification of declared holdings via Etherscan, (2) daily mark-to-market valuation, and (3) stress testing the net worth under additional 50% drawdown scenarios."
-					: "Jack Ma's portfolio has minimal direct crypto exposure. The most notable crypto-adjacent asset is an ETH strategic reserve (10,000 ETH) held through Yunfeng Financial Group, valued at approximately $25M at current prices.";
-			} else if (lower.includes("asx") || lower.includes("delist")) {
-				reply = "Animoca Brands was delisted from ASX on March 25, 2020. ASIC's official statement cited repeated compliance failures including late financial reporting and unapproved transactions. Animoca characterized it as a voluntary delisting to pursue blockchain opportunities. Both narratives should be included in the compliance file. Request the full ASIC correspondence via Fill Easy CorpVerify.";
-			} else if (lower.includes("next") || lower.includes("action") || lower.includes("recommend") || lower.includes("what should")) {
-				reply = riskRating === "High"
-					? "For this HIGH risk case, I recommend the following immediate actions: (1) Complete Enhanced Due Diligence review with senior compliance officer, (2) Verify all crypto holdings on-chain, (3) Set up weekly monitoring for price movements and adverse media, (4) Request updated ASIC records, and (5) Commission an independent Animoca Brands valuation. Check the Reminders tab for scheduled follow-ups."
-					: "For this MEDIUM risk case, I recommend: (1) Request updated Ant Group regulatory status, (2) Obtain Singapore trust deed documents, (3) Order independent real estate appraisals, (4) Verify Blue Pool Capital AUM, and (5) Schedule quarterly PEP/sanctions re-screening. Check the Reminders tab for scheduled follow-ups.";
-			} else if (lower.includes("confidence") || lower.includes("verif")) {
-				reply = profileId === "hnw-jack-ma"
-					? "Overall confidence for Jack Ma's assessment is 68%. The highest confidence is in Alibaba equity holdings (95% — based on SEC F-1 filings). The lowest confidence areas are: Blue Pool Capital AUM (40% — no regulatory filings), real estate valuations (55% — stale purchase prices), and Ant Group valuation (50% — restructuring uncertainty)."
-					: "Overall confidence for Yat Siu's assessment is 42%. The highest confidence is in the Outblaze IBM sale (90% — public transaction records). The lowest areas: SAND token valuation (25% — extreme volatility), Animoca private valuation (35% — outdated), and NFT collection value (20% — illiquid market).";
-			} else if (lower.includes("remind") || lower.includes("follow") || lower.includes("deadline")) {
-				reply = `There are ${reminders.filter(r => !r.completed).length} pending reminders for this case. Switch to the Reminders tab to view them. The most urgent is due ${reminders.find(r => !r.completed)?.dueDate ?? "soon"}. Would you like me to add a new reminder?`;
-			}
-
+		try {
+			const res = await fetch("/api/compliance-chat", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					messages: updatedMessages.map((m) => ({ role: m.role, text: m.text })),
+					profileName,
+					profileContext,
+				}),
+			});
+			const data = await res.json();
+			const reply = res.ok ? data.reply : (data.error ?? "Failed to get response");
 			const botMsg: ChatMessage = { id: `bot-${Date.now()}`, role: "assistant", text: reply, timestamp: "Just now" };
 			setMessages((prev) => [...prev, botMsg]);
-		}, 800);
+		} catch {
+			const botMsg: ChatMessage = { id: `bot-${Date.now()}`, role: "assistant", text: "Network error — unable to reach the AI service. Please try again.", timestamp: "Just now" };
+			setMessages((prev) => [...prev, botMsg]);
+		} finally {
+			setIsTyping(false);
+		}
 	};
 
 	const toggleReminder = (id: string) => {
@@ -2979,161 +2966,155 @@ function ComplianceChatbot({ profileId, profileName, riskRating }: { profileId: 
 		low: "bg-sky-500/15 text-sky-700 border-sky-500/20",
 	};
 
-	const riskColor = riskRating === "High" ? "bg-red-500" : riskRating === "Medium" ? "bg-amber-500" : "bg-emerald-500";
-
 	return (
-		<>
-			{/* Floating chat button */}
-			<button
-				onClick={() => setIsOpen(!isOpen)}
-				className={`fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-105 ${
-					isOpen ? "bg-muted-foreground text-white" : "bg-primary text-primary-foreground shadow-primary/30"
-				}`}
-			>
-				{isOpen ? <XIcon className="size-6" /> : <MessageSquareIcon className="size-6" />}
-				{!isOpen && (
-					<span className={`absolute -top-1 -right-1 h-4 w-4 rounded-full ${riskColor} border-2 border-white animate-pulse`} />
-				)}
-			</button>
+		<div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+			{/* Header */}
+			<div className="bg-gradient-to-r from-primary/10 to-transparent px-5 py-4 border-b border-border">
+				<div className="flex items-center gap-3">
+					<div className="h-9 w-9 rounded-xl bg-primary/15 flex items-center justify-center">
+						<SparklesIcon className="size-5 text-primary" />
+					</div>
+					<div>
+						<div className="font-heading font-semibold text-sm">Compliance Assistant</div>
+						<div className="text-xs text-muted-foreground">{profileName} — AI-Powered Case Analysis</div>
+					</div>
+					<span className="ml-auto text-[9px] font-heading font-bold tracking-wider uppercase px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-600 border border-purple-500/20">AI · Gemini 2.5 Flash</span>
+				</div>
+				{/* Tabs */}
+				<div className="flex gap-1 mt-3">
+					{(["chat", "attention", "reminders"] as const).map((tab) => (
+						<button
+							key={tab}
+							onClick={() => setActiveTab(tab)}
+							className={`px-3 py-1.5 rounded-lg text-xs font-heading font-medium transition-colors ${
+								activeTab === tab ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"
+							}`}
+						>
+							{tab === "chat" ? "Chat" : tab === "attention" ? `Attention (${attentionAreas.length})` : `Reminders (${reminders.filter(r => !r.completed).length})`}
+						</button>
+					))}
+				</div>
+			</div>
 
-			{/* Chat panel */}
-			{isOpen && (
-				<div className="fixed bottom-24 right-6 z-50 w-[420px] max-h-[600px] rounded-2xl border border-border bg-card shadow-2xl flex flex-col overflow-hidden">
-					{/* Header */}
-					<div className="bg-gradient-to-r from-primary/10 to-transparent px-5 py-4 border-b border-border">
-						<div className="flex items-center gap-3">
-							<div className="h-9 w-9 rounded-xl bg-primary/15 flex items-center justify-center">
-								<SparklesIcon className="size-5 text-primary" />
+			{/* Content */}
+			<div className="overflow-y-auto" style={{ maxHeight: "480px", minHeight: "320px" }}>
+				{activeTab === "chat" && (
+					<div className="p-4 space-y-3">
+						{messages.map((msg) => (
+							<div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+								<div className={`max-w-[85%] rounded-xl px-4 py-2.5 ${
+									msg.role === "user"
+										? "bg-primary text-primary-foreground rounded-br-sm"
+										: "bg-muted/60 text-foreground rounded-bl-sm"
+								}`}>
+									<p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.text}</p>
+									<p className={`text-[10px] mt-1 ${msg.role === "user" ? "text-primary-foreground/60" : "text-muted-foreground/60"}`}>{msg.timestamp}</p>
+								</div>
 							</div>
-							<div>
-								<div className="font-heading font-semibold text-sm">Compliance Assistant</div>
-								<div className="text-xs text-muted-foreground">{profileName} — Case Analysis</div>
+						))}
+						{isTyping && (
+							<div className="flex justify-start">
+								<div className="bg-muted/60 rounded-xl rounded-bl-sm px-4 py-3">
+									<div className="flex items-center gap-1.5">
+										<div className="h-2 w-2 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: "0ms" }} />
+										<div className="h-2 w-2 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: "150ms" }} />
+										<div className="h-2 w-2 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: "300ms" }} />
+									</div>
+								</div>
 							</div>
-						</div>
-						{/* Tabs */}
-						<div className="flex gap-1 mt-3">
-							{(["chat", "attention", "reminders"] as const).map((tab) => (
+						)}
+						<div ref={messagesEndRef} />
+					</div>
+				)}
+
+				{activeTab === "attention" && (
+					<div className="p-4 space-y-3">
+						{attentionAreas.map((area) => {
+							const s = severityStyle[area.severity];
+							return (
+								<div key={area.id} className={`rounded-xl border ${s.border} ${s.bg} p-4`}>
+									<div className="flex items-center gap-2 mb-2">
+										<div className={`h-2 w-2 rounded-full ${s.dot}`} />
+										<span className={`text-xs font-heading font-semibold ${s.text}`}>{s.badge}</span>
+										<span className="text-xs text-muted-foreground ml-auto">{area.section}</span>
+									</div>
+									<div className="font-heading font-semibold text-sm mb-1">{area.title}</div>
+									<p className="text-sm text-muted-foreground leading-relaxed">{area.description}</p>
+								</div>
+							);
+						})}
+					</div>
+				)}
+
+				{activeTab === "reminders" && (
+					<div className="p-4 space-y-2">
+						{reminders.map((reminder) => (
+							<div key={reminder.id} className={`flex items-start gap-3 rounded-xl border border-border p-3 transition-all ${reminder.completed ? "opacity-50" : ""}`}>
 								<button
-									key={tab}
-									onClick={() => setActiveTab(tab)}
-									className={`px-3 py-1.5 rounded-lg text-xs font-heading font-medium transition-colors ${
-										activeTab === tab ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"
+									onClick={() => toggleReminder(reminder.id)}
+									className={`mt-0.5 h-5 w-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all ${
+										reminder.completed ? "bg-emerald-500 border-emerald-500" : "border-border hover:border-primary/50"
 									}`}
 								>
-									{tab === "chat" ? "Chat" : tab === "attention" ? `Attention (${attentionAreas.length})` : `Reminders (${reminders.filter(r => !r.completed).length})`}
+									{reminder.completed && <CheckIcon className="size-3 text-white" />}
 								</button>
-							))}
-						</div>
-					</div>
-
-					{/* Content */}
-					<div className="flex-1 overflow-y-auto min-h-0" style={{ maxHeight: "420px" }}>
-						{activeTab === "chat" && (
-							<div className="p-4 space-y-3">
-								{messages.map((msg) => (
-									<div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-										<div className={`max-w-[90%] rounded-xl px-4 py-2.5 ${
-											msg.role === "user"
-												? "bg-primary text-primary-foreground rounded-br-sm"
-												: "bg-muted/60 text-foreground rounded-bl-sm"
-										}`}>
-											<p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.text}</p>
-											<p className={`text-[10px] mt-1 ${msg.role === "user" ? "text-primary-foreground/60" : "text-muted-foreground/60"}`}>{msg.timestamp}</p>
-										</div>
+								<div className="flex-1 min-w-0">
+									<p className={`text-sm leading-snug ${reminder.completed ? "line-through text-muted-foreground" : ""}`}>{reminder.label}</p>
+									<div className="flex items-center gap-2 mt-1.5">
+										<span className={`text-xs font-semibold rounded-md border px-1.5 py-0.5 ${priorityStyle[reminder.priority]}`}>{reminder.priority}</span>
+										<span className="text-xs text-muted-foreground flex items-center gap-1">
+											<CalendarIcon className="size-3" />{reminder.dueDate}
+										</span>
 									</div>
-								))}
-								<div ref={messagesEndRef} />
-							</div>
-						)}
-
-						{activeTab === "attention" && (
-							<div className="p-4 space-y-3">
-								{attentionAreas.map((area) => {
-									const s = severityStyle[area.severity];
-									return (
-										<div key={area.id} className={`rounded-xl border ${s.border} ${s.bg} p-4`}>
-											<div className="flex items-center gap-2 mb-2">
-												<div className={`h-2 w-2 rounded-full ${s.dot}`} />
-												<span className={`text-xs font-heading font-semibold ${s.text}`}>{s.badge}</span>
-												<span className="text-xs text-muted-foreground ml-auto">{area.section}</span>
-											</div>
-											<div className="font-heading font-semibold text-sm mb-1">{area.title}</div>
-											<p className="text-sm text-muted-foreground leading-relaxed">{area.description}</p>
-										</div>
-									);
-								})}
-							</div>
-						)}
-
-						{activeTab === "reminders" && (
-							<div className="p-4 space-y-2">
-								{reminders.map((reminder) => (
-									<div key={reminder.id} className={`flex items-start gap-3 rounded-xl border border-border p-3 transition-all ${reminder.completed ? "opacity-50" : ""}`}>
-										<button
-											onClick={() => toggleReminder(reminder.id)}
-											className={`mt-0.5 h-5 w-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all ${
-												reminder.completed ? "bg-emerald-500 border-emerald-500" : "border-border hover:border-primary/50"
-											}`}
-										>
-											{reminder.completed && <CheckIcon className="size-3 text-white" />}
-										</button>
-										<div className="flex-1 min-w-0">
-											<p className={`text-sm leading-snug ${reminder.completed ? "line-through text-muted-foreground" : ""}`}>{reminder.label}</p>
-											<div className="flex items-center gap-2 mt-1.5">
-												<span className={`text-xs font-semibold rounded-md border px-1.5 py-0.5 ${priorityStyle[reminder.priority]}`}>{reminder.priority}</span>
-												<span className="text-xs text-muted-foreground flex items-center gap-1">
-													<CalendarIcon className="size-3" />{reminder.dueDate}
-												</span>
-											</div>
-										</div>
-										<button onClick={() => deleteReminder(reminder.id)} className="text-muted-foreground/40 hover:text-red-500 transition-colors p-1">
-											<Trash2Icon className="size-3.5" />
-										</button>
-									</div>
-								))}
-								{reminders.length === 0 && (
-									<div className="text-center py-8 text-sm text-muted-foreground">No reminders set for this case.</div>
-								)}
-							</div>
-						)}
-					</div>
-
-					{/* Input (only for chat tab) */}
-					{activeTab === "chat" && (
-						<div className="px-4 py-3 border-t border-border bg-muted/20">
-							<div className="flex items-center gap-2">
-								<input
-									type="text"
-									value={inputValue}
-									onChange={(e) => setInputValue(e.target.value)}
-									onKeyDown={(e) => e.key === "Enter" && handleSend()}
-									placeholder="Ask about risks, entities, wealth claims..."
-									className="flex-1 bg-card border border-border rounded-xl px-4 py-2.5 text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40"
-								/>
-								<button
-									onClick={handleSend}
-									disabled={!inputValue.trim()}
-									className="h-10 w-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-40 hover:bg-primary/90 transition-colors"
-								>
-									<SendIcon className="size-4" />
+								</div>
+								<button onClick={() => deleteReminder(reminder.id)} className="text-muted-foreground/40 hover:text-red-500 transition-colors p-1">
+									<Trash2Icon className="size-3.5" />
 								</button>
 							</div>
-							<div className="flex flex-wrap gap-1.5 mt-2">
-								{["What are the next actions?", "Explain the risk score", "Token volatility"].map((q) => (
-									<button
-										key={q}
-										onClick={() => { setInputValue(q); }}
-										className="text-xs px-2.5 py-1 rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground hover:border-primary/30 transition-colors"
-									>
-										{q}
-									</button>
-								))}
-							</div>
-						</div>
-					)}
+						))}
+						{reminders.length === 0 && (
+							<div className="text-center py-8 text-sm text-muted-foreground">No reminders set for this case.</div>
+						)}
+					</div>
+				)}
+			</div>
+
+			{/* Input (only for chat tab) */}
+			{activeTab === "chat" && (
+				<div className="px-4 py-3 border-t border-border bg-muted/20">
+					<div className="flex items-center gap-2">
+						<input
+							type="text"
+							value={inputValue}
+							onChange={(e) => setInputValue(e.target.value)}
+							onKeyDown={(e) => e.key === "Enter" && handleSend()}
+							placeholder="Ask about risks, entities, wealth claims..."
+							disabled={isTyping}
+							className="flex-1 bg-card border border-border rounded-xl px-4 py-2.5 text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 disabled:opacity-50"
+						/>
+						<button
+							onClick={handleSend}
+							disabled={!inputValue.trim() || isTyping}
+							className="h-10 w-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-40 hover:bg-primary/90 transition-colors"
+						>
+							<SendIcon className="size-4" />
+						</button>
+					</div>
+					<div className="flex flex-wrap gap-1.5 mt-2">
+						{["What are the next actions?", "Explain the risk score", "Summarise key risks"].map((q) => (
+							<button
+								key={q}
+								onClick={() => { setInputValue(q); }}
+								disabled={isTyping}
+								className="text-xs px-2.5 py-1 rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground hover:border-primary/30 transition-colors disabled:opacity-50"
+							>
+								{q}
+							</button>
+						))}
+					</div>
 				</div>
 			)}
-		</>
+		</div>
 	);
 }
 

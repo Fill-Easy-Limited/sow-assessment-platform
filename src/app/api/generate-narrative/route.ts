@@ -3,11 +3,11 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(req: NextRequest) {
 	try {
 		const body = await req.json();
-		const { profileName, profileSummary, netWorth, riskRating, riskScore, careerPhases, wealthCategories, corroborationScores, overallConfidence, keyRiskFactors, apiKey, model } = body;
+		const { profileName, profileSummary, netWorth, riskRating, riskScore, careerPhases, wealthCategories, corroborationScores, overallConfidence, keyRiskFactors, model } = body;
 
-		const openRouterKey = apiKey || process.env.OPENROUTER_API_KEY;
+		const openRouterKey = process.env.OPENROUTER_API_KEY;
 		if (!openRouterKey) {
-			return NextResponse.json({ error: "No OpenRouter API key provided. Set OPENROUTER_API_KEY or pass apiKey in request." }, { status: 400 });
+			return NextResponse.json({ error: "No OpenRouter API key configured. Set OPENROUTER_API_KEY in .env.local" }, { status: 500 });
 		}
 
 		const selectedModel = model || "google/gemini-2.5-flash";
