@@ -1521,107 +1521,148 @@ function SourceBadge({ source, onClick }: { source: SourceCitation; onClick?: (s
 	);
 }
 
-/* ─── Company Network Graph ─── */
+/* ─── Company Network Graph (hierarchical tree) ─── */
+
+const STATUS_STYLE: Record<string, { fill: string; stroke: string; text: string; badge: string }> = {
+	active: { fill: "#f0fdf4", stroke: "#86efac", text: "#166534", badge: "Active" },
+	ipo: { fill: "#eff6ff", stroke: "#93c5fd", text: "#1e40af", badge: "IPO" },
+	exited: { fill: "#fefce8", stroke: "#fde047", text: "#854d0e", badge: "Exited" },
+	restructured: { fill: "#fef3c7", stroke: "#fcd34d", text: "#92400e", badge: "Restructured" },
+	delisted: { fill: "#fef2f2", stroke: "#fca5a5", text: "#991b1b", badge: "Delisted" },
+	dissolved: { fill: "#f3f4f6", stroke: "#d1d5db", text: "#6b7280", badge: "Dissolved" },
+	pending: { fill: "#f5f3ff", stroke: "#c4b5fd", text: "#5b21b6", badge: "Pending" },
+};
+
+const TYPE_ICON: Record<string, string> = {
+	holding: "H", subsidiary: "S", fund: "F", trust: "T", foundation: "P",
+	jv: "JV", token: "◆", investment: "→",
+};
+
+function EntityNodeCard({ node, depth, expanded, onToggle }: {
+	node: CompanyNode; depth: number; expanded: Set<string>; onToggle: (key: string) => void;
+}) {
+	const sc = STATUS_STYLE[node.status] ?? STATUS_STYLE.active;
+	const hasChildren = node.children && node.children.length > 0;
+	const nodeKey = `${depth}-${node.name}`;
+	const isOpen = expanded.has(nodeKey);
+	const typeIcon = node.type ? TYPE_ICON[node.type] ?? "" : "";
+
+	return (
+		<div className={depth === 0 ? "" : "ml-5 border-l-2 border-border/50 pl-4"}>
+			<button
+				type="button"
+				onClick={hasChildren ? () => onToggle(nodeKey) : undefined}
+				className={`w-full text-left rounded-lg border px-3 py-2 mb-1.5 transition-all ${hasChildren ? "cursor-pointer hover:shadow-sm" : "cursor-default"}`}
+				style={{ borderColor: sc.stroke, backgroundColor: sc.fill }}
+			>
+				<div className="flex items-center gap-2">
+					{hasChildren && (
+						<ChevronRightIcon className={`size-3 shrink-0 transition-transform ${isOpen ? "rotate-90" : ""}`} style={{ color: sc.text }} />
+					)}
+					{!hasChildren && <span className="w-3" />}
+					{typeIcon && (
+						<span className="text-[8px] font-bold w-4 h-4 rounded flex items-center justify-center shrink-0" style={{ backgroundColor: sc.stroke + "40", color: sc.text }}>
+							{typeIcon}
+						</span>
+					)}
+					<div className="flex-1 min-w-0">
+						<div className="flex items-center gap-1.5">
+							<span className="text-[11px] font-heading font-semibold truncate" style={{ color: sc.text }}>{node.name}</span>
+							<span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full shrink-0" style={{ backgroundColor: sc.stroke + "30", color: sc.text }}>{sc.badge}</span>
+						</div>
+						<div className="flex items-center gap-2 mt-0.5">
+							<span className="text-[9px] text-muted-foreground truncate">{node.role}</span>
+							{node.ownership && <span className="text-[8px] font-semibold text-muted-foreground shrink-0">{node.ownership}</span>}
+							{node.valuation && <span className="text-[8px] font-medium shrink-0" style={{ color: sc.text }}>{node.valuation}</span>}
+						</div>
+						{node.jurisdiction && (
+							<span className="text-[8px] text-muted-foreground/70">{node.jurisdiction}</span>
+						)}
+					</div>
+					{hasChildren && (
+						<span className="text-[8px] font-bold rounded-full w-4 h-4 flex items-center justify-center shrink-0" style={{ backgroundColor: sc.stroke + "30", color: sc.text }}>
+							{node.children!.length}
+						</span>
+					)}
+				</div>
+			</button>
+			{isOpen && node.children?.map((child, ci) => (
+				<EntityNodeCard key={ci} node={child} depth={depth + 1} expanded={expanded} onToggle={onToggle} />
+			))}
+		</div>
+	);
+}
 
 function CompanyNetworkGraph({ nodes, profileName }: { nodes: CompanyNode[]; profileName: string }) {
-	const statusColor: Record<string, { fill: string; stroke: string; text: string; badge: string }> = {
-		active: { fill: "#f0fdf4", stroke: "#86efac", text: "#166534", badge: "Active" },
-		ipo: { fill: "#eff6ff", stroke: "#93c5fd", text: "#1e40af", badge: "IPO" },
-		exited: { fill: "#fefce8", stroke: "#fde047", text: "#854d0e", badge: "Exited" },
-		restructured: { fill: "#fef3c7", stroke: "#fcd34d", text: "#92400e", badge: "Restructured" },
-		delisted: { fill: "#fef2f2", stroke: "#fca5a5", text: "#991b1b", badge: "Delisted" },
-	};
+	const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
 
-	const personX = 250;
-	const personY = nodes.length > 3 ? 140 : 100;
-	const svgH = nodes.length > 3 ? 320 : 230;
+	const onToggle = useCallback((key: string) => {
+		setExpanded((prev) => {
+			const next = new Set(prev);
+			if (next.has(key)) next.delete(key);
+			else next.add(key);
+			return next;
+		});
+	}, []);
 
-	// Position nodes in a circle around the person
-	const nodePositions = nodes.map((_, i) => {
-		const angleStep = (2 * Math.PI) / nodes.length;
-		const angle = angleStep * i - Math.PI / 2;
-		const rx = 170;
-		const ry = nodes.length > 3 ? 110 : 80;
-		return {
-			x: personX + rx * Math.cos(angle) - 60,
-			y: personY + ry * Math.sin(angle) - 20,
+	const expandAll = useCallback(() => {
+		const keys = new Set<string>();
+		const collect = (list: CompanyNode[], d: number) => {
+			for (const n of list) {
+				if (n.children?.length) {
+					keys.add(`${d}-${n.name}`);
+					collect(n.children, d + 1);
+				}
+			}
 		};
-	});
+		collect(nodes, 0);
+		setExpanded(keys);
+	}, [nodes]);
+
+	const collapseAll = useCallback(() => setExpanded(new Set()), []);
+
+	// Count total entities recursively
+	const countAll = (list: CompanyNode[]): number => list.reduce((s, n) => s + 1 + (n.children ? countAll(n.children) : 0), 0);
+	const totalEntities = countAll(nodes);
+	const topLevel = nodes.length;
 
 	return (
 		<div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-			<div className="flex items-center gap-2 mb-5">
-				<NetworkIcon className="size-4 text-muted-foreground" />
-				<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Related Entity Network</p>
+			<div className="flex items-center justify-between mb-4">
+				<div className="flex items-center gap-2">
+					<NetworkIcon className="size-4 text-muted-foreground" />
+					<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Related Entity Network</p>
+					<span className="text-[9px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">{totalEntities} entities</span>
+				</div>
+				<div className="flex items-center gap-1">
+					<button type="button" onClick={expandAll} className="text-[9px] text-primary font-medium hover:underline px-2 py-1">Expand all</button>
+					<button type="button" onClick={collapseAll} className="text-[9px] text-muted-foreground font-medium hover:underline px-2 py-1">Collapse</button>
+				</div>
 			</div>
-			<div className="overflow-x-auto">
-				<svg width="500" height={svgH} viewBox={`0 0 500 ${svgH}`} className="w-full max-w-[500px] mx-auto">
-					<defs>
-						<filter id="nodeShadow" x="-10%" y="-10%" width="120%" height="130%">
-							<feDropShadow dx="0" dy="1" stdDeviation="2" floodOpacity="0.08" />
-						</filter>
-					</defs>
-
-					{nodes.map((node, i) => {
-						const pos = nodePositions[i];
-						const sc = statusColor[node.status] ?? statusColor.active;
-						const midX = (personX + pos.x + 60) / 2;
-						const midY = (personY + pos.y + 20) / 2;
-
-						return (
-							<g key={i}>
-								{/* Connection line */}
-								<line
-									x1={personX} y1={personY}
-									x2={pos.x + 60} y2={pos.y + 20}
-									stroke={sc.stroke}
-									strokeWidth="2"
-									strokeDasharray={node.status === "exited" || node.status === "delisted" ? "6 4" : "none"}
-									opacity="0.6"
-								/>
-								{/* Role label on line */}
-								<rect x={midX - 40} y={midY - 8} width="80" height="16" rx="8" fill="white" stroke={sc.stroke} strokeWidth="1" />
-								<text x={midX} y={midY + 4} textAnchor="middle" style={{ fontSize: "6px", fill: "#6b7280" }}>
-									{node.role.length > 25 ? node.role.slice(0, 25) + "..." : node.role}
-								</text>
-							</g>
-						);
-					})}
-
-					{/* Person node */}
-					<circle cx={personX} cy={personY} r="24" fill="white" stroke="#3b82f6" strokeWidth="2.5" filter="url(#nodeShadow)" />
-					<circle cx={personX} cy={personY - 6} r="6" fill="none" stroke="#3b82f6" strokeWidth="1.5" />
-					<path d={`M ${personX - 10} ${personY + 10} Q ${personX} ${personY + 2} ${personX + 10} ${personY + 10}`} fill="none" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round" />
-					<text x={personX} y={personY + 36} textAnchor="middle" className="font-heading" style={{ fontSize: "10px", fontWeight: 600, fill: "#1e40af" }}>
-						{profileName}
-					</text>
-
-					{/* Company nodes */}
-					{nodes.map((node, i) => {
-						const pos = nodePositions[i];
-						const sc = statusColor[node.status] ?? statusColor.active;
-						const lines = node.name.split(/(?<=\s)/);
-						const displayName = node.name.length > 22 ? node.name.slice(0, 22) + "..." : node.name;
-
-						return (
-							<g key={`node-${i}`}>
-								<rect x={pos.x} y={pos.y} width="120" height="50" rx="10" fill={sc.fill} stroke={sc.stroke} strokeWidth="1.5" filter="url(#nodeShadow)" />
-								<text x={pos.x + 60} y={pos.y + 20} textAnchor="middle" style={{ fontSize: "8px", fontWeight: 600, fill: sc.text }}>
-									{displayName}
-								</text>
-								{node.ownership && (
-									<text x={pos.x + 60} y={pos.y + 31} textAnchor="middle" style={{ fontSize: "7px", fill: "#6b7280" }}>
-										{node.ownership}
-									</text>
-								)}
-								<rect x={pos.x + 20} y={pos.y + 37} width="80" height="14" rx="7" fill={sc.stroke} opacity="0.3" />
-								<text x={pos.x + 60} y={pos.y + 47} textAnchor="middle" style={{ fontSize: "7px", fontWeight: 600, fill: sc.text }}>
-									{sc.badge}
-								</text>
-							</g>
-						);
-					})}
-				</svg>
+			{/* Person header */}
+			<div className="flex items-center gap-3 mb-4 pb-3 border-b border-border">
+				<div className="w-8 h-8 rounded-full bg-blue-50 border-2 border-blue-400 flex items-center justify-center">
+					<UserIcon className="size-4 text-blue-600" />
+				</div>
+				<div>
+					<p className="text-sm font-heading font-semibold text-foreground">{profileName}</p>
+					<p className="text-[10px] text-muted-foreground">{topLevel} direct entities &middot; {totalEntities} total network nodes</p>
+				</div>
+			</div>
+			{/* Type legend */}
+			<div className="flex flex-wrap gap-x-3 gap-y-1 mb-4">
+				{(Object.entries(STATUS_STYLE) as [string, typeof STATUS_STYLE.active][]).filter(([k]) => nodes.some(n => n.status === k || n.children?.some(c => c.status === k))).map(([k, v]) => (
+					<span key={k} className="flex items-center gap-1 text-[8px]">
+						<span className="w-2 h-2 rounded-full" style={{ backgroundColor: v.stroke }} />
+						<span style={{ color: v.text }}>{v.badge}</span>
+					</span>
+				))}
+			</div>
+			{/* Tree */}
+			<div className="space-y-0.5 max-h-[600px] overflow-y-auto pr-1">
+				{nodes.map((node, i) => (
+					<EntityNodeCard key={i} node={node} depth={0} expanded={expanded} onToggle={onToggle} />
+				))}
 			</div>
 		</div>
 	);

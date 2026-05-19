@@ -156,8 +156,11 @@ export interface CompanyNode {
 	name: string;
 	role: string;
 	ownership?: string;
-	status: "active" | "ipo" | "exited" | "restructured" | "delisted";
+	status: "active" | "ipo" | "exited" | "restructured" | "delisted" | "dissolved" | "pending";
 	valuation?: string;
+	type?: "holding" | "subsidiary" | "fund" | "trust" | "foundation" | "jv" | "token" | "investment";
+	jurisdiction?: string;
+	children?: CompanyNode[];
 }
 
 export interface PepScreeningEntry {
@@ -1013,28 +1016,174 @@ const YAT_SIU_SOURCES: DataSourceDef[] = [
 // ── Company Nodes (for network graph) ───────────────────────────
 
 const JACK_MA_COMPANIES: CompanyNode[] = [
-	{ name: "Alibaba Group (NYSE: BABA)", role: "Founder & Former Chairman", ownership: "~4.5%", status: "active", valuation: "$215B" },
-	{ name: "Ant Group", role: "Co-founder, former controlling shareholder", ownership: "~8%", status: "restructured", valuation: "~$70B" },
-	{ name: "Yunfeng Capital", role: "Co-founder", ownership: "GP interest", status: "active", valuation: "AUM ~$8B" },
-	{ name: "Blue Pool Capital", role: "Co-founder (with Joe Tsai)", ownership: "Co-principal", status: "active", valuation: "AUM ~$50B" },
-	{ name: "Yunfeng Financial Group (HK-listed)", role: "Major shareholder", ownership: "11.15%", status: "active", valuation: "Bought 10K ETH" },
-	{ name: "Singapore Family Trust", role: "Settlor", status: "active", valuation: "$2.4B+" },
-	{ name: "Jack Ma Foundation", role: "Founder", status: "active" },
-	{ name: "Huayi Brothers (Shenzhen-listed)", role: "Minority investor", ownership: "~2.6%", status: "active" },
-	{ name: "Enlight Media (Beijing-listed)", role: "Via Hangzhou Ali Venture Capital (80%)", ownership: "~10%", status: "active" },
+	{
+		name: "Alibaba Group (NYSE: BABA)", role: "Founder & Former Chairman", ownership: "~4.5%", status: "ipo", valuation: "$215B",
+		type: "holding", jurisdiction: "Cayman Islands / NYSE",
+		children: [
+			{ name: "Taobao / Tmall Group", role: "Core e-commerce", status: "active", type: "subsidiary", jurisdiction: "China", valuation: "Separated entity" },
+			{ name: "Alibaba Cloud (Aliyun)", role: "Cloud computing", status: "active", type: "subsidiary", jurisdiction: "China", valuation: "$11B revenue" },
+			{ name: "Cainiao Network", role: "Logistics (IPO filed HK)", ownership: "~70%", status: "active", type: "subsidiary", jurisdiction: "China / HK", valuation: "~$25B" },
+			{ name: "Alibaba International (AIDC)", role: "Lazada, AliExpress, Trendyol", status: "active", type: "subsidiary", jurisdiction: "Global" },
+			{ name: "Freshippo (Hema)", role: "New retail grocery", status: "active", type: "subsidiary", jurisdiction: "China" },
+		],
+	},
+	{
+		name: "Ant Group", role: "Co-founder, former controlling shareholder", ownership: "~8%", status: "restructured", valuation: "~$70B",
+		type: "holding", jurisdiction: "China",
+		children: [
+			{ name: "Alipay", role: "Payments platform (1.3B+ users)", status: "active", type: "subsidiary", jurisdiction: "China" },
+			{ name: "MYbank", role: "Online bank (30% Ant-owned)", ownership: "30%", status: "active", type: "subsidiary", jurisdiction: "China" },
+			{ name: "Zhima Credit (Sesame)", role: "Credit scoring", status: "restructured", type: "subsidiary", jurisdiction: "China" },
+			{ name: "Tianhong Asset Mgmt", role: "Yu'e Bao money market fund", status: "active", type: "fund", jurisdiction: "China", valuation: "¥600B AUM" },
+			{ name: "Ant Insurance", role: "InsurTech platform", status: "restructured", type: "subsidiary", jurisdiction: "China" },
+		],
+	},
+	{
+		name: "Yunfeng Capital", role: "Co-founder", ownership: "GP interest", status: "active", valuation: "AUM ~$8B",
+		type: "fund", jurisdiction: "Hong Kong / China",
+		children: [
+			{ name: "Alibaba Health (HK: 0241)", role: "Portfolio company", status: "active", type: "investment", jurisdiction: "HK", valuation: "~$5B mcap" },
+			{ name: "Meituan (early investor)", role: "Early-stage investment", status: "exited", type: "investment", jurisdiction: "HK" },
+		],
+	},
+	{
+		name: "Blue Pool Capital", role: "Co-founder (with Joe Tsai)", ownership: "Co-principal", status: "active", valuation: "AUM ~$50B",
+		type: "fund", jurisdiction: "Hong Kong",
+		children: [
+			{ name: "Riverside Fund ($1B+)", role: "Concentrated equity strategy", status: "active", type: "fund", jurisdiction: "Hong Kong" },
+			{ name: "Global equities portfolio", role: "Public markets (TSMC, Apple, etc.)", status: "active", type: "investment", jurisdiction: "Global" },
+		],
+	},
+	{
+		name: "Yunfeng Financial Group (HK: 1160)", role: "Major shareholder", ownership: "11.15%", status: "active",
+		type: "holding", jurisdiction: "Hong Kong",
+		children: [
+			{ name: "Yunfeng Securities", role: "Brokerage", status: "active", type: "subsidiary", jurisdiction: "HK" },
+			{ name: "ETH Strategic Reserve", role: "10,000 ETH purchased ($44M)", status: "active", type: "investment", jurisdiction: "On-chain" },
+		],
+	},
+	{
+		name: "Singapore Family Trust", role: "Settlor", status: "active", valuation: "$2.4B+",
+		type: "trust", jurisdiction: "Singapore",
+		children: [
+			{ name: "BABA shares (~$2.4B)", role: "Trust corpus — transferred 2023", status: "active", type: "investment", jurisdiction: "Singapore" },
+			{ name: "Singapore properties (via Zhang Ying)", role: "GCB + Duxton Rd shophouses", status: "active", type: "investment", jurisdiction: "Singapore", valuation: "~S$90M" },
+		],
+	},
+	{ name: "Jack Ma Foundation", role: "Founder", status: "active", type: "foundation", jurisdiction: "China / Global" },
+	{
+		name: "Hangzhou Ali Venture Capital", role: "Controlling shareholder (80%)", ownership: "80%", status: "active",
+		type: "holding", jurisdiction: "China",
+		children: [
+			{ name: "Enlight Media (SZ-listed)", role: "$383M stake", ownership: "~10%", status: "active", type: "investment", jurisdiction: "China" },
+		],
+	},
+	{ name: "Huayi Brothers (SZ-listed)", role: "Minority investor (since 2009 IPO)", ownership: "~2.6%", status: "active", type: "investment", jurisdiction: "China" },
+	{
+		name: "Real estate portfolio", role: "Personal assets", status: "active", valuation: "~$600M",
+		type: "holding", jurisdiction: "Multi-jurisdictional",
+		children: [
+			{ name: "Victoria Peak mansion (HK)", role: "HK$1.5B — FilEasy Land Reg", status: "active", type: "investment", jurisdiction: "Hong Kong", valuation: "~$200M" },
+			{ name: "Brandon Park (NY, 28,100 ac)", role: "Via New Brandon LLC", status: "active", type: "investment", jurisdiction: "USA" , valuation: "$23M" },
+			{ name: "Château de Sours (Bordeaux)", role: "54ha vineyard", status: "active", type: "investment", jurisdiction: "France", valuation: "~$20M" },
+			{ name: "Château Guerry (Bordeaux)", role: "Second vineyard", status: "active", type: "investment", jurisdiction: "France" },
+		],
+	},
+	{
+		name: "Luxury & lifestyle assets", role: "Personal", status: "active", valuation: "~$265M",
+		type: "holding",
+		children: [
+			{ name: "M/Y Zen (88m Feadship)", role: "Superyacht — built 2021", status: "active", type: "investment", valuation: "~$200M" },
+			{ name: "Gulfstream G650ER (VP-CZM)", role: "Via Brilliant Sky Blue Ltd", status: "active", type: "investment", jurisdiction: "Cayman Islands", valuation: "~$65M" },
+		],
+	},
 ];
 
 const YAT_SIU_COMPANIES: CompanyNode[] = [
-	{ name: "Animoca Brands", role: "Co-founder & Chairman", ownership: "~30-40%", status: "active", valuation: "$5.9B (last round)" },
-	{ name: "The Sandbox", role: "Parent company (via Animoca)", ownership: "Subsidiary", status: "active", valuation: "SAND mcap ~$900M" },
-	{ name: "Outblaze Limited", role: "Founder", ownership: "Majority", status: "exited", valuation: "Messaging sold to IBM" },
-	{ name: "TinyTap (ed-tech)", role: "Via Animoca (84.13%)", ownership: "Subsidiary", status: "active", valuation: "$100M (2023 raise)" },
-	{ name: "Animoca Ventures", role: "GP", ownership: "GP interest", status: "active", valuation: "AUM $100M+" },
-	{ name: "nWay (fighting games)", role: "Via Animoca", ownership: "Subsidiary", status: "active" },
-	{ name: "Eden Games (racing)", role: "Via Animoca", ownership: "Subsidiary", status: "active" },
-	{ name: "Blowfish Studios", role: "Via Animoca", ownership: "Subsidiary", status: "active" },
-	{ name: "GAMEE / Arc8", role: "Via Animoca", ownership: "Subsidiary", status: "active", valuation: "51% LOI with AlphaTON" },
-	{ name: "Anchorpoint Financial", role: "JV (StanChart + HKT + Animoca)", ownership: "JV partner", status: "active", valuation: "HKMA licensed" },
+	{
+		name: "Animoca Brands", role: "Co-founder & Chairman", ownership: "~30-40%", status: "active", valuation: "$5.9B (last round)",
+		type: "holding", jurisdiction: "Hong Kong",
+		children: [
+			{
+				name: "The Sandbox (SAND)", role: "Subsidiary — metaverse platform", ownership: "Subsidiary", status: "active", valuation: "SAND mcap ~$900M",
+				type: "subsidiary", jurisdiction: "Hong Kong / Argentina",
+				children: [
+					{ name: "SAND token reserves", role: "Treasury tokens (locked/vesting)", status: "active", type: "token", valuation: "$150M+ notional" },
+					{ name: "LAND NFT ecosystem", role: "175K+ virtual parcels sold", status: "active", type: "token", jurisdiction: "Ethereum / Polygon" },
+				],
+			},
+			{
+				name: "TinyTap (ed-tech)", role: "84.13% — acquired 2022 ($38.9M)", ownership: "84.13%", status: "active", valuation: "$100M (2023 raise)",
+				type: "subsidiary", jurisdiction: "Israel",
+				children: [
+					{ name: "TINT token (proposed)", role: "Ed-fi token — not yet launched", status: "pending", type: "token" },
+				],
+			},
+			{ name: "nWay (fighting games)", role: "Subsidiary — Power Rangers: Legacy Wars", ownership: "100%", status: "active", type: "subsidiary", jurisdiction: "San Francisco", valuation: "60M+ downloads" },
+			{
+				name: "GAMEE / Arc8", role: "Subsidiary — mobile competitive gaming", ownership: "100%", status: "active",
+				type: "subsidiary", jurisdiction: "Prague",
+				children: [
+					{ name: "GMEE token", role: "Play-to-earn rewards", status: "active", type: "token", valuation: "~$5M mcap" },
+					{ name: "AlphaTON divestiture (51%)", role: "LOI signed — TON blockchain pivot", status: "pending", type: "subsidiary" },
+				],
+			},
+			{ name: "Eden Games (racing)", role: "Subsidiary — Gear.Club, V-Rally", ownership: "100%", status: "active", type: "subsidiary", jurisdiction: "Lyon, France" },
+			{ name: "Blowfish Studios", role: "Subsidiary — game development", ownership: "100%", status: "active", type: "subsidiary", jurisdiction: "Sydney, Australia" },
+			{
+				name: "Lympo (fitness/NFT)", role: "Subsidiary — hot wallet hacked $18.7M", ownership: "Subsidiary", status: "restructured",
+				type: "subsidiary", jurisdiction: "Lithuania",
+				children: [
+					{ name: "LMT token", role: "Severely impaired post-hack", status: "restructured", type: "token", valuation: "<$1M" },
+				],
+			},
+			{
+				name: "Quidd (digital collectibles)", role: "Subsidiary — licensed IP collectibles", ownership: "100%", status: "active",
+				type: "subsidiary", jurisdiction: "USA",
+			},
+			{ name: "REVV Motorsport ecosystem", role: "Cross-game token (F1 Delta Time, MotoGP)", status: "active", type: "token", valuation: "REVV ~$15M mcap" },
+			{ name: "TOWER token (Crazy Defense Heroes)", role: "Game token — 3M+ players", status: "active", type: "token", valuation: "~$20M mcap" },
+		],
+	},
+	{
+		name: "Animoca Ventures", role: "GP", ownership: "GP interest", status: "active", valuation: "AUM $100M+",
+		type: "fund", jurisdiction: "Hong Kong",
+		children: [
+			{ name: "540+ portfolio companies", role: "Web3 / gaming investments", status: "active", type: "investment", valuation: "$2.9B off-balance" },
+			{ name: "Mocaverse / MOCA token", role: "Animoca ecosystem token", status: "active", type: "token", jurisdiction: "On-chain", valuation: "Raised $29.3M" },
+		],
+	},
+	{
+		name: "Anchorpoint Financial", role: "JV (StanChart + HKT + Animoca)", ownership: "JV partner", status: "active",
+		type: "jv", jurisdiction: "Hong Kong", valuation: "HKMA stablecoin license",
+		children: [
+			{ name: "HKD-pegged stablecoin (planned)", role: "Regulatory sandbox participant", status: "pending", type: "token", jurisdiction: "Hong Kong" },
+		],
+	},
+	{
+		name: "Outblaze Limited", role: "Founder", ownership: "Majority", status: "exited",
+		type: "holding", jurisdiction: "Hong Kong", valuation: "Messaging sold to IBM (~$15M)",
+		children: [
+			{ name: "Outblaze messaging (sold to IBM)", role: "Enterprise messaging division", status: "exited", type: "subsidiary", jurisdiction: "Hong Kong" },
+			{ name: "Outblaze games division", role: "Became Animoca Brands (2014)", status: "exited", type: "subsidiary", jurisdiction: "Hong Kong" },
+		],
+	},
+	{
+		name: "Currenc Group (Nasdaq merger)", role: "Reverse merger vehicle for Animoca listing", status: "pending",
+		type: "holding", jurisdiction: "Cayman Islands / Nasdaq",
+		children: [
+			{ name: "Animoca Brands public listing", role: "Expected via reverse merger", status: "pending", type: "subsidiary", jurisdiction: "Nasdaq" },
+		],
+	},
+	{
+		name: "Personal token holdings", role: "Direct wallet holdings", status: "active",
+		type: "holding", jurisdiction: "On-chain",
+		children: [
+			{ name: "SAND tokens (personal)", role: "Discounted from peak $8.40 → ~$0.40", status: "active", type: "token", valuation: "~$30M est." },
+			{ name: "MOCA tokens (personal)", role: "Ecosystem governance token", status: "active", type: "token", valuation: "~$20M est." },
+			{ name: "NFT collection", role: "BAYC, Mocaverse, Sandbox LAND", status: "active", type: "token", valuation: "~$5M (depreciated)" },
+		],
+	},
 ];
 
 // ── Key Parameters ──────────────────────────────────────────────
