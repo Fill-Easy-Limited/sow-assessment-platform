@@ -1294,9 +1294,9 @@ function WealthDonutChart({ wealthByCategory, totalWealth, overallConfidence }: 
 
 	let cumulativeAngle = 0;
 	const segments = valueItems.map((item) => {
-		const percentage = total > 0 ? item.totalUSD / total : 0;
+		const percentage = total > 0 ? (item.totalUSD / total) * 100 : 0;
 		const startAngle = cumulativeAngle;
-		const sweep = percentage * 360;
+		const sweep = (percentage / 100) * 360;
 		cumulativeAngle += sweep;
 		return { ...item, percentage, startAngle, sweep, color: CATEGORY_COLORS[item.category] };
 	});
