@@ -1449,3 +1449,84 @@ const YAT_SIU_REPORT: HnwReport = {
 };
 
 export const HNW_CASES: HnwReport[] = [JACK_MA_REPORT, YAT_SIU_REPORT];
+
+/* ═══════════════════════════════════════════════════════════════
+   Compliance Chatbot — hardcoded conversations per subject
+   ═══════════════════════════════════════════════════════════════ */
+
+export interface ChatMessage {
+	id: string;
+	role: "assistant" | "user";
+	text: string;
+	timestamp: string;
+}
+
+export interface ChatReminder {
+	id: string;
+	label: string;
+	dueDate: string;
+	priority: "high" | "medium" | "low";
+	completed: boolean;
+}
+
+export interface CaseAttentionArea {
+	id: string;
+	title: string;
+	severity: "critical" | "warning" | "info";
+	description: string;
+	section: string;
+}
+
+export const CHATBOT_ATTENTION_AREAS: Record<string, CaseAttentionArea[]> = {
+	"hnw-jack-ma": [
+		{ id: "jm-1", title: "Ant Group Restructuring Impact", severity: "critical", description: "The halted Ant Group IPO and forced restructuring significantly affected wealth estimates. Current Ant valuation models range from $60B to $150B — the ~$78B figure used carries moderate confidence. Request updated PBOC regulatory status.", section: "Career Phase 5" },
+		{ id: "jm-2", title: "Singapore Trust Transfers", severity: "critical", description: "Jack Ma transferred ~$2.4B in BABA shares to a Singapore-based family trust in 2023. Trust structure and beneficiaries remain opaque. Request trust deed and ACRA filings via FilEasy CorpVerify.", section: "Entity Network" },
+		{ id: "jm-3", title: "Blue Pool Capital AUM Verification", severity: "warning", description: "Blue Pool Capital manages an estimated ~$50B AUM but is not regulated by the SFC. No public filings available. Consider requesting voluntary disclosure from the client or a co-investor reference.", section: "Entity Network" },
+		{ id: "jm-4", title: "Real Estate Valuations Stale", severity: "warning", description: "The Brandon Park estate ($23M) and Château properties use 2019-2021 purchase prices. Current market values may differ materially. Recommend independent appraisals.", section: "Alternatives" },
+		{ id: "jm-5", title: "PEP Status — Chinese Communist Party", severity: "info", description: "Jack Ma was a member of the CPC and former delegate of the CPPCC. Although he has stepped back from public roles, his PEP classification remains active. Monitor for any reinstatement or new political appointments.", section: "PEP Screening" },
+	],
+	"hnw-yat-siu": [
+		{ id: "ys-1", title: "Crypto Token Volatility — Extreme Risk", severity: "critical", description: "SAND token represents the largest single asset concentration. It has fallen ~90% from its 2021 peak ($8.40 to ~$0.30-0.60). Daily revaluation is needed for any accurate net worth assessment. On-chain verification via Etherscan is recommended.", section: "Career Phase 5-6" },
+		{ id: "ys-2", title: "ASX Delisting — Regulatory Concern", severity: "critical", description: "Animoca Brands was delisted from ASX in March 2020 for repeated compliance failures. While the company characterizes this as voluntary, ASIC records indicate regulatory action. This must be prominently disclosed in any client-facing documentation.", section: "Career Phase 4" },
+		{ id: "ys-3", title: "Lympo Hack — $18.7M Loss", severity: "warning", description: "Subsidiary Lympo suffered an $18.7M hot wallet hack in January 2022. Investigation status is unclear. Verify whether insurance claims were filed and if any recoveries were made.", section: "Entity Network" },
+		{ id: "ys-4", title: "Currenc / Nasdaq Listing — Pending", severity: "warning", description: "Animoca Brands plans to list via SPAC merger with Currenc Group on Nasdaq. The deal is still pending SEC review. If approved, this would significantly change the liquidity profile of Yat Siu's holdings. Monitor SEC EDGAR for updates.", section: "Entity Network" },
+		{ id: "ys-5", title: "Private Valuation Discrepancy", severity: "warning", description: "Animoca Brands' last private valuation was $5.9B (Jan 2022), but comparable public blockchain companies have declined 60-80%. An updated fair value assessment is needed before relying on this figure.", section: "Career Phase 5" },
+		{ id: "ys-6", title: "X/Twitter Account Hack", severity: "info", description: "Yat Siu's X account was hacked in December 2024 and used for a fake token scam. While personal assets were not directly affected, this raises cybersecurity risk concerns for his crypto holdings.", section: "Risk Parameters" },
+	],
+};
+
+export const CHATBOT_REMINDERS: Record<string, ChatReminder[]> = {
+	"hnw-jack-ma": [
+		{ id: "r-jm-1", label: "Request updated Ant Group regulatory status from PBOC", dueDate: "2026-06-02", priority: "high", completed: false },
+		{ id: "r-jm-2", label: "Follow up with client for Singapore trust deed documents", dueDate: "2026-06-09", priority: "high", completed: false },
+		{ id: "r-jm-3", label: "Order independent appraisals for real estate portfolio", dueDate: "2026-06-16", priority: "medium", completed: false },
+		{ id: "r-jm-4", label: "Verify Blue Pool Capital AUM with co-investor reference", dueDate: "2026-06-23", priority: "medium", completed: false },
+		{ id: "r-jm-5", label: "Schedule quarterly PEP/sanctions re-screening", dueDate: "2026-07-01", priority: "low", completed: false },
+	],
+	"hnw-yat-siu": [
+		{ id: "r-ys-1", label: "Verify SAND token holdings via on-chain Etherscan analysis", dueDate: "2026-05-26", priority: "high", completed: false },
+		{ id: "r-ys-2", label: "Request ASIC delisting records via FilEasy CorpVerify", dueDate: "2026-06-02", priority: "high", completed: false },
+		{ id: "r-ys-3", label: "Check Lympo hack insurance claim status with client", dueDate: "2026-06-09", priority: "medium", completed: false },
+		{ id: "r-ys-4", label: "Monitor SEC EDGAR for Currenc SPAC merger filing updates", dueDate: "2026-06-16", priority: "medium", completed: false },
+		{ id: "r-ys-5", label: "Commission updated Animoca Brands fair value assessment", dueDate: "2026-06-23", priority: "high", completed: false },
+		{ id: "r-ys-6", label: "Set up weekly automated SAND/REVV/TOWER price monitoring", dueDate: "2026-05-26", priority: "medium", completed: false },
+	],
+};
+
+export const CHATBOT_INITIAL_MESSAGES: Record<string, ChatMessage[]> = {
+	"hnw-jack-ma": [
+		{ id: "jm-c1", role: "assistant", text: "I've completed the Source of Wealth assessment for Jack Ma. Here's a summary of areas that need your attention:", timestamp: "Just now" },
+		{ id: "jm-c2", role: "assistant", text: "🔴 CRITICAL: The Ant Group restructuring has created significant uncertainty in wealth estimates. The valuation gap between $60B and $150B needs resolution. I recommend requesting an updated regulatory status from the PBOC.", timestamp: "Just now" },
+		{ id: "jm-c3", role: "assistant", text: "🔴 CRITICAL: The 2023 Singapore trust transfer of ~$2.4B in BABA shares needs investigation. The trust structure is opaque — request the trust deed and ACRA filings through FilEasy CorpVerify.", timestamp: "Just now" },
+		{ id: "jm-c4", role: "assistant", text: "🟡 WARNING: Blue Pool Capital's ~$50B AUM is unverified (no SFC regulation, no public filings). Real estate valuations are also stale — using 2019-2021 purchase prices.", timestamp: "Just now" },
+		{ id: "jm-c5", role: "assistant", text: "I've pre-set 5 follow-up reminders for this case. You can view and manage them in the Reminders tab. Would you like me to highlight any specific area of the report?", timestamp: "Just now" },
+	],
+	"hnw-yat-siu": [
+		{ id: "ys-c1", role: "assistant", text: "I've completed the Source of Wealth assessment for Yat Siu. This is a HIGH RISK case with several areas requiring immediate attention:", timestamp: "Just now" },
+		{ id: "ys-c2", role: "assistant", text: "🔴 CRITICAL: SAND token (the largest single asset) has declined ~90% from peak. Daily revaluation is needed for accurate net worth. Recommend on-chain verification via Etherscan.", timestamp: "Just now" },
+		{ id: "ys-c3", role: "assistant", text: "🔴 CRITICAL: The ASX delisting of Animoca Brands in 2020 was due to repeated compliance failures. ASIC records must be obtained and disclosed in client documentation.", timestamp: "Just now" },
+		{ id: "ys-c4", role: "assistant", text: "🟡 WARNING: Animoca's $5.9B private valuation is from Jan 2022. Comparable public blockchain companies have declined 60-80%. An updated fair value assessment is essential before onboarding.", timestamp: "Just now" },
+		{ id: "ys-c5", role: "assistant", text: "🟡 WARNING: The Lympo subsidiary hack ($18.7M) and pending Currenc/Nasdaq SPAC merger both need follow-up. The December 2024 X/Twitter hack also raises cybersecurity concerns.", timestamp: "Just now" },
+		{ id: "ys-c6", role: "assistant", text: "I've pre-set 6 follow-up reminders for this case. You can view and manage them in the Reminders tab. Would you like me to drill into any specific risk area?", timestamp: "Just now" },
+	],
+};

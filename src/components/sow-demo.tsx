@@ -57,6 +57,10 @@ import {
 	FileXIcon,
 	ArrowLeftRightIcon,
 	FilePlusIcon,
+	MessageSquareIcon,
+	SendIcon,
+	XIcon,
+	Trash2Icon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -93,6 +97,12 @@ import {
 	type ClientDocument,
 	type CrossReference,
 	type DocumentUploadSlot,
+	type ChatMessage,
+	type ChatReminder,
+	type CaseAttentionArea,
+	CHATBOT_ATTENTION_AREAS,
+	CHATBOT_REMINDERS,
+	CHATBOT_INITIAL_MESSAGES,
 } from "@/lib/sow-mock-data";
 
 /* ═══════════════════════════════════════════════════════════════
@@ -272,23 +282,23 @@ function Dashboard({ onNewAssessment, onSelectMonitoring }: { onNewAssessment: (
 			<div className="rounded-2xl border border-border bg-gradient-to-r from-muted/30 to-transparent p-5 shadow-sm">
 				<div className="flex items-center gap-2 mb-3">
 					<ShieldCheckIcon className="size-4 text-primary" />
-					<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Compliance Summary</p>
+					<p className="text-xs font-heading font-semibold text-muted-foreground uppercase tracking-widest">Compliance Summary</p>
 				</div>
 				<div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
 					<div>
-						<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Avg. Confidence</div>
+						<div className="text-[11px] font-heading text-muted-foreground uppercase tracking-widest">Avg. Confidence</div>
 						<div className="mt-0.5 font-heading font-semibold">62%</div>
 					</div>
 					<div>
-						<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Profiles Verified</div>
+						<div className="text-[11px] font-heading text-muted-foreground uppercase tracking-widest">Profiles Verified</div>
 						<div className="mt-0.5 font-heading font-semibold">5 / {profilesMonitored}</div>
 					</div>
 					<div>
-						<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Data Sources</div>
+						<div className="text-[11px] font-heading text-muted-foreground uppercase tracking-widest">Data Sources</div>
 						<div className="mt-0.5 font-heading font-semibold">20 per subject</div>
 					</div>
 					<div>
-						<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Coverage</div>
+						<div className="text-[11px] font-heading text-muted-foreground uppercase tracking-widest">Coverage</div>
 						<div className="mt-0.5 font-heading font-semibold text-emerald-700">Multi-jurisdictional</div>
 					</div>
 				</div>
@@ -305,9 +315,9 @@ function Dashboard({ onNewAssessment, onSelectMonitoring }: { onNewAssessment: (
 				<div className="flex items-center justify-between">
 					<div className="flex items-center gap-2">
 						<BellRingIcon className="size-4 text-amber-500" />
-						<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Notifications</p>
+						<p className="text-xs font-heading font-semibold text-muted-foreground uppercase tracking-widest">Notifications</p>
 						{unreadCount > 0 && (
-							<span className="text-[9px] font-bold rounded-full px-1.5 py-0.5 bg-red-500 text-white min-w-[18px] text-center">{unreadCount}</span>
+							<span className="text-[11px] font-bold rounded-full px-1.5 py-0.5 bg-red-500 text-white min-w-[18px] text-center">{unreadCount}</span>
 						)}
 					</div>
 					<button onClick={() => setLastRefresh(new Date())} className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded-md hover:bg-muted" title="Refresh">
@@ -319,7 +329,7 @@ function Dashboard({ onNewAssessment, onSelectMonitoring }: { onNewAssessment: (
 						<HnwNotificationRow key={n.id} notification={n} onRead={() => markRead(n.id)} />
 					))}
 				</div>
-				<p className="text-[10px] text-muted-foreground/60 text-right tracking-wide">
+				<p className="text-xs text-muted-foreground/60 text-right tracking-wide">
 					Last updated: {lastRefresh.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })} · Auto-refreshes every 60s
 				</p>
 			</div>
@@ -339,7 +349,7 @@ function StatCard({ label, value, icon: Icon, color }: { label: string; value: n
 	return (
 		<div className="rounded-2xl border border-border bg-card p-4 shadow-sm hover:shadow-md transition-shadow">
 			<div className="flex items-center justify-between mb-3">
-				<span className="text-[9px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">{label}</span>
+				<span className="text-[11px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">{label}</span>
 				<div className={`h-8 w-8 rounded-xl flex items-center justify-center ${c}`}>
 					<Icon className="size-4" />
 				</div>
@@ -357,12 +367,12 @@ function HnwMonitoringTable({ entries, onSelect }: { entries: HnwMonitoringEntry
 			<div className="flex items-center justify-between">
 				<div className="flex items-center gap-2">
 					<RadarIcon className="size-4 text-primary" />
-					<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">HNW Monitoring</p>
-					<span className="text-[9px] font-bold rounded-full px-1.5 py-0.5 bg-primary/15 text-primary min-w-[18px] text-center">
+					<p className="text-xs font-heading font-semibold text-muted-foreground uppercase tracking-widest">HNW Monitoring</p>
+					<span className="text-[11px] font-bold rounded-full px-1.5 py-0.5 bg-primary/15 text-primary min-w-[18px] text-center">
 						{entries.length} active
 					</span>
 				</div>
-				<div className="flex items-center gap-2 text-[10px]">
+				<div className="flex items-center gap-2 text-xs">
 					<span className="rounded-md border border-border bg-muted/50 text-muted-foreground px-1.5 py-0.5 font-semibold flex items-center gap-1">
 						<ScanIcon className="size-3" /> Last scan: {new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short" })}
 					</span>
@@ -387,7 +397,7 @@ function HnwMonitoringTable({ entries, onSelect }: { entries: HnwMonitoringEntry
 							<tr key={entry.id} className="hover:bg-accent/30 transition-colors cursor-pointer" onClick={() => onSelect(entry.id)}>
 								<td className="px-4 py-3">
 									<div className="font-medium text-primary">{entry.name}</div>
-									{entry.nameCn && <div className="text-[10px] text-muted-foreground/60">{entry.nameCn}</div>}
+									{entry.nameCn && <div className="text-xs text-muted-foreground/60">{entry.nameCn}</div>}
 								</td>
 								<td className="px-4 py-3 text-xs text-muted-foreground hidden sm:table-cell">{entry.industry}</td>
 								<td className="px-4 py-3 text-right hidden sm:table-cell">
@@ -401,7 +411,7 @@ function HnwMonitoringTable({ entries, onSelect }: { entries: HnwMonitoringEntry
 								</td>
 								<td className="px-4 py-3 text-center">
 									{entry.openAlerts > 0 ? (
-										<span className="text-[10px] font-bold rounded-full px-2 py-0.5 bg-red-500/15 text-red-700">{entry.openAlerts}</span>
+										<span className="text-xs font-bold rounded-full px-2 py-0.5 bg-red-500/15 text-red-700">{entry.openAlerts}</span>
 									) : (
 										<span className="text-xs text-muted-foreground/40">—</span>
 									)}
@@ -431,28 +441,28 @@ function PepSanctionsSection({ entries }: { entries: PepScreeningEntry[] }) {
 		<div className="space-y-3">
 			<div className="flex items-center gap-2">
 				<ShieldAlertIcon className="size-4 text-amber-500" />
-				<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">PEP / Sanctions / Watchlist Screening</p>
+				<p className="text-xs font-heading font-semibold text-muted-foreground uppercase tracking-widest">PEP / Sanctions / Watchlist Screening</p>
 			</div>
 
 			<div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
 				<div className="rounded-xl border border-border bg-card p-3 shadow-sm">
-					<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">PEP Hits</div>
+					<div className="text-[11px] font-heading text-muted-foreground uppercase tracking-widest">PEP Hits</div>
 					<div className={`text-2xl font-heading font-bold mt-1 tabular-nums ${totalPep > 0 ? "text-amber-600" : "text-emerald-600"}`}>{totalPep}</div>
 				</div>
 				<div className="rounded-xl border border-border bg-card p-3 shadow-sm">
-					<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Sanctions Hits</div>
+					<div className="text-[11px] font-heading text-muted-foreground uppercase tracking-widest">Sanctions Hits</div>
 					<div className={`text-2xl font-heading font-bold mt-1 tabular-nums ${totalSanctions > 0 ? "text-red-600" : "text-emerald-600"}`}>{totalSanctions}</div>
 				</div>
 				<div className="rounded-xl border border-border bg-card p-3 shadow-sm">
-					<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Adverse Media</div>
+					<div className="text-[11px] font-heading text-muted-foreground uppercase tracking-widest">Adverse Media</div>
 					<div className={`text-2xl font-heading font-bold mt-1 tabular-nums ${totalAdverse > 0 ? "text-amber-600" : "text-emerald-600"}`}>{totalAdverse}</div>
 				</div>
 				<div className="rounded-xl border border-border bg-card p-3 shadow-sm">
-					<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Flagged</div>
+					<div className="text-[11px] font-heading text-muted-foreground uppercase tracking-widest">Flagged</div>
 					<div className={`text-2xl font-heading font-bold mt-1 tabular-nums ${flaggedCount > 0 ? "text-red-600" : "text-emerald-600"}`}>{flaggedCount}</div>
 				</div>
 				<div className="rounded-xl border border-border bg-card p-3 shadow-sm">
-					<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Review Req.</div>
+					<div className="text-[11px] font-heading text-muted-foreground uppercase tracking-widest">Review Req.</div>
 					<div className={`text-2xl font-heading font-bold mt-1 tabular-nums ${reviewCount > 0 ? "text-amber-600" : "text-emerald-600"}`}>{reviewCount}</div>
 				</div>
 			</div>
@@ -481,7 +491,7 @@ function PepSanctionsSection({ entries }: { entries: PepScreeningEntry[] }) {
 								<tr key={i} className="hover:bg-accent/20 transition-colors">
 									<td className="px-4 py-3">
 										<div className="font-medium">{entry.subjectName}</div>
-										{entry.subjectNameCn && <div className="text-[10px] text-muted-foreground/60">{entry.subjectNameCn}</div>}
+										{entry.subjectNameCn && <div className="text-xs text-muted-foreground/60">{entry.subjectNameCn}</div>}
 									</td>
 									<td className="px-4 py-3 text-center"><RiskBadge rating={entry.riskRating} /></td>
 									<td className="px-4 py-3 text-center hidden sm:table-cell">
@@ -494,7 +504,7 @@ function PepSanctionsSection({ entries }: { entries: PepScreeningEntry[] }) {
 										<span className={`font-heading font-bold ${entry.adverseMedia > 0 ? "text-amber-600" : "text-muted-foreground/40"}`}>{entry.adverseMedia}</span>
 									</td>
 									<td className="px-4 py-3 text-center">
-										<span className={`text-[10px] font-semibold rounded-md border px-1.5 py-0.5 whitespace-nowrap ${statusColor[entry.overallStatus]}`}>{entry.overallStatus}</span>
+										<span className={`text-xs font-semibold rounded-md border px-1.5 py-0.5 whitespace-nowrap ${statusColor[entry.overallStatus]}`}>{entry.overallStatus}</span>
 									</td>
 									<td className="px-4 py-3 text-xs text-muted-foreground hidden lg:table-cell">{entry.lastScreened}</td>
 								</tr>
@@ -534,23 +544,23 @@ function MonitoringProfile({ entry, onBack }: { entry: HnwMonitoringEntry; onBac
 				<div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
 					<div className="flex items-center gap-2">
 						<UserIcon className="size-4 text-primary" />
-						<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Subject Profile</p>
+						<p className="text-xs font-heading font-semibold text-muted-foreground uppercase tracking-widest">Subject Profile</p>
 					</div>
 					<div className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
 						<div>
-							<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Est. Net Worth</div>
+							<div className="text-[11px] font-heading text-muted-foreground uppercase tracking-widest">Est. Net Worth</div>
 							<div className="mt-0.5 font-heading font-bold text-lg">{formatUSD(entry.estimatedNetWorthUSD)}</div>
 						</div>
 						<div>
-							<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Risk Rating</div>
+							<div className="text-[11px] font-heading text-muted-foreground uppercase tracking-widest">Risk Rating</div>
 							<div className={`mt-0.5 font-heading font-bold text-lg ${entry.riskRating === "High" ? "text-red-600" : entry.riskRating === "Medium" ? "text-amber-600" : "text-emerald-600"}`}>{entry.riskRating}</div>
 						</div>
 						<div>
-							<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Industry</div>
+							<div className="text-[11px] font-heading text-muted-foreground uppercase tracking-widest">Industry</div>
 							<div className="mt-0.5">{entry.industry}</div>
 						</div>
 						<div>
-							<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Screening Freq.</div>
+							<div className="text-[11px] font-heading text-muted-foreground uppercase tracking-widest">Screening Freq.</div>
 							<div className="mt-0.5 font-heading font-semibold text-primary">{entry.screeningFrequency}</div>
 						</div>
 					</div>
@@ -560,23 +570,23 @@ function MonitoringProfile({ entry, onBack }: { entry: HnwMonitoringEntry; onBac
 				<div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
 					<div className="flex items-center gap-2">
 						<RadarIcon className="size-4 text-primary" />
-						<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Monitoring Configuration</p>
+						<p className="text-xs font-heading font-semibold text-muted-foreground uppercase tracking-widest">Monitoring Configuration</p>
 					</div>
 					<div className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
 						<div>
-							<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Last Screened</div>
+							<div className="text-[11px] font-heading text-muted-foreground uppercase tracking-widest">Last Screened</div>
 							<div className="mt-0.5">{entry.lastScreened}</div>
 						</div>
 						<div>
-							<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Frequency</div>
+							<div className="text-[11px] font-heading text-muted-foreground uppercase tracking-widest">Frequency</div>
 							<div className="mt-0.5 font-heading font-semibold">{entry.screeningFrequency}</div>
 						</div>
 						<div>
-							<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Open Alerts</div>
+							<div className="text-[11px] font-heading text-muted-foreground uppercase tracking-widest">Open Alerts</div>
 							<div className={`mt-0.5 font-heading font-bold ${entry.openAlerts > 0 ? "text-red-600" : "text-emerald-600"}`}>{entry.openAlerts}</div>
 						</div>
 						<div>
-							<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Status</div>
+							<div className="text-[11px] font-heading text-muted-foreground uppercase tracking-widest">Status</div>
 							<div className="mt-0.5"><MonitoringStatusBadge status={entry.status} /></div>
 						</div>
 					</div>
@@ -588,35 +598,35 @@ function MonitoringProfile({ entry, onBack }: { entry: HnwMonitoringEntry; onBac
 				<div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
 					<div className="flex items-center gap-2">
 						<ShieldCheckIcon className="size-4 text-primary" />
-						<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Screening Results</p>
+						<p className="text-xs font-heading font-semibold text-muted-foreground uppercase tracking-widest">Screening Results</p>
 					</div>
 					<div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
 						<div className="rounded-xl border border-border/60 bg-muted/20 p-3">
-							<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">PEP Hits</div>
+							<div className="text-[11px] font-heading text-muted-foreground uppercase tracking-widest">PEP Hits</div>
 							<div className={`text-xl font-heading font-bold mt-1 ${screening.pepHits > 0 ? "text-amber-600" : "text-emerald-600"}`}>{screening.pepHits}</div>
 						</div>
 						<div className="rounded-xl border border-border/60 bg-muted/20 p-3">
-							<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Sanctions</div>
+							<div className="text-[11px] font-heading text-muted-foreground uppercase tracking-widest">Sanctions</div>
 							<div className={`text-xl font-heading font-bold mt-1 ${screening.sanctionsHits > 0 ? "text-red-600" : "text-emerald-600"}`}>{screening.sanctionsHits}</div>
 						</div>
 						<div className="rounded-xl border border-border/60 bg-muted/20 p-3">
-							<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Adverse Media</div>
+							<div className="text-[11px] font-heading text-muted-foreground uppercase tracking-widest">Adverse Media</div>
 							<div className={`text-xl font-heading font-bold mt-1 ${screening.adverseMedia > 0 ? "text-amber-600" : "text-emerald-600"}`}>{screening.adverseMedia}</div>
 						</div>
 						<div className="rounded-xl border border-border/60 bg-muted/20 p-3">
-							<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">Lists Checked</div>
+							<div className="text-[11px] font-heading text-muted-foreground uppercase tracking-widest">Lists Checked</div>
 							<div className="text-xl font-heading font-bold mt-1">{screening.listsChecked.length}</div>
 						</div>
 					</div>
 					{screening.pepDetails && (
 						<div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
-							<div className="text-[9px] font-heading text-amber-700 uppercase tracking-widest mb-1">PEP Details</div>
+							<div className="text-[11px] font-heading text-amber-700 uppercase tracking-widest mb-1">PEP Details</div>
 							<p className="text-sm text-amber-900/80 leading-relaxed">{screening.pepDetails}</p>
 						</div>
 					)}
 					{screening.adverseMediaDetails && (
 						<div className="rounded-xl border border-border/60 bg-muted/20 p-4">
-							<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest mb-1">Adverse Media Details</div>
+							<div className="text-[11px] font-heading text-muted-foreground uppercase tracking-widest mb-1">Adverse Media Details</div>
 							<p className="text-sm text-muted-foreground leading-relaxed">{screening.adverseMediaDetails}</p>
 						</div>
 					)}
@@ -627,7 +637,7 @@ function MonitoringProfile({ entry, onBack }: { entry: HnwMonitoringEntry; onBac
 			<div className="space-y-3">
 				<div className="flex items-center gap-2">
 					<BellRingIcon className="size-4 text-amber-500" />
-					<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Recent Activity</p>
+					<p className="text-xs font-heading font-semibold text-muted-foreground uppercase tracking-widest">Recent Activity</p>
 				</div>
 				<div className="rounded-2xl border border-border overflow-hidden shadow-sm divide-y divide-border/60 bg-card">
 					{HNW_NOTIFICATIONS.filter((n) => n.subjectName === entry.name).map((n) => (
@@ -661,12 +671,12 @@ function HnwNotificationRow({ notification: n, onRead }: { notification: HnwNoti
 				</div>
 				<div className="flex-1 min-w-0">
 					<div className="flex items-center gap-2">
-						<span className={`text-sm font-medium truncate ${!n.read ? "text-foreground" : "text-muted-foreground"}`}>{n.title}</span>
+						<span className={`text-sm font-medium ${!n.read ? "text-foreground" : "text-muted-foreground"}`}>{n.title}</span>
 						{!n.read && <div className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />}
 					</div>
-					<p className="text-[11px] text-muted-foreground leading-relaxed mt-0.5 line-clamp-2">{n.detail}</p>
+					<p className="text-sm text-muted-foreground leading-relaxed mt-0.5">{n.detail}</p>
 					<div className="flex items-center gap-2 mt-1.5">
-						<span className="text-[9px] text-muted-foreground/50">{n.time}</span>
+						<span className="text-[11px] text-muted-foreground/50">{n.time}</span>
 					</div>
 				</div>
 			</div>
@@ -733,7 +743,7 @@ function PersonSelector({ selectedCase, onSelectCase, onBegin, onBack }: {
 		<div className="space-y-6">
 			<div className="flex items-center justify-between">
 				<div>
-					<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest mb-1">
+					<p className="text-xs font-heading font-semibold text-muted-foreground uppercase tracking-widest mb-1">
 						Select Subject for Assessment
 					</p>
 					<p className="text-sm text-muted-foreground">
@@ -793,20 +803,20 @@ function PersonSelector({ selectedCase, onSelectCase, onBegin, onBack }: {
 
 							<div className="flex items-center gap-3 mb-3">
 								<div className="rounded-lg bg-muted/60 px-2.5 py-1">
-									<div className="text-[9px] text-muted-foreground uppercase tracking-widest">Net Worth</div>
+									<div className="text-[11px] text-muted-foreground uppercase tracking-widest">Net Worth</div>
 									<div className="font-heading font-bold text-sm">{formatUSD(p.estimatedNetWorthUSD)}</div>
 								</div>
 								<div className="rounded-lg bg-muted/60 px-2.5 py-1">
-									<div className="text-[9px] text-muted-foreground uppercase tracking-widest">Confidence</div>
+									<div className="text-[11px] text-muted-foreground uppercase tracking-widest">Confidence</div>
 									<div className="font-heading font-bold text-sm">{report.overallConfidence}%</div>
 								</div>
 								<div className="rounded-lg bg-muted/60 px-2.5 py-1">
-									<div className="text-[9px] text-muted-foreground uppercase tracking-widest">Risk Score</div>
+									<div className="text-[11px] text-muted-foreground uppercase tracking-widest">Risk Score</div>
 									<div className="font-heading font-bold text-sm">{p.riskScore}/100</div>
 								</div>
 							</div>
 
-							<p className="text-[11px] text-muted-foreground/70 leading-relaxed line-clamp-2">
+							<p className="text-sm text-muted-foreground/70 leading-relaxed">
 								{p.profileSummary}
 							</p>
 						</button>
@@ -879,13 +889,13 @@ function GeneratingView({ report, completedSources, currentSourceIndex, elapsedM
 							</div>
 							<div className="flex-1 min-w-0">
 								<div className={`text-sm ${isPending ? "text-muted-foreground/40" : ""}`}>{source.name}</div>
-								<div className="text-[11px] text-muted-foreground">{source.provider}</div>
+								<div className="text-sm text-muted-foreground">{source.provider}</div>
 							</div>
 							<div className="shrink-0">
 								{isCurrent ? (
 									<span className="text-xs text-primary font-heading font-medium">Querying...</span>
 								) : isCompleted ? (
-									<span className="text-[10px] font-semibold rounded-md border px-1.5 py-0.5 bg-emerald-500/15 text-emerald-700 border-emerald-500/20">
+									<span className="text-xs font-semibold rounded-md border px-1.5 py-0.5 bg-emerald-500/15 text-emerald-700 border-emerald-500/20">
 										{source.category}
 									</span>
 								) : null}
@@ -910,7 +920,7 @@ function ReportView({ report, onReset }: { report: HnwReport; onReset: () => voi
 		<div className="space-y-8">
 			<div className="flex items-center justify-between">
 				<div>
-					<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">
+					<p className="text-xs font-heading font-semibold text-muted-foreground uppercase tracking-widest">
 						Wealth Intelligence Report
 					</p>
 					<h3 className="text-xl font-heading font-semibold mt-0.5 tracking-tight">
@@ -940,6 +950,9 @@ function ReportView({ report, onReset }: { report: HnwReport; onReset: () => voi
 
 			{/* Source Detail Modal */}
 			<SourceDetailModal source={selectedSource} onClose={() => setSelectedSource(null)} />
+
+			{/* Compliance Chatbot */}
+			<ComplianceChatbot profileId={p.id} profileName={p.name} riskRating={p.riskRating} />
 		</div>
 	);
 }
@@ -982,7 +995,7 @@ function HnwProfileCard({ profile: p }: { profile: HnwProfile }) {
 function InfoField({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
 	return (
 		<div>
-			<div className="text-[9px] font-heading text-muted-foreground uppercase tracking-widest">{label}</div>
+			<div className="text-[11px] font-heading text-muted-foreground uppercase tracking-widest">{label}</div>
 			<div className={`mt-0.5 ${mono ? "font-mono text-xs tracking-wide" : "text-sm"}`}>{value}</div>
 		</div>
 	);
@@ -1001,7 +1014,7 @@ function RiskScoreGauge({ profile: p }: { profile: HnwProfile }) {
 		<div className={`rounded-2xl border border-border bg-gradient-to-br ${bgColor} p-6 shadow-sm`}>
 			<div className="flex items-center gap-2 mb-4">
 				<GaugeIcon className="size-4 text-muted-foreground" />
-				<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Composite Risk Score</p>
+				<p className="text-xs font-heading font-semibold text-muted-foreground uppercase tracking-widest">Composite Risk Score</p>
 			</div>
 			<div className="flex items-center gap-8">
 				<div className="shrink-0">
@@ -1023,10 +1036,10 @@ function RiskScoreGauge({ profile: p }: { profile: HnwProfile }) {
 							strokeDasharray={`${(angle / 180) * 204} 204`}
 						/>
 						<text x="80" y="72" textAnchor="middle" className="font-heading" style={{ fontSize: "28px", fontWeight: 700, fill: color }}>{score}</text>
-						<text x="80" y="88" textAnchor="middle" style={{ fontSize: "10px", fill: "#9ca3af" }}>/ 100</text>
-						<text x="15" y="88" textAnchor="start" style={{ fontSize: "8px", fill: "#10b981" }}>LOW</text>
-						<text x="80" y="88" textAnchor="middle" style={{ fontSize: "8px", fill: "#f59e0b" }}></text>
-						<text x="145" y="88" textAnchor="end" style={{ fontSize: "8px", fill: "#ef4444" }}>HIGH</text>
+						<text x="80" y="88" textAnchor="middle" style={{ fontSize: "12px", fill: "#9ca3af" }}>/ 100</text>
+						<text x="15" y="88" textAnchor="start" style={{ fontSize: "10px", fill: "#10b981" }}>LOW</text>
+						<text x="80" y="88" textAnchor="middle" style={{ fontSize: "10px", fill: "#f59e0b" }}></text>
+						<text x="145" y="88" textAnchor="end" style={{ fontSize: "10px", fill: "#ef4444" }}>HIGH</text>
 					</svg>
 				</div>
 				<div className="flex-1 space-y-2">
@@ -1055,16 +1068,16 @@ function KeyParameters({ params }: { params: KeyParameter[] }) {
 		<div className="space-y-3">
 			<div className="flex items-center gap-2">
 				<GaugeIcon className="size-4 text-muted-foreground" />
-				<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Key Risk Parameters</p>
+				<p className="text-xs font-heading font-semibold text-muted-foreground uppercase tracking-widest">Key Risk Parameters</p>
 			</div>
 			<div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
 				{params.map((param, i) => (
 					<div key={i} className={`rounded-xl border p-3.5 ${statusStyle[param.status]}`}>
 						<div className="flex items-center gap-1.5 mb-1.5">
 							<div className={`h-1.5 w-1.5 rounded-full ${dotStyle[param.status]}`} />
-							<span className="text-[9px] font-heading font-semibold text-muted-foreground uppercase tracking-widest truncate">{param.label}</span>
+							<span className="text-[11px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">{param.label}</span>
 						</div>
-						<div className="text-sm font-heading font-semibold truncate" title={param.value}>{param.value}</div>
+						<div className="text-sm font-heading font-semibold">{param.value}</div>
 					</div>
 				))}
 			</div>
@@ -1088,7 +1101,7 @@ function CareerTimeline({ phases }: { phases: CareerPhase[] }) {
 		<div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
 			<div className="flex items-center gap-2 mb-5">
 				<BriefcaseIcon className="size-4 text-muted-foreground" />
-				<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Career Timeline</p>
+				<p className="text-xs font-heading font-semibold text-muted-foreground uppercase tracking-widest">Career Timeline</p>
 			</div>
 			<div className="overflow-x-auto">
 				<svg width={svgWidth} height={svgHeight} viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="w-full max-w-[700px] mx-auto">
@@ -1114,28 +1127,28 @@ function CareerTimeline({ phases }: { phases: CareerPhase[] }) {
 
 								{/* Node */}
 								<circle cx={x} cy={nodeY} r={nodeRadius} fill="white" stroke="#3b82f6" strokeWidth="2.5" />
-								<text x={x} y={nodeY + 5} textAnchor="middle" className="font-heading" style={{ fontSize: "11px", fontWeight: 700, fill: "#3b82f6" }}>
+								<text x={x} y={nodeY + 5} textAnchor="middle" className="font-heading" style={{ fontSize: "13px", fontWeight: 700, fill: "#3b82f6" }}>
 									{i + 1}
 								</text>
 
 								{/* Year range */}
-								<text x={x} y={nodeY - 24} textAnchor="middle" style={{ fontSize: "9px", fill: "#6b7280" }}>
+								<text x={x} y={nodeY - 24} textAnchor="middle" style={{ fontSize: "11px", fill: "#6b7280" }}>
 									{phase.startYear}–{phase.endYear ?? "Now"}
 								</text>
 
 								{/* Title */}
-								<text x={x} y={nodeY + 38} textAnchor="middle" className="font-heading" style={{ fontSize: "9px", fontWeight: 600, fill: "#1f2937" }}>
-									{phase.title.length > 18 ? phase.title.slice(0, 18) + "..." : phase.title}
+								<text x={x} y={nodeY + 38} textAnchor="middle" className="font-heading" style={{ fontSize: "11px", fontWeight: 600, fill: "#1f2937" }}>
+									{phase.title}
 								</text>
 
 								{/* Wealth at this phase */}
-								<text x={x} y={nodeY + 52} textAnchor="middle" style={{ fontSize: "9px", fontWeight: 600, fill: wealthColor }}>
+								<text x={x} y={nodeY + 52} textAnchor="middle" style={{ fontSize: "11px", fontWeight: 600, fill: wealthColor }}>
 									{formatUSD(phase.cumulativeWealthUSD)}
 								</text>
 
 								{/* Location */}
-								<text x={x} y={nodeY + 65} textAnchor="middle" style={{ fontSize: "7px", fill: "#9ca3af" }}>
-									{phase.location.length > 20 ? phase.location.slice(0, 20) + "..." : phase.location}
+								<text x={x} y={nodeY + 65} textAnchor="middle" style={{ fontSize: "9px", fill: "#9ca3af" }}>
+									{phase.location}
 								</text>
 							</g>
 						);
@@ -1167,7 +1180,7 @@ function WealthAccumulationChart({ phases }: { phases: CareerPhase[] }) {
 		<div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
 			<div className="flex items-center gap-2 mb-2">
 				<BarChart3Icon className="size-4 text-muted-foreground" />
-				<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Wealth Accumulation by Career Phase</p>
+				<p className="text-xs font-heading font-semibold text-muted-foreground uppercase tracking-widest">Wealth Accumulation by Career Phase</p>
 			</div>
 
 			{/* Legend */}
@@ -1175,7 +1188,7 @@ function WealthAccumulationChart({ phases }: { phases: CareerPhase[] }) {
 				{categories.map((cat) => (
 					<div key={cat} className="flex items-center gap-1.5">
 						<div className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: CATEGORY_COLORS[cat] }} />
-						<span className="text-[10px] text-muted-foreground">{CATEGORY_LABELS[cat]}</span>
+						<span className="text-xs text-muted-foreground">{CATEGORY_LABELS[cat]}</span>
 					</div>
 				))}
 			</div>
@@ -1189,7 +1202,7 @@ function WealthAccumulationChart({ phases }: { phases: CareerPhase[] }) {
 						return (
 							<g key={frac}>
 								<line x1={marginLeft} y1={y} x2={marginLeft + chartWidth} y2={y} stroke="#e5e7eb" strokeWidth="1" strokeDasharray="4 2" />
-								<text x={marginLeft - 8} y={y + 4} textAnchor="end" style={{ fontSize: "9px", fill: "#9ca3af" }}>
+								<text x={marginLeft - 8} y={y + 4} textAnchor="end" style={{ fontSize: "11px", fill: "#9ca3af" }}>
 									{formatUSD(val)}
 								</text>
 							</g>
@@ -1236,15 +1249,15 @@ function WealthAccumulationChart({ phases }: { phases: CareerPhase[] }) {
 									y={marginTop + chartHeight + 16}
 									textAnchor="middle"
 									className="font-heading"
-									style={{ fontSize: "8px", fontWeight: 600, fill: "#374151" }}
+									style={{ fontSize: "10px", fontWeight: 600, fill: "#374151" }}
 								>
-									{phase.title.length > 12 ? phase.title.slice(0, 12) + "..." : phase.title}
+									{phase.title}
 								</text>
 								<text
 									x={barX + barWidth / 2}
 									y={marginTop + chartHeight + 28}
 									textAnchor="middle"
-									style={{ fontSize: "7px", fill: "#9ca3af" }}
+									style={{ fontSize: "9px", fill: "#9ca3af" }}
 								>
 									{phase.startYear}–{phase.endYear ?? "Now"}
 								</text>
@@ -1254,7 +1267,7 @@ function WealthAccumulationChart({ phases }: { phases: CareerPhase[] }) {
 									x={barX + barWidth / 2}
 									y={marginTop + chartHeight - yOffset - 4}
 									textAnchor="middle"
-									style={{ fontSize: "8px", fontWeight: 600, fill: "#374151" }}
+									style={{ fontSize: "10px", fontWeight: 600, fill: "#374151" }}
 								>
 									{formatUSD(phaseTotal)}
 								</text>
@@ -1305,7 +1318,7 @@ function WealthDonutChart({ wealthByCategory, totalWealth, overallConfidence }: 
 		<div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
 			<div className="flex items-center gap-2 mb-5">
 				<TrendingUpIcon className="size-4 text-muted-foreground" />
-				<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Wealth Composition</p>
+				<p className="text-xs font-heading font-semibold text-muted-foreground uppercase tracking-widest">Wealth Composition</p>
 			</div>
 			<div className="flex items-center gap-8">
 				<div className="shrink-0">
@@ -1323,7 +1336,7 @@ function WealthDonutChart({ wealthByCategory, totalWealth, overallConfidence }: 
 						<text x="70" y="66" textAnchor="middle" className="font-heading" style={{ fontSize: "16px", fontWeight: 700, fill: "currentColor" }}>
 							{formatUSD(totalWealth)}
 						</text>
-						<text x="70" y="82" textAnchor="middle" style={{ fontSize: "9px", fill: "#9ca3af" }}>
+						<text x="70" y="82" textAnchor="middle" style={{ fontSize: "11px", fill: "#9ca3af" }}>
 							{overallConfidence}% confidence
 						</text>
 					</svg>
@@ -1335,15 +1348,15 @@ function WealthDonutChart({ wealthByCategory, totalWealth, overallConfidence }: 
 							<div className="h-3 w-3 rounded-sm shrink-0" style={{ backgroundColor: seg.color }} />
 							<div className="flex-1 min-w-0">
 								<div className="flex items-center justify-between">
-									<span className="text-sm font-heading font-medium truncate">{CATEGORY_LABELS[seg.category]}</span>
+									<span className="text-sm font-heading font-medium">{CATEGORY_LABELS[seg.category]}</span>
 									<span className="text-sm font-heading font-bold tabular-nums ml-2">{formatUSD(seg.totalUSD)}</span>
 								</div>
 								<div className="flex items-center gap-2 mt-0.5">
 									<div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
 										<div className="h-full rounded-full" style={{ width: `${seg.percentage}%`, backgroundColor: seg.color }} />
 									</div>
-									<span className="text-[10px] text-muted-foreground tabular-nums w-10 text-right">{seg.percentage.toFixed(1)}%</span>
-									<span className="text-[10px] text-muted-foreground tabular-nums w-12 text-right">{seg.avgConfidence}% conf</span>
+									<span className="text-xs text-muted-foreground tabular-nums w-10 text-right">{seg.percentage.toFixed(1)}%</span>
+									<span className="text-xs text-muted-foreground tabular-nums w-12 text-right">{seg.avgConfidence}% conf</span>
 								</div>
 							</div>
 						</div>
@@ -1363,7 +1376,7 @@ function CareerPhaseCards({ phases, onSourceClick }: { phases: CareerPhase[]; on
 		<div className="space-y-3">
 			<div className="flex items-center gap-2">
 				<BookOpenIcon className="size-4 text-muted-foreground" />
-				<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Career Phase Detail</p>
+				<p className="text-xs font-heading font-semibold text-muted-foreground uppercase tracking-widest">Career Phase Detail</p>
 			</div>
 			<div className="space-y-3">
 				{phases.map((phase, idx) => {
@@ -1382,7 +1395,7 @@ function CareerPhaseCards({ phases, onSourceClick }: { phases: CareerPhase[]; on
 										<span className="font-heading font-semibold">{phase.title}</span>
 										{phase.organization && <span className="text-xs text-muted-foreground">— {phase.organization}</span>}
 									</div>
-									<div className="flex items-center gap-3 text-[11px] text-muted-foreground mt-0.5">
+									<div className="flex items-center gap-3 text-sm text-muted-foreground mt-0.5">
 										<span>{phase.startYear}–{phase.endYear ?? "Present"}</span>
 										<span>·</span>
 										<span>{phase.location}</span>
@@ -1400,7 +1413,7 @@ function CareerPhaseCards({ phases, onSourceClick }: { phases: CareerPhase[]; on
 									{/* Key Events */}
 									{phase.keyEvents.length > 0 && (
 										<div>
-											<div className="text-[9px] font-heading font-semibold text-muted-foreground uppercase tracking-widest mb-2">Key Events</div>
+											<div className="text-[11px] font-heading font-semibold text-muted-foreground uppercase tracking-widest mb-2">Key Events</div>
 											<div className="space-y-1">
 												{phase.keyEvents.map((event, i) => (
 													<div key={i} className="flex items-start gap-2 text-xs">
@@ -1472,7 +1485,7 @@ function ConfidenceBar({ value }: { value: number }) {
 			<div className="w-16 h-1.5 rounded-full bg-muted overflow-hidden">
 				<div className="h-full rounded-full transition-all" style={{ width: `${value}%`, backgroundColor: color }} />
 			</div>
-			<span className="text-[10px] font-heading font-semibold tabular-nums" style={{ color }}>{value}%</span>
+			<span className="text-xs font-heading font-semibold tabular-nums" style={{ color }}>{value}%</span>
 		</div>
 	);
 }
@@ -1512,11 +1525,11 @@ function SourceBadge({ source, onClick }: { source: SourceCitation; onClick?: (s
 		<button
 			type="button"
 			onClick={(e) => { e.stopPropagation(); onClick?.(source); }}
-			className={`inline-flex items-center gap-1 text-[9px] font-semibold rounded-md border px-1.5 py-0.5 cursor-pointer hover:opacity-80 hover:ring-1 hover:ring-current/20 transition-all ${colorClass}`}
+			className={`inline-flex items-center gap-1 text-[11px] font-semibold rounded-md border px-1.5 py-0.5 cursor-pointer hover:opacity-80 hover:ring-1 hover:ring-current/20 transition-all ${colorClass}`}
 			title={`${source.label} — click for details`}
 		>
 			<Icon className="size-2.5" />
-			{source.label.length > 30 ? source.label.slice(0, 30) + "..." : source.label}
+			{source.label}
 		</button>
 	);
 }
@@ -1561,26 +1574,26 @@ function EntityNodeCard({ node, depth, expanded, onToggle }: {
 					)}
 					{!hasChildren && <span className="w-3" />}
 					{typeIcon && (
-						<span className="text-[8px] font-bold w-4 h-4 rounded flex items-center justify-center shrink-0" style={{ backgroundColor: sc.stroke + "40", color: sc.text }}>
+						<span className="text-[10px] font-bold w-4 h-4 rounded flex items-center justify-center shrink-0" style={{ backgroundColor: sc.stroke + "40", color: sc.text }}>
 							{typeIcon}
 						</span>
 					)}
 					<div className="flex-1 min-w-0">
 						<div className="flex items-center gap-1.5">
-							<span className="text-[11px] font-heading font-semibold truncate" style={{ color: sc.text }}>{node.name}</span>
-							<span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full shrink-0" style={{ backgroundColor: sc.stroke + "30", color: sc.text }}>{sc.badge}</span>
+							<span className="text-sm font-heading font-semibold" style={{ color: sc.text }}>{node.name}</span>
+							<span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0" style={{ backgroundColor: sc.stroke + "30", color: sc.text }}>{sc.badge}</span>
 						</div>
 						<div className="flex items-center gap-2 mt-0.5">
-							<span className="text-[9px] text-muted-foreground truncate">{node.role}</span>
-							{node.ownership && <span className="text-[8px] font-semibold text-muted-foreground shrink-0">{node.ownership}</span>}
-							{node.valuation && <span className="text-[8px] font-medium shrink-0" style={{ color: sc.text }}>{node.valuation}</span>}
+							<span className="text-[11px] text-muted-foreground">{node.role}</span>
+							{node.ownership && <span className="text-[10px] font-semibold text-muted-foreground shrink-0">{node.ownership}</span>}
+							{node.valuation && <span className="text-[10px] font-medium shrink-0" style={{ color: sc.text }}>{node.valuation}</span>}
 						</div>
 						{node.jurisdiction && (
-							<span className="text-[8px] text-muted-foreground/70">{node.jurisdiction}</span>
+							<span className="text-[10px] text-muted-foreground/70">{node.jurisdiction}</span>
 						)}
 					</div>
 					{hasChildren && (
-						<span className="text-[8px] font-bold rounded-full w-4 h-4 flex items-center justify-center shrink-0" style={{ backgroundColor: sc.stroke + "30", color: sc.text }}>
+						<span className="text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center shrink-0" style={{ backgroundColor: sc.stroke + "30", color: sc.text }}>
 							{node.children!.length}
 						</span>
 					)}
@@ -1631,12 +1644,12 @@ function CompanyNetworkGraph({ nodes, profileName }: { nodes: CompanyNode[]; pro
 			<div className="flex items-center justify-between mb-4">
 				<div className="flex items-center gap-2">
 					<NetworkIcon className="size-4 text-muted-foreground" />
-					<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Related Entity Network</p>
-					<span className="text-[9px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">{totalEntities} entities</span>
+					<p className="text-xs font-heading font-semibold text-muted-foreground uppercase tracking-widest">Related Entity Network</p>
+					<span className="text-[11px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">{totalEntities} entities</span>
 				</div>
 				<div className="flex items-center gap-1">
-					<button type="button" onClick={expandAll} className="text-[9px] text-primary font-medium hover:underline px-2 py-1">Expand all</button>
-					<button type="button" onClick={collapseAll} className="text-[9px] text-muted-foreground font-medium hover:underline px-2 py-1">Collapse</button>
+					<button type="button" onClick={expandAll} className="text-[11px] text-primary font-medium hover:underline px-2 py-1">Expand all</button>
+					<button type="button" onClick={collapseAll} className="text-[11px] text-muted-foreground font-medium hover:underline px-2 py-1">Collapse</button>
 				</div>
 			</div>
 			{/* Person header */}
@@ -1646,13 +1659,13 @@ function CompanyNetworkGraph({ nodes, profileName }: { nodes: CompanyNode[]; pro
 				</div>
 				<div>
 					<p className="text-sm font-heading font-semibold text-foreground">{profileName}</p>
-					<p className="text-[10px] text-muted-foreground">{topLevel} direct entities &middot; {totalEntities} total network nodes</p>
+					<p className="text-xs text-muted-foreground">{topLevel} direct entities &middot; {totalEntities} total network nodes</p>
 				</div>
 			</div>
 			{/* Type legend */}
 			<div className="flex flex-wrap gap-x-3 gap-y-1 mb-4">
 				{(Object.entries(STATUS_STYLE) as [string, typeof STATUS_STYLE.active][]).filter(([k]) => nodes.some(n => n.status === k || n.children?.some(c => c.status === k))).map(([k, v]) => (
-					<span key={k} className="flex items-center gap-1 text-[8px]">
+					<span key={k} className="flex items-center gap-1 text-[10px]">
 						<span className="w-2 h-2 rounded-full" style={{ backgroundColor: v.stroke }} />
 						<span style={{ color: v.text }}>{v.badge}</span>
 					</span>
@@ -1679,7 +1692,7 @@ function NarrativeSection({ narrative }: { narrative: string }) {
 		<div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
 			<div className="flex items-center gap-2 mb-4">
 				<FileTextIcon className="size-4 text-muted-foreground" />
-				<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Wealth Narrative</p>
+				<p className="text-xs font-heading font-semibold text-muted-foreground uppercase tracking-widest">Wealth Narrative</p>
 			</div>
 			<div className="space-y-3">
 				{(expanded ? paragraphs : preview).map((para, i) => (
@@ -1715,7 +1728,7 @@ function SourceCitationsAggregate({ phases, onSourceClick }: { phases: CareerPha
 		<div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
 			<div className="flex items-center gap-2 mb-4">
 				<LinkIcon className="size-4 text-muted-foreground" />
-				<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">
+				<p className="text-xs font-heading font-semibold text-muted-foreground uppercase tracking-widest">
 					Source Citations ({sources.length})
 				</p>
 			</div>
@@ -1731,7 +1744,7 @@ function SourceCitationsAggregate({ phases, onSourceClick }: { phases: CareerPha
 						<div className="flex-1 min-w-0">
 							<span className="font-medium group-hover:text-primary transition-colors">{src.label}</span>
 							{src.date && <span className="text-muted-foreground ml-2">({src.date})</span>}
-							<span className={`ml-2 text-[9px] font-semibold rounded-md border px-1 py-0.5 ${SOURCE_TYPE_COLORS[src.type] ?? "bg-muted/50 text-muted-foreground border-border/60"}`}>
+							<span className={`ml-2 text-[11px] font-semibold rounded-md border px-1 py-0.5 ${SOURCE_TYPE_COLORS[src.type] ?? "bg-muted/50 text-muted-foreground border-border/60"}`}>
 								{SOURCE_TYPE_LABELS[src.type] ?? src.type}
 							</span>
 							{src.url && (
@@ -1773,7 +1786,7 @@ function SourceDetailModal({ source, onClose }: { source: SourceCitation | null;
 			<DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
 				<DialogHeader>
 					<div className="flex items-center gap-2 mb-1">
-						<span className={`inline-flex items-center gap-1 text-[10px] font-semibold rounded-md border px-2 py-0.5 ${colorClass}`}>
+						<span className={`inline-flex items-center gap-1 text-xs font-semibold rounded-md border px-2 py-0.5 ${colorClass}`}>
 							<Icon className="size-3" />
 							{typeLabel}
 						</span>
@@ -1798,7 +1811,7 @@ function SourceDetailModal({ source, onClose }: { source: SourceCitation | null;
 								<div className="w-2.5 h-2.5 rounded-full bg-yellow-400/70" />
 								<div className="w-2.5 h-2.5 rounded-full bg-green-400/70" />
 							</div>
-							<div className="flex-1 bg-white rounded-md px-2.5 py-1 flex items-center gap-1.5 text-[10px] text-muted-foreground font-mono">
+							<div className="flex-1 bg-white rounded-md px-2.5 py-1 flex items-center gap-1.5 text-xs text-muted-foreground font-mono">
 								<div className="w-3 h-3 rounded-sm shrink-0" style={{ backgroundColor: s.faviconColor }} />
 								<span className="truncate">{s.domain}</span>
 								<ShieldCheckIcon className="size-2.5 text-emerald-600 shrink-0 ml-auto" />
@@ -1806,14 +1819,14 @@ function SourceDetailModal({ source, onClose }: { source: SourceCitation | null;
 						</div>
 						{/* Page content mock */}
 						<div className="bg-white p-4 min-h-[120px] relative">
-							<div className="text-[10px] font-heading font-semibold text-foreground/80 mb-2 border-b border-border/40 pb-1.5">
+							<div className="text-xs font-heading font-semibold text-foreground/80 mb-2 border-b border-border/40 pb-1.5">
 								{s.pageTitle}
 							</div>
-							<p className="text-[10px] text-muted-foreground leading-relaxed">
+							<p className="text-xs text-muted-foreground leading-relaxed">
 								{s.thumbnailDescription}
 							</p>
 							{/* Capture watermark */}
-							<div className="absolute bottom-2 right-2 flex items-center gap-1 text-[8px] text-muted-foreground/50 bg-white/80 backdrop-blur-sm rounded px-1.5 py-0.5 border border-border/30">
+							<div className="absolute bottom-2 right-2 flex items-center gap-1 text-[10px] text-muted-foreground/50 bg-white/80 backdrop-blur-sm rounded px-1.5 py-0.5 border border-border/30">
 								<CameraIcon className="size-2.5" />
 								Captured: {fmtTs(s.capturedAt)}
 							</div>
@@ -1826,9 +1839,9 @@ function SourceDetailModal({ source, onClose }: { source: SourceCitation | null;
 					<div className="rounded-lg border border-border bg-muted/20 p-3 space-y-2">
 						<div className="flex items-center gap-1.5">
 							<ClipboardListIcon className="size-3.5 text-muted-foreground" />
-							<span className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Audit Trail</span>
+							<span className="text-xs font-heading font-semibold text-muted-foreground uppercase tracking-widest">Audit Trail</span>
 						</div>
-						<div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-[11px]">
+						<div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
 							<div className="flex items-center gap-1.5 text-muted-foreground">
 								<GlobeIcon className="size-3 shrink-0" />
 								First accessed
@@ -1863,26 +1876,26 @@ function SourceDetailModal({ source, onClose }: { source: SourceCitation | null;
 					<div className="rounded-lg border border-border bg-muted/20 p-3 space-y-3">
 						<div className="flex items-center gap-1.5">
 							<SearchIcon className="size-3.5 text-muted-foreground" />
-							<span className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Company Search Template</span>
+							<span className="text-xs font-heading font-semibold text-muted-foreground uppercase tracking-widest">Company Search Template</span>
 						</div>
-						<div className="flex items-center justify-between text-[11px]">
+						<div className="flex items-center justify-between text-sm">
 							<span className="font-heading font-semibold">{t.registryName}</span>
 							<span className="text-muted-foreground">{t.jurisdiction}</span>
 						</div>
 						<div className="rounded-md border border-border bg-card p-3 space-y-2">
-							<div className="text-[10px] text-muted-foreground font-medium mb-1">{t.searchType}</div>
+							<div className="text-xs text-muted-foreground font-medium mb-1">{t.searchType}</div>
 							{t.searchFields.map((f, i) => (
 								<div key={i} className="flex items-center gap-2">
-									<label className="text-[10px] text-muted-foreground w-28 shrink-0">{f.label}</label>
-									<div className="flex-1 text-[11px] font-mono bg-muted/40 border border-border/60 rounded px-2 py-1">{f.value}</div>
+									<label className="text-xs text-muted-foreground w-28 shrink-0">{f.label}</label>
+									<div className="flex-1 text-sm font-mono bg-muted/40 border border-border/60 rounded px-2 py-1">{f.value}</div>
 								</div>
 							))}
 							<div className="flex items-center gap-2 mt-2">
-								<div className="bg-primary/10 text-primary text-[10px] font-heading font-semibold px-4 py-1.5 rounded-md border border-primary/20 opacity-60">
+								<div className="bg-primary/10 text-primary text-xs font-heading font-semibold px-4 py-1.5 rounded-md border border-primary/20 opacity-60">
 									Search Registry
 								</div>
 								{t.registryUrl && (
-									<a href={t.registryUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] text-primary hover:underline flex items-center gap-1">
+									<a href={t.registryUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1">
 										<ExternalLinkIcon className="size-2.5" />
 										Open registry
 									</a>
@@ -1947,7 +1960,7 @@ function ClientDocumentsSection({ documents }: { documents: ClientDocument[] }) 
 			<div className="flex items-center justify-between mb-5">
 				<div className="flex items-center gap-2">
 					<FolderOpenIcon className="size-4 text-muted-foreground" />
-					<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Client-Submitted Documents</p>
+					<p className="text-xs font-heading font-semibold text-muted-foreground uppercase tracking-widest">Client-Submitted Documents</p>
 				</div>
 				<div className="flex items-center gap-2">
 					<span className="text-xs text-muted-foreground font-heading">{verified}/{total} verified</span>
@@ -1968,14 +1981,14 @@ function ClientDocumentsSection({ documents }: { documents: ClientDocument[] }) 
 							</div>
 							<div className="flex-1 min-w-0">
 								<div className="flex items-center gap-2">
-									<span className="text-sm font-heading font-medium truncate">{doc.label}</span>
-									<span className={`inline-flex items-center gap-1 text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded border ${st.bg} ${st.color}`}>
+									<span className="text-sm font-heading font-medium">{doc.label}</span>
+									<span className={`inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded border ${st.bg} ${st.color}`}>
 										<StatusIcon className="size-2.5" />
 										{st.label}
 									</span>
 								</div>
-								<p className="text-[11px] text-muted-foreground mt-0.5">{doc.fileDescription}</p>
-								<div className="flex items-center gap-3 mt-1.5 text-[10px] text-muted-foreground">
+								<p className="text-sm text-muted-foreground mt-0.5">{doc.fileDescription}</p>
+								<div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground">
 									<span>Type: {DOC_TYPE_LABELS[doc.type]}</span>
 									<span className="text-muted-foreground/30">|</span>
 									<span>Submitted: {doc.submittedDate}</span>
@@ -1985,11 +1998,11 @@ function ClientDocumentsSection({ documents }: { documents: ClientDocument[] }) 
 								{doc.governmentAuthority && (
 									<div className="flex items-center gap-1.5 mt-1.5">
 										<LandmarkIcon className="size-3 text-sky-600" />
-										<span className="text-[10px] font-semibold text-sky-700 dark:text-sky-400">Gov. Authority: {doc.governmentAuthority}</span>
+										<span className="text-xs font-semibold text-sky-700 dark:text-sky-400">Gov. Authority: {doc.governmentAuthority}</span>
 									</div>
 								)}
 								{doc.verificationNotes && (
-									<p className="text-[10px] text-muted-foreground/80 mt-1 italic">{doc.verificationNotes}</p>
+									<p className="text-xs text-muted-foreground/80 mt-1 italic">{doc.verificationNotes}</p>
 								)}
 							</div>
 						</div>
@@ -2018,7 +2031,7 @@ function CrossReferenceTable({ crossRefs }: { crossRefs: CrossReference[] }) {
 			<div className="flex items-center justify-between mb-5">
 				<div className="flex items-center gap-2">
 					<ArrowLeftRightIcon className="size-4 text-muted-foreground" />
-					<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Cross-Reference Verification</p>
+					<p className="text-xs font-heading font-semibold text-muted-foreground uppercase tracking-widest">Cross-Reference Verification</p>
 				</div>
 				<div className="flex items-center gap-3 text-xs text-muted-foreground font-heading">
 					<span className="flex items-center gap-1"><CheckCircle2Icon className="size-3 text-emerald-500" />{exactCount} exact</span>
@@ -2040,13 +2053,13 @@ function CrossReferenceTable({ crossRefs }: { crossRefs: CrossReference[] }) {
 				<table className="w-full text-sm">
 					<thead>
 						<tr className="border-b border-border">
-							<th className="text-left py-2 px-3 text-[9px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Field</th>
-							<th className="text-left py-2 px-3 text-[9px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Client Doc</th>
-							<th className="text-left py-2 px-3 text-[9px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Client Value</th>
-							<th className="text-left py-2 px-3 text-[9px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">External Source</th>
-							<th className="text-left py-2 px-3 text-[9px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">External Value</th>
-							<th className="text-center py-2 px-3 text-[9px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Status</th>
-							<th className="text-center py-2 px-3 text-[9px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Confidence</th>
+							<th className="text-left py-2 px-3 text-[11px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Field</th>
+							<th className="text-left py-2 px-3 text-[11px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Client Doc</th>
+							<th className="text-left py-2 px-3 text-[11px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Client Value</th>
+							<th className="text-left py-2 px-3 text-[11px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">External Source</th>
+							<th className="text-left py-2 px-3 text-[11px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">External Value</th>
+							<th className="text-center py-2 px-3 text-[11px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Status</th>
+							<th className="text-center py-2 px-3 text-[11px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Confidence</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -2060,7 +2073,7 @@ function CrossReferenceTable({ crossRefs }: { crossRefs: CrossReference[] }) {
 										{ref.verifiedVia && (
 											<div className="flex items-center gap-1 mt-0.5">
 												<LandmarkIcon className="size-2.5 text-sky-600" />
-												<span className="text-[9px] text-sky-700 dark:text-sky-400 font-medium">{ref.verifiedVia}</span>
+												<span className="text-[11px] text-sky-700 dark:text-sky-400 font-medium">{ref.verifiedVia}</span>
 											</div>
 										)}
 									</td>
@@ -2069,7 +2082,7 @@ function CrossReferenceTable({ crossRefs }: { crossRefs: CrossReference[] }) {
 									<td className="py-2.5 px-3 text-xs text-muted-foreground">{ref.externalSourceLabel}</td>
 									<td className="py-2.5 px-3 text-xs font-mono">{ref.externalValue}</td>
 									<td className="py-2.5 px-3 text-center">
-										<span className={`inline-flex items-center gap-1 text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded border ${ms.bg} ${ms.color}`}>
+										<span className={`inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded border ${ms.bg} ${ms.color}`}>
 											<MatchIcon className="size-2.5" />
 											{ms.label}
 										</span>
@@ -2089,10 +2102,10 @@ function CrossReferenceTable({ crossRefs }: { crossRefs: CrossReference[] }) {
 			{/* Notes section */}
 			{crossRefs.some((r) => r.notes) && (
 				<div className="mt-4 p-3 rounded-xl bg-muted/20 border border-border/50">
-					<p className="text-[9px] font-heading font-semibold text-muted-foreground uppercase tracking-widest mb-2">Verification Notes</p>
+					<p className="text-[11px] font-heading font-semibold text-muted-foreground uppercase tracking-widest mb-2">Verification Notes</p>
 					<div className="space-y-1">
 						{crossRefs.filter((r) => r.notes).map((r) => (
-							<p key={r.id} className="text-[11px] text-muted-foreground">
+							<p key={r.id} className="text-sm text-muted-foreground">
 								<span className="font-medium text-foreground/80">{r.field}:</span> {r.notes}
 							</p>
 						))}
@@ -2114,7 +2127,7 @@ function DocumentUploadSlotsSection({ slots }: { slots: DocumentUploadSlot[] }) 
 			<div className="flex items-center justify-between mb-5">
 				<div className="flex items-center gap-2">
 					<UploadIcon className="size-4 text-muted-foreground" />
-					<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Document Upload</p>
+					<p className="text-xs font-heading font-semibold text-muted-foreground uppercase tracking-widest">Document Upload</p>
 				</div>
 				<div className="flex items-center gap-3 text-xs text-muted-foreground font-heading">
 					<span>{uploaded} uploaded</span>
@@ -2150,21 +2163,21 @@ function DocumentUploadSlotsSection({ slots }: { slots: DocumentUploadSlot[] }) 
 									<div className="flex items-center gap-2">
 										<span className="text-sm font-heading font-medium">{slot.label}</span>
 										{slot.required && !isUploaded && (
-											<span className="text-[8px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded bg-red-500/10 text-red-600 border border-red-500/20">Required</span>
+											<span className="text-[10px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded bg-red-500/10 text-red-600 border border-red-500/20">Required</span>
 										)}
 										{!slot.required && (
-											<span className="text-[8px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded bg-muted/50 text-muted-foreground border border-border">Optional</span>
+											<span className="text-[10px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded bg-muted/50 text-muted-foreground border border-border">Optional</span>
 										)}
 									</div>
-									<p className="text-[11px] text-muted-foreground mt-0.5">{slot.description}</p>
+									<p className="text-sm text-muted-foreground mt-0.5">{slot.description}</p>
 									{!isUploaded && (
-										<button className="mt-2 inline-flex items-center gap-1.5 text-[10px] font-heading font-semibold text-primary hover:text-primary/80 transition-colors">
+										<button className="mt-2 inline-flex items-center gap-1.5 text-xs font-heading font-semibold text-primary hover:text-primary/80 transition-colors">
 											<UploadIcon className="size-3" />
 											Upload Document
 										</button>
 									)}
 									{isUploaded && (
-										<div className="mt-1.5 flex items-center gap-1 text-[10px] text-emerald-600 font-medium">
+										<div className="mt-1.5 flex items-center gap-1 text-xs text-emerald-600 font-medium">
 											<CheckCircle2Icon className="size-3" />
 											Document uploaded
 										</div>
@@ -2205,7 +2218,7 @@ function FollowUpActions({ riskRating }: { riskRating: "Low" | "Medium" | "High"
 		<div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
 			<div className="flex items-center gap-2 mb-4">
 				<CheckCircle2Icon className="size-4 text-muted-foreground" />
-				<p className="text-[10px] font-heading font-semibold text-muted-foreground uppercase tracking-widest">Recommended Actions</p>
+				<p className="text-xs font-heading font-semibold text-muted-foreground uppercase tracking-widest">Recommended Actions</p>
 			</div>
 			<div className="space-y-3">
 				{actions.map((action) => {
@@ -2290,6 +2303,243 @@ function DownloadReportButton({ report }: { report: HnwReport }) {
 }
 
 /* ═══════════════════════════════════════════════════════════════
+   Compliance Chatbot
+   ═══════════════════════════════════════════════════════════════ */
+
+function ComplianceChatbot({ profileId, profileName, riskRating }: { profileId: string; profileName: string; riskRating: "Low" | "Medium" | "High" }) {
+	const [isOpen, setIsOpen] = useState(false);
+	const [activeTab, setActiveTab] = useState<"chat" | "attention" | "reminders">("chat");
+	const [messages, setMessages] = useState<ChatMessage[]>(CHATBOT_INITIAL_MESSAGES[profileId] ?? []);
+	const [reminders, setReminders] = useState<ChatReminder[]>(CHATBOT_REMINDERS[profileId] ?? []);
+	const [inputValue, setInputValue] = useState("");
+	const messagesEndRef = useRef<HTMLDivElement>(null);
+	const attentionAreas = CHATBOT_ATTENTION_AREAS[profileId] ?? [];
+
+	useEffect(() => {
+		messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+	}, [messages]);
+
+	const handleSend = () => {
+		if (!inputValue.trim()) return;
+		const userMsg: ChatMessage = { id: `user-${Date.now()}`, role: "user", text: inputValue, timestamp: "Just now" };
+		setMessages((prev) => [...prev, userMsg]);
+		setInputValue("");
+
+		// Hardcoded bot responses based on keywords
+		setTimeout(() => {
+			let reply = "I can help you navigate this assessment. Try asking about specific risk areas, entity structures, or wealth claims. You can also switch to the Attention or Reminders tab for a structured overview.";
+
+			const lower = inputValue.toLowerCase();
+			if (lower.includes("risk") || lower.includes("score")) {
+				reply = profileId === "hnw-jack-ma"
+					? "Jack Ma's risk score is 45/100 (Medium). The primary risk drivers are: (1) Ant Group restructuring uncertainty, (2) opaque Singapore trust structures, and (3) PEP classification as a former CPC member. The wealth plausibility score is high, but source diversity is moderate due to concentration in Alibaba equity."
+					: "Yat Siu's risk score is 72/100 (High). Key risk drivers: (1) extreme crypto token volatility with SAND down ~90%, (2) ASX regulatory delisting, (3) $18.7M subsidiary hack, and (4) highly concentrated holdings in unregulated digital assets. Enhanced Due Diligence is required before onboarding.";
+			} else if (lower.includes("ant") || lower.includes("restructur")) {
+				reply = "The Ant Group restructuring is one of the most significant risk factors. The IPO was halted by regulators in November 2020. The company was forced to restructure into a financial holding company under PBOC supervision. Current valuation estimates range from $60B to $150B — I recommend requesting an official regulatory status update from the PBOC before finalizing wealth figures.";
+			} else if (lower.includes("trust") || lower.includes("singapore")) {
+				reply = "In 2023, Jack Ma transferred approximately $2.4B in Alibaba shares to a Singapore-based family trust. The trust structure and beneficiaries have not been publicly disclosed. I recommend requesting the trust deed through FilEasy CorpVerify (ACRA registry) and verifying the transfer with the client directly.";
+			} else if (lower.includes("sand") || lower.includes("token") || lower.includes("crypto")) {
+				reply = profileId === "hnw-yat-siu"
+					? "SAND token holdings are the single largest risk factor. The token peaked at $8.40 in November 2021 and currently trades around $0.30-0.60 — a ~90% decline. I recommend: (1) On-chain verification of declared holdings via Etherscan, (2) daily mark-to-market valuation, and (3) stress testing the net worth under additional 50% drawdown scenarios."
+					: "Jack Ma's portfolio has minimal direct crypto exposure. The most notable crypto-adjacent asset is an ETH strategic reserve (10,000 ETH) held through Yunfeng Financial Group, valued at approximately $25M at current prices.";
+			} else if (lower.includes("asx") || lower.includes("delist")) {
+				reply = "Animoca Brands was delisted from ASX on March 25, 2020. ASIC's official statement cited repeated compliance failures including late financial reporting and unapproved transactions. Animoca characterized it as a voluntary delisting to pursue blockchain opportunities. Both narratives should be included in the compliance file. Request the full ASIC correspondence via FilEasy CorpVerify.";
+			} else if (lower.includes("next") || lower.includes("action") || lower.includes("recommend") || lower.includes("what should")) {
+				reply = riskRating === "High"
+					? "For this HIGH risk case, I recommend the following immediate actions: (1) Complete Enhanced Due Diligence review with senior compliance officer, (2) Verify all crypto holdings on-chain, (3) Set up weekly monitoring for price movements and adverse media, (4) Request updated ASIC records, and (5) Commission an independent Animoca Brands valuation. Check the Reminders tab for scheduled follow-ups."
+					: "For this MEDIUM risk case, I recommend: (1) Request updated Ant Group regulatory status, (2) Obtain Singapore trust deed documents, (3) Order independent real estate appraisals, (4) Verify Blue Pool Capital AUM, and (5) Schedule quarterly PEP/sanctions re-screening. Check the Reminders tab for scheduled follow-ups.";
+			} else if (lower.includes("confidence") || lower.includes("verif")) {
+				reply = profileId === "hnw-jack-ma"
+					? "Overall confidence for Jack Ma's assessment is 68%. The highest confidence is in Alibaba equity holdings (95% — based on SEC F-1 filings). The lowest confidence areas are: Blue Pool Capital AUM (40% — no regulatory filings), real estate valuations (55% — stale purchase prices), and Ant Group valuation (50% — restructuring uncertainty)."
+					: "Overall confidence for Yat Siu's assessment is 42%. The highest confidence is in the Outblaze IBM sale (90% — public transaction records). The lowest areas: SAND token valuation (25% — extreme volatility), Animoca private valuation (35% — outdated), and NFT collection value (20% — illiquid market).";
+			} else if (lower.includes("remind") || lower.includes("follow") || lower.includes("deadline")) {
+				reply = `There are ${reminders.filter(r => !r.completed).length} pending reminders for this case. Switch to the Reminders tab to view them. The most urgent is due ${reminders.find(r => !r.completed)?.dueDate ?? "soon"}. Would you like me to add a new reminder?`;
+			}
+
+			const botMsg: ChatMessage = { id: `bot-${Date.now()}`, role: "assistant", text: reply, timestamp: "Just now" };
+			setMessages((prev) => [...prev, botMsg]);
+		}, 800);
+	};
+
+	const toggleReminder = (id: string) => {
+		setReminders((prev) => prev.map((r) => r.id === id ? { ...r, completed: !r.completed } : r));
+	};
+
+	const deleteReminder = (id: string) => {
+		setReminders((prev) => prev.filter((r) => r.id !== id));
+	};
+
+	const severityStyle = {
+		critical: { bg: "bg-red-500/10", border: "border-red-500/30", dot: "bg-red-500", text: "text-red-700", badge: "Critical" },
+		warning: { bg: "bg-amber-500/10", border: "border-amber-500/30", dot: "bg-amber-500", text: "text-amber-700", badge: "Warning" },
+		info: { bg: "bg-sky-500/10", border: "border-sky-500/30", dot: "bg-sky-500", text: "text-sky-700", badge: "Info" },
+	};
+
+	const priorityStyle = {
+		high: "bg-red-500/15 text-red-700 border-red-500/20",
+		medium: "bg-amber-500/15 text-amber-700 border-amber-500/20",
+		low: "bg-sky-500/15 text-sky-700 border-sky-500/20",
+	};
+
+	const riskColor = riskRating === "High" ? "bg-red-500" : riskRating === "Medium" ? "bg-amber-500" : "bg-emerald-500";
+
+	return (
+		<>
+			{/* Floating chat button */}
+			<button
+				onClick={() => setIsOpen(!isOpen)}
+				className={`fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-105 ${
+					isOpen ? "bg-muted-foreground text-white" : "bg-primary text-primary-foreground shadow-primary/30"
+				}`}
+			>
+				{isOpen ? <XIcon className="size-6" /> : <MessageSquareIcon className="size-6" />}
+				{!isOpen && (
+					<span className={`absolute -top-1 -right-1 h-4 w-4 rounded-full ${riskColor} border-2 border-white animate-pulse`} />
+				)}
+			</button>
+
+			{/* Chat panel */}
+			{isOpen && (
+				<div className="fixed bottom-24 right-6 z-50 w-[420px] max-h-[600px] rounded-2xl border border-border bg-card shadow-2xl flex flex-col overflow-hidden">
+					{/* Header */}
+					<div className="bg-gradient-to-r from-primary/10 to-transparent px-5 py-4 border-b border-border">
+						<div className="flex items-center gap-3">
+							<div className="h-9 w-9 rounded-xl bg-primary/15 flex items-center justify-center">
+								<SparklesIcon className="size-5 text-primary" />
+							</div>
+							<div>
+								<div className="font-heading font-semibold text-sm">Compliance Assistant</div>
+								<div className="text-xs text-muted-foreground">{profileName} — Case Analysis</div>
+							</div>
+						</div>
+						{/* Tabs */}
+						<div className="flex gap-1 mt-3">
+							{(["chat", "attention", "reminders"] as const).map((tab) => (
+								<button
+									key={tab}
+									onClick={() => setActiveTab(tab)}
+									className={`px-3 py-1.5 rounded-lg text-xs font-heading font-medium transition-colors ${
+										activeTab === tab ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"
+									}`}
+								>
+									{tab === "chat" ? "Chat" : tab === "attention" ? `Attention (${attentionAreas.length})` : `Reminders (${reminders.filter(r => !r.completed).length})`}
+								</button>
+							))}
+						</div>
+					</div>
+
+					{/* Content */}
+					<div className="flex-1 overflow-y-auto min-h-0" style={{ maxHeight: "420px" }}>
+						{activeTab === "chat" && (
+							<div className="p-4 space-y-3">
+								{messages.map((msg) => (
+									<div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+										<div className={`max-w-[90%] rounded-xl px-4 py-2.5 ${
+											msg.role === "user"
+												? "bg-primary text-primary-foreground rounded-br-sm"
+												: "bg-muted/60 text-foreground rounded-bl-sm"
+										}`}>
+											<p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.text}</p>
+											<p className={`text-[10px] mt-1 ${msg.role === "user" ? "text-primary-foreground/60" : "text-muted-foreground/60"}`}>{msg.timestamp}</p>
+										</div>
+									</div>
+								))}
+								<div ref={messagesEndRef} />
+							</div>
+						)}
+
+						{activeTab === "attention" && (
+							<div className="p-4 space-y-3">
+								{attentionAreas.map((area) => {
+									const s = severityStyle[area.severity];
+									return (
+										<div key={area.id} className={`rounded-xl border ${s.border} ${s.bg} p-4`}>
+											<div className="flex items-center gap-2 mb-2">
+												<div className={`h-2 w-2 rounded-full ${s.dot}`} />
+												<span className={`text-xs font-heading font-semibold ${s.text}`}>{s.badge}</span>
+												<span className="text-xs text-muted-foreground ml-auto">{area.section}</span>
+											</div>
+											<div className="font-heading font-semibold text-sm mb-1">{area.title}</div>
+											<p className="text-sm text-muted-foreground leading-relaxed">{area.description}</p>
+										</div>
+									);
+								})}
+							</div>
+						)}
+
+						{activeTab === "reminders" && (
+							<div className="p-4 space-y-2">
+								{reminders.map((reminder) => (
+									<div key={reminder.id} className={`flex items-start gap-3 rounded-xl border border-border p-3 transition-all ${reminder.completed ? "opacity-50" : ""}`}>
+										<button
+											onClick={() => toggleReminder(reminder.id)}
+											className={`mt-0.5 h-5 w-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all ${
+												reminder.completed ? "bg-emerald-500 border-emerald-500" : "border-border hover:border-primary/50"
+											}`}
+										>
+											{reminder.completed && <CheckIcon className="size-3 text-white" />}
+										</button>
+										<div className="flex-1 min-w-0">
+											<p className={`text-sm leading-snug ${reminder.completed ? "line-through text-muted-foreground" : ""}`}>{reminder.label}</p>
+											<div className="flex items-center gap-2 mt-1.5">
+												<span className={`text-xs font-semibold rounded-md border px-1.5 py-0.5 ${priorityStyle[reminder.priority]}`}>{reminder.priority}</span>
+												<span className="text-xs text-muted-foreground flex items-center gap-1">
+													<CalendarIcon className="size-3" />{reminder.dueDate}
+												</span>
+											</div>
+										</div>
+										<button onClick={() => deleteReminder(reminder.id)} className="text-muted-foreground/40 hover:text-red-500 transition-colors p-1">
+											<Trash2Icon className="size-3.5" />
+										</button>
+									</div>
+								))}
+								{reminders.length === 0 && (
+									<div className="text-center py-8 text-sm text-muted-foreground">No reminders set for this case.</div>
+								)}
+							</div>
+						)}
+					</div>
+
+					{/* Input (only for chat tab) */}
+					{activeTab === "chat" && (
+						<div className="px-4 py-3 border-t border-border bg-muted/20">
+							<div className="flex items-center gap-2">
+								<input
+									type="text"
+									value={inputValue}
+									onChange={(e) => setInputValue(e.target.value)}
+									onKeyDown={(e) => e.key === "Enter" && handleSend()}
+									placeholder="Ask about risks, entities, wealth claims..."
+									className="flex-1 bg-card border border-border rounded-xl px-4 py-2.5 text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40"
+								/>
+								<button
+									onClick={handleSend}
+									disabled={!inputValue.trim()}
+									className="h-10 w-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-40 hover:bg-primary/90 transition-colors"
+								>
+									<SendIcon className="size-4" />
+								</button>
+							</div>
+							<div className="flex flex-wrap gap-1.5 mt-2">
+								{["What are the next actions?", "Explain the risk score", "Token volatility"].map((q) => (
+									<button
+										key={q}
+										onClick={() => { setInputValue(q); }}
+										className="text-xs px-2.5 py-1 rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground hover:border-primary/30 transition-colors"
+									>
+										{q}
+									</button>
+								))}
+							</div>
+						</div>
+					)}
+				</div>
+			)}
+		</>
+	);
+}
+
+/* ═══════════════════════════════════════════════════════════════
    Shared UI Components
    ═══════════════════════════════════════════════════════════════ */
 
@@ -2299,7 +2549,7 @@ function RiskBadge({ rating, size = "sm" }: { rating: "Low" | "Medium" | "High";
 		Medium: "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/20",
 		High: "bg-red-500/15 text-red-700 dark:text-red-400 border-red-500/20",
 	};
-	const sizeClass = size === "lg" ? "text-xs px-3 py-1" : "text-[10px] px-1.5 py-0.5";
+	const sizeClass = size === "lg" ? "text-xs px-3 py-1" : "text-xs px-1.5 py-0.5";
 	return <span className={`font-semibold rounded-md border ${colors[rating]} ${sizeClass}`}>{rating} Risk</span>;
 }
 
@@ -2316,7 +2566,7 @@ function MonitoringStatusBadge({ status }: { status: "Active" | "Under Review" |
 	};
 	const Icon = icons[status] ?? ShieldIcon;
 	return (
-		<span className={`inline-flex items-center gap-1 text-[10px] font-semibold ${styles[status]}`}>
+		<span className={`inline-flex items-center gap-1 text-xs font-semibold ${styles[status]}`}>
 			<Icon className="size-3" />
 			{status}
 		</span>
