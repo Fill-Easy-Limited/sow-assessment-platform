@@ -25,7 +25,7 @@ export default function DemoPage() {
 								HNW Wealth Intelligence
 							</h1>
 							<p className="text-[11px] text-white/45 leading-tight tracking-wide">
-								Powered by <span className="text-sky-300 font-semibold">FilEasy</span> · AI-powered source of wealth · International data sources
+								Powered by <span className="text-sky-300 font-semibold">Fill Easy</span> · AI-powered source of wealth · International data sources
 							</p>
 						</div>
 					</div>
@@ -52,11 +52,11 @@ export default function DemoPage() {
 								This is a demonstration environment with simulated data. All names, identifiers, and financial figures are fictional.
 							</p>
 							<p className="text-white/20 tracking-wide mt-1">
-								Data sourced via <span className="text-sky-400/60 font-semibold">FilEasy</span> CorpVerify, GovVerify, and China Cross-Border APIs across 80+ jurisdictions.
+								Data sourced via <span className="text-sky-400/60 font-semibold">Fill Easy</span> CorpVerify, GovVerify, and China Cross-Border APIs across 80+ jurisdictions.
 							</p>
 						</div>
 						<p className="text-white/20 shrink-0 tracking-wider">
-							&copy; {new Date().getFullYear()} <span className="text-sky-400/40 font-semibold">FilEasy</span> Limited
+							&copy; {new Date().getFullYear()} <span className="text-sky-400/40 font-semibold">Fill Easy</span> Limited
 						</p>
 					</div>
 				</div>
