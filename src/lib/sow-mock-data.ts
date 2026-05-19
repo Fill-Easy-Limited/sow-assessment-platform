@@ -293,7 +293,7 @@ const SRC_MA: Record<string, SourceCitation> = {
 		...srcMeta("nytimes.com", "Yahoo to Buy 40% of Alibaba | NYT", "New York Times article from August 2005 reporting Yahoo's acquisition of 40% stake in Alibaba for $1 billion plus the contribution of Yahoo China operations.", "#000000"),
 	},
 	softbank: {
-		id: "s11", label: "SoftBank $20M investment in Alibaba (2000)", url: "https://group.softbank/en/about/history", date: "2000-01-01", type: "news",
+		id: "s11", label: "SoftBank $20M investment in Alibaba (2000)", url: "https://group.softbank/en/philosophy/history", date: "2000-01-01", type: "news",
 		...srcMeta("group.softbank", "SoftBank Group | Corporate History — Key Milestones", "SoftBank Group corporate history page listing key investments. Year 2000 milestone: $20 million investment in Alibaba.com Corporation, Masayoshi Son's personal decision after a 5-minute meeting with Jack Ma.", "#f0f0f0"),
 	},
 	goldmanSachs: {
@@ -420,8 +420,8 @@ const SRC_MA: Record<string, SourceCitation> = {
 	},
 	// ── Additional sources (exhaustive wealth research) ──
 	brandonPark: {
-		id: "s34", label: "CNN Money: Jack Ma buys 28,100-acre Adirondack estate for $23M", url: "https://money.cnn.com/2015/06/25/real_estate/jack-ma-alibaba-new-york-property/", date: "2015-06-25", type: "news",
-		...srcMeta("cnn.com", "Jack Ma buys massive New York estate | CNN Money", "CNN Money article reporting Alibaba founder Jack Ma purchased Brandon Park, a 28,100-acre estate in the Adirondacks, for approximately $23 million via entity New Brandon LLC. Property includes 9 miles of St. Regis River.", "#cc0000"),
+		id: "s34", label: "CNBC: Jack Ma buys 28,100-acre Adirondack estate for $23M", url: "https://www.cnbc.com/2015/06/26/jack-ma-buys-28100-acre-property-in-adirondacks.html", date: "2015-06-26", type: "news",
+		...srcMeta("cnbc.com", "Jack Ma Buys 28,100-Acre Property in Adirondacks | CNBC", "CNBC article reporting Alibaba founder Jack Ma purchased Brandon Park, a 28,100-acre estate in the Adirondacks, for approximately $23 million via entity New Brandon LLC. Property includes 9 miles of St. Regis River.", "#005594"),
 	},
 	superyachtZen: {
 		id: "s35", label: "SuperYachtFan: M/Y Zen — 88m Feadship owned by Jack Ma", url: "https://www.superyachtfan.com/yacht/zen/", date: "2021-01-01", type: "news",
@@ -582,15 +582,15 @@ const JACK_MA_CAREER: CareerPhase[] = [
 
 const SRC_SIU: Record<string, SourceCitation> = {
 	ibmAcq: {
-		id: "y1", label: "IBM acquires Outblaze messaging division", url: "https://newsroom.ibm.com/2009-08-05-IBM-Acquires-Outblaze-Web-Community-Technology", date: "2009-01-01", type: "news",
-		...srcMeta("ibm.com", "IBM Acquires Outblaze Web Community Technology | IBM", "IBM press release announcing acquisition of Outblaze's web messaging and community services division. Deal value estimated at $10-20 million. Hong Kong-based technology transfer.", "#0530ad"),
+		id: "y1", label: "RTTNews: IBM plans to buy Outblaze messaging assets", url: "https://www.rttnews.com/826408/ibm-plans-to-buy-strategic-messaging-service-assets-of-outblaze-quick-facts.aspx", date: "2009-01-15", type: "news",
+		...srcMeta("rttnews.com", "IBM Plans To Buy Strategic Messaging Service Assets Of Outblaze | RTTNews", "RTTNews reporting IBM's January 15, 2009 announcement to acquire strategic messaging service assets of Outblaze Ltd., a Hong Kong-based provider of online messaging and collaboration services. Deal value estimated at $10-20 million.", "#0530ad"),
 	},
 	asxListing: {
-		id: "y2", label: "ASX: Animoca Brands IPO listing", url: "https://www2.asx.com.au/markets/company/AB1", date: "2015-01-01", type: "market-data",
+		id: "y2", label: "ASX: Animoca Brands IPO listing", url: "https://www.asx.com.au/markets/company/AB1", date: "2015-01-01", type: "market-data",
 		...srcMeta("asx.com.au", "ASX | Animoca Brands Corporation Limited (AB1)", "Australian Securities Exchange company page for Animoca Brands (ticker: AB1). Historical listing data showing IPO date, initial market capitalization, and trading history from 2015.", "#002244"),
 	},
 	asxDelist: {
-		id: "y3", label: "ASX: Animoca Brands delisted over crypto accounting", url: "https://www2.asx.com.au/markets/company/AB1", date: "2020-03-25", type: "registry",
+		id: "y3", label: "ASX: Animoca Brands delisted over crypto accounting", url: "https://www.asx.com.au/markets/company/AB1", date: "2020-03-25", type: "registry",
 		...srcMeta("asx.com.au", "ASX Notice | Animoca Brands Delisting (March 2020)", "ASX compliance notice dated March 25, 2020 regarding removal of Animoca Brands from official list. Delisting due to non-compliance with listing rules related to cryptocurrency asset accounting.", "#002244"),
 		companySearchTemplate: {
 			registryName: "Australian Securities Exchange (ASX)",
@@ -605,8 +605,8 @@ const SRC_SIU: Record<string, SourceCitation> = {
 		},
 	},
 	tcAnimoca: {
-		id: "y4", label: "TechCrunch: Animoca raises $358M at $5.9B valuation", url: "https://techcrunch.com/2022/01/18/animoca-brands-raises-358-million/", date: "2022-01-18", type: "news",
-		...srcMeta("techcrunch.com", "Animoca Brands raises $358.8M at $5.9B valuation | TechCrunch", "TechCrunch article dated January 18, 2022. Reports Animoca Brands completing $358.8 million funding round at $5.9 billion valuation. Investors include Liberty City Ventures, Soros Fund Management.", "#0a9c00"),
+		id: "y4", label: "VentureBeat: Animoca raises $358.8M at $5.5B valuation", url: "https://venturebeat.com/games/animoca-brands-raises-358-8m-at-5-5b-valuation-for-open-metaverse/", date: "2022-01-18", type: "news",
+		...srcMeta("venturebeat.com", "Animoca Brands raises $358.8M at $5.5B valuation for open metaverse | VentureBeat", "VentureBeat article dated January 18, 2022. Reports Animoca Brands completing $358.8 million funding round at $5.5 billion valuation. Investors include Liberty City Ventures, Soros Fund Management.", "#0a9c00"),
 	},
 	coinGecko: {
 		id: "y5", label: "CoinGecko: SAND token historical price data", url: "https://www.coingecko.com/en/coins/the-sandbox", type: "market-data",
@@ -649,15 +649,15 @@ const SRC_SIU: Record<string, SourceCitation> = {
 		},
 	},
 	forbesSiu: {
-		id: "y9", label: "Forbes: Yat Siu profile & net worth estimate", url: "https://www.forbes.com/profile/yat-siu/", date: "2024-06-01", type: "estimate",
-		...srcMeta("forbes.com", "Yat Siu - Forbes Profile", "Forbes profile page for Yat Siu. Net worth estimate based on Animoca Brands stake and crypto holdings. Industry classification: Blockchain/Gaming.", "#c4112f"),
+		id: "y9", label: "CCN: Yat Siu net worth & Animoca Brands fortune explained", url: "https://www.ccn.com/news/business/yat-siu-net-worth-explained/", date: "2024-06-01", type: "estimate",
+		...srcMeta("ccn.com", "Yat Siu Net Worth Explained: How the Animoca Brands Chairman Built His Blockchain Fortune | CCN", "CCN profile of Yat Siu detailing net worth estimate based on Animoca Brands stake, crypto holdings, and investment portfolio. Industry classification: Blockchain/Gaming.", "#1a73e8"),
 	},
 	bloombergSiu: {
 		id: "y10", label: "Bloomberg: Animoca Brands profile", url: "https://www.bloomberg.com/profile/company/1610751D:HK", type: "news",
 		...srcMeta("bloomberg.com", "Animoca Brands | Bloomberg Company Profile", "Bloomberg company profile for Animoca Brands showing key executives, financial data, funding rounds, and recent news coverage. Chairman Yat Siu listed as key person.", "#1e1e1e"),
 	},
 	sandboxAcq: {
-		id: "y11", label: "Animoca acquires The Sandbox from Pixowl", url: "https://www.animocabrands.com/animoca-brands-acquires-tsb-game-studio", date: "2018-08-01", type: "news",
+		id: "y11", label: "Animoca acquires The Sandbox from Pixowl", url: "https://www.animocabrands.com/animoca-brands-acquires-pixowl", date: "2018-08-01", type: "news",
 		...srcMeta("animocabrands.com", "Animoca Brands Acquires TSB Gaming Studio | Press Release", "Animoca Brands press release announcing acquisition of TSB Game Studio (Pixowl) and The Sandbox game. Strategic pivot to blockchain gaming outlined.", "#ff6b35"),
 	},
 	sandPeak: {
@@ -665,7 +665,7 @@ const SRC_SIU: Record<string, SourceCitation> = {
 		...srcMeta("coingecko.com", "SAND ATH $8.40 (Nov 25, 2021) | CoinGecko", "CoinGecko SAND price chart zoomed to November 25, 2021 showing all-time high of $8.40. 24h volume exceeding $5.7 billion. Market cap at peak above $7 billion.", "#8bc53f"),
 	},
 	hkPolicy: {
-		id: "y13", label: "HKMA: Virtual asset regulatory framework", url: "https://www.hkma.gov.hk/eng/key-functions/banking/banking-regulatory-and-supervisory-regime/virtual-assets/", date: "2023-06-01", type: "public-record",
+		id: "y13", label: "HKMA: Virtual asset regulatory framework", url: "https://www.hkma.gov.hk/eng/key-functions/international-financial-centre/fintech/", date: "2023-06-01", type: "public-record",
 		...srcMeta("hkma.gov.hk", "HKMA | Virtual Assets Regulatory Framework", "Hong Kong Monetary Authority page outlining virtual asset service provider (VASP) licensing regime. Guidelines for banks dealing with crypto entities.", "#003366"),
 	},
 	sequoia: {
@@ -697,7 +697,7 @@ const SRC_SIU: Record<string, SourceCitation> = {
 		},
 	},
 	asxHistorical: {
-		id: "y18", label: "ASX Historical Market Cap: Animoca (AB1)", url: "https://www2.asx.com.au/markets/company/AB1", type: "market-data",
+		id: "y18", label: "ASX Historical Market Cap: Animoca (AB1)", url: "https://www.asx.com.au/markets/company/AB1", type: "market-data",
 		...srcMeta("asx.com.au", "ASX | AB1 Historical Market Data", "Australian Securities Exchange historical market data for Animoca Brands (AB1). Market capitalization history from listing to delisting, daily trading volumes.", "#002244"),
 	},
 	asxAnnualReport: {
@@ -709,7 +709,7 @@ const SRC_SIU: Record<string, SourceCitation> = {
 		...srcMeta("pitchbook.com", "PitchBook | Animoca Brands Profile", "PitchBook private company profile for Animoca Brands showing funding history, post-money valuations, secondary market trading data, and implied discount from last round.", "#0066cc"),
 	},
 	hkRVD: {
-		id: "y21", label: "HK Rating & Valuation Dept: Property Price Indices", url: "https://www.rvd.gov.hk/en/property_market_statistics/", type: "public-record",
+		id: "y21", label: "HK Rating & Valuation Dept: Property Price Indices", url: "https://www.rvd.gov.hk/en/publications/property_market_statistics.html", type: "public-record",
 		...srcMeta("rvd.gov.hk", "RVD | Private Domestic — Price Indices", "HK Rating and Valuation Department property price index showing residential price movements. Mid-Levels area index tracked.", "#003366"),
 	},
 	filleasyHKCR: {
@@ -758,20 +758,20 @@ const SRC_SIU: Record<string, SourceCitation> = {
 		...srcMeta("coindesk.com", "Animoca Brands Acquires TinyTap for $38.9M | CoinDesk", "CoinDesk reporting Animoca Brands acquisition of 80.45% stake in TinyTap (ed-tech platform) for US$38.875M (cash + shares). TinyTap later raised $8.5M at $100M valuation.", "#0a9c00"),
 	},
 	mocaToken: {
-		id: "y27", label: "Animoca: MOCA token launch — $29.3M raised", url: "https://www.animocabrands.com/moca-foundation-concludes-moca-token-launch", date: "2024-07-11", type: "market-data",
-		...srcMeta("animocabrands.com", "MOCA Token Launch — $29.3M Committed | Animoca Brands", "Animoca Brands press release: MOCA token sale concluded with $29.3M raised at 12x oversubscription. Public launch July 11, 2024. Mocaverse NFT collection: 8,888 NFTs.", "#ff6b35"),
+		id: "y27", label: "Animoca: MOCA token launch — $29.3M raised", url: "https://www.animocabrands.com/moca-foundation-concludes-moca-token-launch-with-usd29300000-committed", date: "2024-05-03", type: "market-data",
+		...srcMeta("animocabrands.com", "MOCA Foundation Concludes MOCA Token Launch with US$29.3M Committed | Animoca Brands", "Animoca Brands press release: MOCA token sale concluded May 3, 2024 with $29.3M raised at 12x oversubscription. 126.98M MOCA tokens (1.5% supply) at $0.03938 each. Nearly 17,000 KYC-ed users from 123 countries.", "#ff6b35"),
 	},
 	apeCoinDAO: {
-		id: "y28", label: "Cointelegraph: ApeCoin DAO Council compensation — $250K/yr", url: "https://cointelegraph.com/news/board-member-yat-siu-answers-community-concerns-on-apecoin-dao-salary-payouts", date: "2023-06-01", type: "news",
-		...srcMeta("cointelegraph.com", "Yat Siu on ApeCoin DAO Council Compensation | Cointelegraph", "Cointelegraph article: ApeCoin DAO Special Council member compensation disclosed at $20,833/month (~$250K/year). Yat Siu served on council. Caused community controversy in June 2023.", "#1a1a2e"),
+		id: "y28", label: "CoinDesk: ApeCoin DAO Council compensation — $250K/yr", url: "https://www.coindesk.com/business/2023/06/21/animoca-brands-yat-siu-defends-apecoin-dao-council-compensation/", date: "2023-06-21", type: "news",
+		...srcMeta("coindesk.com", "Animoca Brands' Yat Siu Defends ApeCoin DAO Council Compensation | CoinDesk", "CoinDesk article: ApeCoin DAO Special Council member compensation disclosed at $20,833/month (~$250K/year). Yat Siu served on council and defended payout. Community controversy in June 2023.", "#0a9c00"),
 	},
 	nasdaqMerger: {
 		id: "y29", label: "Bloomberg: Animoca plans Nasdaq listing via reverse merger", url: "https://www.bloomberg.com/news/articles/2025-11-03/animoca-brands-plans-nasdaq-listing-through-reverse-merger", date: "2025-11-03", type: "news",
 		...srcMeta("bloomberg.com", "Animoca Brands Plans Nasdaq Listing Through Reverse Merger | Bloomberg", "Bloomberg: Animoca Brands filed for Nasdaq listing via reverse merger with Currenc Group (CURR). Target ~$1B valuation. Animoca shareholders get 95%. Expected closing Q3 2026.", "#1e1e1e"),
 	},
 	anchorpointJV: {
-		id: "y30", label: "Standard Chartered: Anchorpoint Financial JV — HKMA stablecoin license", url: "https://www.sc.com/en/press-release/standard-chartered-backed-anchorpoint-licensed-stablecoin/", date: "2025-02-01", type: "news",
-		...srcMeta("sc.com", "Anchorpoint Financial Granted Stablecoin Issuer Licence | StanChart", "Standard Chartered press release: Anchorpoint Financial JV (Standard Chartered + HKT + Animoca Brands) granted HKMA stablecoin issuer licence. Will issue HKDAP (HKD At Par) regulated stablecoin.", "#003087"),
+		id: "y30", label: "Standard Chartered: Anchorpoint Financial JV — HKMA stablecoin license", url: "https://www.sc.com/en/press-release/standard-chartered-backed-anchorpoint-granted-stablecoin-issuer-licence-by-the-hong-kong-monetary-authority/", date: "2025-08-01", type: "news",
+		...srcMeta("sc.com", "Standard Chartered-backed Anchorpoint Granted Stablecoin Issuer Licence by the HKMA | StanChart", "Standard Chartered press release: Anchorpoint Financial JV (Standard Chartered + HKT + Animoca Brands) granted HKMA stablecoin issuer licence under Stablecoins Ordinance. Will issue HKDAP (HKD At Par) regulated stablecoin via B2B2C model.", "#003087"),
 	},
 	animocaFinancials: {
 		id: "y31", label: "Animoca Brands: FY2024 Investor Update — $4.3B total assets", url: "https://www.animocabrands.com/animoca-brands-investor-update-for-the-quarter-and-fiscal-year-ending-on-31-december-2024", date: "2025-03-01", type: "filing",
@@ -794,8 +794,8 @@ const SRC_SIU: Record<string, SourceCitation> = {
 		...srcMeta("animocabrands.com", "GAMEE / Arc8 Platform — 1.3M Users | Animoca Brands", "Animoca Brands press release: GAMEE acquired for US$4.5M in July 2020. Arc8 play-to-earn platform launched October 2021 with 1.3M registered users. GMEE token (3.18B supply).", "#ff6b35"),
 	},
 	lympoHack: {
-		id: "y36", label: "Cointelegraph: Lympo hot wallet hacked — $18.7M stolen", url: "https://cointelegraph.com/news/animoca-brands-lympo-nft-platform-hacked-for-18-7-million", date: "2022-01-10", type: "news",
-		...srcMeta("cointelegraph.com", "Animoca's Lympo Hacked for $18.7M | Cointelegraph", "Cointelegraph: Animoca subsidiary Lympo's hot wallet hacked January 10, 2022. 165.2M LMT tokens stolen worth $18.7M. LMT price crashed 92% in 12 hours. Lympo was acquired for $2.88M.", "#1a1a2e"),
+		id: "y36", label: "CoinDesk: Animoca subsidiary Lympo hacked — $18.7M stolen", url: "https://www.coindesk.com/markets/2022/01/10/animoca-subsidiary-lympo-suffers-187m-hot-wallet-hack/", date: "2022-01-10", type: "news",
+		...srcMeta("coindesk.com", "Animoca Subsidiary Lympo Suffers $18.7M Hot Wallet Hack | CoinDesk", "CoinDesk: Animoca subsidiary Lympo's hot wallet hacked January 10, 2022. 165.2M LMT tokens stolen worth $18.7M. LMT price crashed 92% in 12 hours. Lympo was acquired for $2.88M.", "#0a9c00"),
 	},
 };
 
