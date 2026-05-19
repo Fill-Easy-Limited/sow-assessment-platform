@@ -2259,33 +2259,293 @@ function DownloadReportButton({ report }: { report: HnwReport }) {
 		const riskColor = p.riskScore >= 60 ? "#dc2626" : p.riskScore >= 40 ? "#d97706" : "#16a34a";
 		const riskBg = p.riskScore >= 60 ? "#fef2f2" : p.riskScore >= 40 ? "#fefce8" : "#f0fdf4";
 		const now = new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" });
+		const confColor = (v: number) => v >= 70 ? "#16a34a" : v >= 40 ? "#d97706" : "#dc2626";
+		const statusColor = (s: string) => s === "critical" ? "#dc2626" : s === "warning" ? "#d97706" : "#16a34a";
+		const matchLabel = (m: string) => m === "exact" ? "Exact Match" : m === "partial" ? "Partial Match" : m === "mismatch" ? "Mismatch" : "N/A";
+		const matchColor = (m: string) => m === "exact" ? "#16a34a" : m === "partial" ? "#d97706" : m === "mismatch" ? "#dc2626" : "#6b7280";
+		const docTypeLabels: Record<string, string> = { passport: "Passport / National ID", "bank-statement": "Bank Statement", "tax-return": "Tax Return", "share-certificate": "Share Certificate", "property-deed": "Property Deed", "trust-deed": "Trust Deed", "incorporation-cert": "Certificate of Incorporation", "annual-return": "Annual Return", "reference-letter": "Reference Letter", other: "Other Document" };
+		const srcTypeLabels: Record<string, string> = { filing: "Regulatory Filing", news: "News Report", registry: "Corporate Registry", "market-data": "Market Data", "public-record": "Public Record", estimate: "Estimate / Analysis" };
+		const td = (v: string, opts?: string) => `<td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;${opts ?? ""}">${v}</td>`;
 
-		const paramRows = report.keyParameters.map((param) => {
-			const color = param.status === "critical" ? "#dc2626" : param.status === "warning" ? "#d97706" : "#16a34a";
-			return `<tr><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;">${param.label}</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;font-weight:600;color:${color}">${param.value}</td></tr>`;
+		/* ── Section 2: Key Risk Parameters ── */
+		const paramRows = report.keyParameters.map((param) =>
+			`<tr>${td(param.label)}${td(param.value, `font-weight:600;color:${statusColor(param.status)}`)}</tr>`
+		).join("");
+
+		/* ── Section 3: Wealth Composition ── */
+		const wealthRows = report.wealthByCategory.filter((w) => w.totalUSD > 0).map((w) =>
+			`<tr>${td(CATEGORY_LABELS[w.category])}${td(formatUSD(w.totalUSD), "text-align:right;font-family:monospace;")}${td(w.percentage.toFixed(1) + "%", "text-align:right;")}${td(w.avgConfidence + "%", `text-align:center;color:${confColor(w.avgConfidence)};font-weight:600;`)}</tr>`
+		).join("");
+
+		/* ── Section 4: Career Timeline ── */
+		const timelineRows = report.careerTimeline.map((phase) =>
+			`<tr>${td(phase.startYear + "–" + (phase.endYear ?? "Present"), "font-size:12px;")}${td(phase.title, "font-size:12px;font-weight:600;")}${td(phase.organization ?? "", "font-size:12px;")}${td(phase.location, "font-size:12px;")}${td(formatUSD(phase.cumulativeWealthUSD), "font-size:12px;text-align:right;font-family:monospace;")}</tr>`
+		).join("");
+
+		/* ── Section 5: Career Phase Detail with claims ── */
+		const phaseDetailHtml = report.careerTimeline.map((phase, idx) => {
+			const eventsHtml = phase.keyEvents.length > 0
+				? `<div style="margin:8px 0"><div style="font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Key Events</div>${phase.keyEvents.map((e) => `<div style="font-size:12px;margin:2px 0;padding-left:12px;border-left:2px solid #0891b2;">&#8226; ${e}</div>`).join("")}</div>`
+				: "";
+			const categoriesHtml = phase.categories.map((cat) => {
+				const claimsHtml = cat.claims.map((claim) => {
+					const srcList = claim.sources.map((s) => `<span style="display:inline-block;font-size:10px;padding:1px 6px;border-radius:4px;background:#f3f4f6;border:1px solid #e5e7eb;margin:1px 2px;">${s.label}${s.date ? ` (${s.date})` : ""}</span>`).join(" ");
+					return `<div style="padding:6px 0;border-bottom:1px solid #f3f4f6;">
+						<div style="display:flex;justify-content:space-between;align-items:center;">
+							<span style="font-size:12px;flex:1;">${claim.description}</span>
+							<span style="font-size:12px;font-family:monospace;font-weight:600;margin-left:12px;white-space:nowrap;">${formatUSD(claim.estimatedValueUSD)}</span>
+						</div>
+						<div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
+							<div style="font-size:10px;color:#6b7280;">Confidence:</div>
+							<div style="flex:0 0 100px;height:6px;border-radius:3px;background:#e5e7eb;overflow:hidden;"><div style="height:100%;border-radius:3px;background:${confColor(claim.confidence)};width:${claim.confidence}%"></div></div>
+							<span style="font-size:11px;font-weight:600;color:${confColor(claim.confidence)}">${claim.confidence}%</span>
+						</div>
+						<div style="margin-top:4px;">${srcList}</div>
+					</div>`;
+				}).join("");
+				return `<div style="margin:8px 0 12px;padding:10px 14px;border-radius:8px;border:1px solid #e5e7eb;background:#fafafa;">
+					<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+						<div style="display:flex;align-items:center;gap:6px;">
+							<span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${CATEGORY_COLORS[cat.category]};"></span>
+							<span style="font-size:12px;font-weight:600;">${CATEGORY_LABELS[cat.category]}</span>
+						</div>
+						<div style="font-size:12px;font-weight:700;">${formatUSD(cat.subtotalUSD)} <span style="font-weight:400;color:${confColor(cat.avgConfidence)};">(${cat.avgConfidence}% conf.)</span></div>
+					</div>
+					${claimsHtml}
+				</div>`;
+			}).join("");
+			return `<div style="margin-bottom:20px;padding:16px;border:1px solid #d1d5db;border-radius:10px;background:white;">
+				<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+					<span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:8px;background:#0891b2;color:white;font-size:13px;font-weight:700;">${idx + 1}</span>
+					<div>
+						<span style="font-size:14px;font-weight:600;">${phase.title}</span>
+						${phase.organization ? `<span style="font-size:12px;color:#6b7280;"> — ${phase.organization}</span>` : ""}
+						<div style="font-size:11px;color:#6b7280;">${phase.startYear}–${phase.endYear ?? "Present"} · ${phase.location} · <span style="font-weight:600;color:#111;">${formatUSD(phase.cumulativeWealthUSD)} cumulative</span></div>
+					</div>
+				</div>
+				<p style="font-size:12px;color:#4b5563;line-height:1.6;margin:8px 0;">${phase.description}</p>
+				${eventsHtml}
+				${categoriesHtml}
+			</div>`;
 		}).join("");
 
-		const wealthRows = report.wealthByCategory.filter((w) => w.totalUSD > 0).map((w) => {
-			const confColor = w.avgConfidence >= 70 ? "#16a34a" : w.avgConfidence >= 40 ? "#d97706" : "#dc2626";
-			return `<tr><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;">${CATEGORY_LABELS[w.category]}</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;text-align:right;font-family:monospace;">${formatUSD(w.totalUSD)}</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;text-align:right;">${w.percentage.toFixed(1)}%</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;text-align:center;color:${confColor};font-weight:600;">${w.avgConfidence}%</td></tr>`;
+		/* ── Section 6: Entity Network (flatten tree) ── */
+		const flattenNodes = (nodes: CompanyNode[], depth = 0): string => {
+			return nodes.map((node) => {
+				const indent = depth * 20;
+				const statusColors: Record<string, string> = { active: "#16a34a", ipo: "#0891b2", exited: "#6b7280", restructured: "#d97706", delisted: "#dc2626", dissolved: "#9ca3af", pending: "#6366f1" };
+				const sColor = statusColors[node.status] ?? "#6b7280";
+				const row = `<div style="padding:6px 12px 6px ${12 + indent}px;border-bottom:1px solid #f3f4f6;font-size:12px;">
+					<span style="font-weight:600;">${node.name}</span>
+					<span style="display:inline-block;font-size:10px;padding:1px 6px;border-radius:4px;color:${sColor};border:1px solid ${sColor}33;background:${sColor}11;margin-left:6px;text-transform:capitalize;">${node.status}</span>
+					<br/><span style="color:#6b7280;font-size:11px;">${node.role}${node.ownership ? ` · ${node.ownership}` : ""}${node.valuation ? ` · ${node.valuation}` : ""}${node.jurisdiction ? ` · ${node.jurisdiction}` : ""}</span>
+				</div>`;
+				const children = node.children ? flattenNodes(node.children, depth + 1) : "";
+				return row + children;
+			}).join("");
+		};
+		const entityHtml = flattenNodes(report.companyNodes);
+
+		/* ── Section 7: Narrative ── */
+		const narrativeHtml = report.narrative.split("\n\n").map((para) =>
+			`<p style="margin:0 0 12px 0;font-size:13px;line-height:1.7;color:#374151;">${para}</p>`
+		).join("");
+
+		/* ── Section 8: Source Citations ── */
+		const allSources = new Map<string, SourceCitation>();
+		for (const phase of report.careerTimeline) {
+			for (const cat of phase.categories) {
+				for (const claim of cat.claims) {
+					for (const src of claim.sources) {
+						allSources.set(src.id, src);
+					}
+				}
+			}
+		}
+		const sourcesArr = Array.from(allSources.values());
+		const sourceRows = sourcesArr.map((src, i) =>
+			`<tr>${td((i + 1).toString(), "text-align:center;color:#6b7280;font-family:monospace;font-size:11px;")}${td(src.label, "font-weight:500;")}${td(srcTypeLabels[src.type] ?? src.type, "font-size:11px;")}${td(src.date ?? "—", "font-size:11px;color:#6b7280;")}${td(src.url ? `<a href="${src.url}" style="color:#0891b2;text-decoration:none;">Link</a>` : "—", "font-size:11px;text-align:center;")}</tr>`
+		).join("");
+
+		/* ── Section 9: Client Documents ── */
+		const docStatusColor = (s: string) => s === "verified" ? "#16a34a" : s === "pending" ? "#d97706" : s === "flagged" ? "#dc2626" : "#6b7280";
+		const docRows = report.clientDocuments.map((doc) =>
+			`<tr>${td(doc.label, "font-weight:500;")}${td(docTypeLabels[doc.type] ?? doc.type, "font-size:11px;")}${td(`<span style="color:${docStatusColor(doc.status)};font-weight:600;text-transform:capitalize;">${doc.status}</span>`)}${td(doc.submittedDate, "font-size:11px;color:#6b7280;")}${td(doc.submittedBy, "font-size:11px;color:#6b7280;")}${td(doc.governmentAuthority ?? "—", "font-size:11px;color:#6b7280;")}</tr>`
+		).join("");
+
+		/* ── Section 10: Cross-Reference Verification ── */
+		const exactCount = report.crossReferences.filter((r) => r.match === "exact").length;
+		const matchRate = Math.round((exactCount / report.crossReferences.length) * 100);
+		const crossRefRows = report.crossReferences.map((ref) =>
+			`<tr>${td(ref.field, "font-weight:500;")}${td(ref.clientValue, "font-family:monospace;font-size:11px;")}${td(ref.clientDocLabel, "font-size:11px;color:#6b7280;")}${td(ref.externalValue, "font-family:monospace;font-size:11px;")}${td(ref.externalSourceLabel, "font-size:11px;color:#6b7280;")}${td(`<span style="color:${matchColor(ref.match)};font-weight:600;">${matchLabel(ref.match)}</span>`, "text-align:center;")}${td(`<span style="color:${confColor(ref.confidence)};font-weight:600;">${ref.confidence}%</span>`, "text-align:center;")}</tr>`
+		).join("");
+		const verificationNotes = report.crossReferences.filter((r) => r.notes).map((r) =>
+			`<p style="font-size:12px;margin:4px 0;"><strong>${r.field}:</strong> ${r.notes}</p>`
+		).join("");
+
+		/* ── Section 11: PEP / Sanctions Screening ── */
+		const scr = report.screeningResult;
+		const scrStatusColor = scr.overallStatus === "Clear" ? "#16a34a" : scr.overallStatus === "Review Required" ? "#d97706" : "#dc2626";
+
+		/* ── Section 12: Document Upload Status ── */
+		const uploadedCount = report.uploadSlots.filter((s) => s.status === "uploaded").length;
+		const pendingCount = report.uploadSlots.filter((s) => s.status === "pending").length;
+		const uploadRows = report.uploadSlots.map((slot) => {
+			const sColor = slot.status === "uploaded" ? "#16a34a" : slot.status === "pending" ? "#d97706" : "#6b7280";
+			return `<tr>${td(slot.label, "font-weight:500;")}${td(slot.description, "font-size:11px;color:#6b7280;")}${td(slot.required ? "Required" : "Optional", "font-size:11px;text-align:center;")}${td(`<span style="color:${sColor};font-weight:600;text-transform:capitalize;">${slot.status}</span>`, "text-align:center;")}</tr>`;
 		}).join("");
 
-		const timelineRows = report.careerTimeline.map((phase) => {
-			return `<tr><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;font-size:12px;">${phase.startYear}-${phase.endYear ?? "Present"}</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;font-size:12px;font-weight:600;">${phase.title}</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;font-size:12px;">${phase.organization ?? ""}</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;font-size:12px;">${phase.location}</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;font-size:12px;text-align:right;font-family:monospace;">${formatUSD(phase.cumulativeWealthUSD)}</td></tr>`;
-		}).join("");
+		/* ── Section 13: Recommended Actions ── */
+		const actions = p.riskRating === "High"
+			? [{ label: "Enhanced Due Diligence Review", desc: "Requires senior compliance officer review before onboarding" }, { label: "Verify Crypto Holdings On-chain", desc: "Cross-reference declared token holdings with blockchain explorer data" }, { label: "Set Weekly Monitoring", desc: "Enable weekly screening for price movements, adverse media, and regulatory changes" }]
+			: p.riskRating === "Medium"
+			? [{ label: "Set Monthly Monitoring", desc: "Enable monthly screening for adverse media and regulatory changes" }, { label: "Schedule Periodic Review", desc: "Set next review date per enhanced monitoring policy" }, { label: "Request Supporting Documents", desc: "Obtain additional documentation for lower-confidence wealth claims" }]
+			: [{ label: "Approve for Onboarding", desc: "All checks passed — eligible for standard onboarding" }, { label: "Set Quarterly Monitoring", desc: "Enable quarterly screening per standard monitoring policy" }];
+		const actionsHtml = actions.map((a) =>
+			`<div style="padding:8px 12px;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:6px;"><div style="font-size:13px;font-weight:600;">&#9744; ${a.label}</div><div style="font-size:11px;color:#6b7280;margin-top:2px;">${a.desc}</div></div>`
+		).join("");
 
-		const narrativeHtml = report.narrative.split("\n\n").map((para) => `<p style="margin:0 0 12px 0;font-size:13px;line-height:1.7;color:#374151;">${para}</p>`).join("");
+		/* ══════════════ Assemble Full HTML ══════════════ */
+		const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>HNW Wealth Report — ${p.name}</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=DM+Sans:wght@400;500&family=JetBrains+Mono:wght@400&display=swap');
+@media print{body{margin:0;padding:20px}.page-break{page-break-before:always}.no-print{display:none}}
+body{font-family:'DM Sans','Inter',-apple-system,BlinkMacSystemFont,sans-serif;color:#1f2937;max-width:900px;margin:0 auto;padding:40px 32px;font-size:13px;line-height:1.5}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:8px 12px;background:#f3f4f6;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#6b7280;border-bottom:2px solid #d1d5db;font-family:'Inter',sans-serif}
+h1{font-size:22px;margin:0;font-family:'Inter',sans-serif}
+h2{font-size:16px;margin:32px 0 12px;padding-bottom:6px;border-bottom:2px solid #e5e7eb;color:#111827;text-transform:uppercase;letter-spacing:.04em;font-family:'Inter',sans-serif}
+h3{font-size:14px;margin:20px 0 8px;color:#1f2937;font-family:'Inter',sans-serif}
+a{color:#0891b2}
+</style></head><body>
 
-		const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>HNW Wealth Report - ${p.name}</title><style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=DM+Sans:wght@400;500&family=JetBrains+Mono:wght@400&display=swap');@media print{body{margin:0}.page-break{page-break-before:always}}body{font-family:'DM Sans','Inter',-apple-system,BlinkMacSystemFont,sans-serif;color:#1f2937;max-width:800px;margin:0 auto;padding:40px 32px}table{width:100%;border-collapse:collapse}th{text-align:left;padding:8px 12px;background:#f3f4f6;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#6b7280;border-bottom:2px solid #d1d5db;font-family:'Inter',sans-serif}h1{font-size:22px;margin:0;font-family:'Inter',sans-serif}h2{font-size:16px;margin:32px 0 12px;padding-bottom:6px;border-bottom:2px solid #e5e7eb;color:#111827;text-transform:uppercase;letter-spacing:.04em;font-family:'Inter',sans-serif}</style></head><body>
-<div style="border-bottom:3px solid #1e3a5f;padding-bottom:16px;margin-bottom:24px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.15em;color:#6b7280;margin-bottom:4px">Confidential — HNW Wealth Intelligence</div><h1>Source of Wealth Assessment Report</h1><div style="font-size:13px;color:#6b7280;margin-top:6px">Subject: ${p.name}${p.nameCn ? ` (${p.nameCn})` : ""} | Generated: ${now}</div></div>
-<div style="display:flex;gap:16px;margin-bottom:24px"><div style="flex:1;padding:12px 16px;border-radius:8px;background:${riskBg};border:1px solid ${riskColor}33"><div style="font-size:10px;text-transform:uppercase;color:#6b7280">Risk Rating</div><div style="font-size:18px;font-weight:700;color:${riskColor};margin-top:2px">${p.riskRating} (${p.riskScore}/100)</div></div><div style="flex:1;padding:12px 16px;border-radius:8px;background:#f3f4f6"><div style="font-size:10px;text-transform:uppercase;color:#6b7280">Est. Net Worth</div><div style="font-size:18px;font-weight:700;margin-top:2px">${formatUSD(report.totalEstimatedWealthUSD)}</div></div><div style="flex:1;padding:12px 16px;border-radius:8px;background:#f3f4f6"><div style="font-size:10px;text-transform:uppercase;color:#6b7280">Overall Confidence</div><div style="font-size:18px;font-weight:700;margin-top:2px">${report.overallConfidence}%</div></div></div>
-<h2>1. Subject Profile</h2><table><tr><td style="padding:4px 0;font-size:13px;color:#6b7280;width:160px">Full Name</td><td style="padding:4px 0;font-size:13px">${p.name}${p.nameCn ? ` (${p.nameCn})` : ""}</td></tr><tr><td style="padding:4px 0;font-size:13px;color:#6b7280">Date of Birth</td><td style="padding:4px 0;font-size:13px">${p.dateOfBirth} (Age ${p.age})</td></tr><tr><td style="padding:4px 0;font-size:13px;color:#6b7280">Nationality</td><td style="padding:4px 0;font-size:13px">${p.nationality}</td></tr><tr><td style="padding:4px 0;font-size:13px;color:#6b7280">Residences</td><td style="padding:4px 0;font-size:13px">${p.residences.join(", ")}</td></tr><tr><td style="padding:4px 0;font-size:13px;color:#6b7280">Primary Industry</td><td style="padding:4px 0;font-size:13px">${p.primaryIndustry}</td></tr></table>
-<h2>2. Key Risk Parameters</h2><table><tr><th>Parameter</th><th>Assessment</th></tr>${paramRows}</table>
-<h2>3. Wealth Composition</h2><table><tr><th>Category</th><th style="text-align:right">Value (USD)</th><th style="text-align:right">Allocation</th><th style="text-align:center">Confidence</th></tr>${wealthRows}</table>
+<!-- Header -->
+<div style="border-bottom:3px solid #1e3a5f;padding-bottom:16px;margin-bottom:24px">
+	<div style="display:flex;justify-content:space-between;align-items:flex-start;">
+		<div>
+			<div style="font-size:10px;text-transform:uppercase;letter-spacing:.15em;color:#6b7280;margin-bottom:4px">Confidential — HNW Wealth Intelligence Report</div>
+			<h1>Source of Wealth Assessment</h1>
+			<div style="font-size:13px;color:#6b7280;margin-top:6px">Subject: <strong>${p.name}${p.nameCn ? ` (${p.nameCn})` : ""}</strong> | Generated: ${now}</div>
+		</div>
+		<div style="text-align:right;font-size:11px;color:#6b7280;">
+			<div style="font-weight:700;color:#0891b2;font-size:12px;">FilEasy</div>
+			<div>Wealth Intelligence Engine</div>
+			<div>CorpVerify · GovVerify · China Cross-Border</div>
+		</div>
+	</div>
+</div>
+
+<!-- Summary Cards -->
+<div style="display:flex;gap:16px;margin-bottom:24px">
+	<div style="flex:1;padding:12px 16px;border-radius:8px;background:${riskBg};border:1px solid ${riskColor}33">
+		<div style="font-size:10px;text-transform:uppercase;color:#6b7280">Risk Rating</div>
+		<div style="font-size:18px;font-weight:700;color:${riskColor};margin-top:2px">${p.riskRating} (${p.riskScore}/100)</div>
+	</div>
+	<div style="flex:1;padding:12px 16px;border-radius:8px;background:#f3f4f6">
+		<div style="font-size:10px;text-transform:uppercase;color:#6b7280">Est. Net Worth</div>
+		<div style="font-size:18px;font-weight:700;margin-top:2px">${formatUSD(report.totalEstimatedWealthUSD)}</div>
+	</div>
+	<div style="flex:1;padding:12px 16px;border-radius:8px;background:#f3f4f6">
+		<div style="font-size:10px;text-transform:uppercase;color:#6b7280">Overall Confidence</div>
+		<div style="font-size:18px;font-weight:700;margin-top:2px">${report.overallConfidence}%</div>
+	</div>
+	<div style="flex:1;padding:12px 16px;border-radius:8px;background:#f3f4f6">
+		<div style="font-size:10px;text-transform:uppercase;color:#6b7280">Sources Cited</div>
+		<div style="font-size:18px;font-weight:700;margin-top:2px">${sourcesArr.length}</div>
+	</div>
+</div>
+
+<h2>1. Subject Profile</h2>
+<table>
+	<tr><td style="padding:4px 0;font-size:13px;color:#6b7280;width:160px">Full Name</td><td style="padding:4px 0;font-size:13px">${p.name}${p.nameCn ? ` (${p.nameCn})` : ""}</td></tr>
+	<tr><td style="padding:4px 0;font-size:13px;color:#6b7280">Date of Birth</td><td style="padding:4px 0;font-size:13px">${p.dateOfBirth} (Age ${p.age})</td></tr>
+	<tr><td style="padding:4px 0;font-size:13px;color:#6b7280">Nationality</td><td style="padding:4px 0;font-size:13px">${p.nationality}</td></tr>
+	<tr><td style="padding:4px 0;font-size:13px;color:#6b7280">Residences</td><td style="padding:4px 0;font-size:13px">${p.residences.join(", ")}</td></tr>
+	<tr><td style="padding:4px 0;font-size:13px;color:#6b7280">Primary Industry</td><td style="padding:4px 0;font-size:13px">${p.primaryIndustry}</td></tr>
+	<tr><td style="padding:4px 0;font-size:13px;color:#6b7280">Net Worth Source</td><td style="padding:4px 0;font-size:13px">${p.netWorthSource}</td></tr>
+</table>
+
+<h2>2. Key Risk Parameters</h2>
+<table><tr><th>Parameter</th><th>Assessment</th></tr>${paramRows}</table>
+
+<h2>3. Wealth Composition</h2>
+<table><tr><th>Category</th><th style="text-align:right">Value (USD)</th><th style="text-align:right">Allocation</th><th style="text-align:center">Confidence</th></tr>${wealthRows}</table>
+
 <div class="page-break"></div>
-<h2>4. Career Timeline</h2><table><tr><th>Period</th><th>Phase</th><th>Organization</th><th>Location</th><th style="text-align:right">Cumulative Wealth</th></tr>${timelineRows}</table>
-<h2>5. Wealth Narrative</h2>${narrativeHtml}
-<div style="border-top:2px solid #e5e7eb;margin-top:32px;padding-top:16px;font-size:11px;color:#9ca3af">This report was generated using verified data from international registries, regulatory filings, market data providers, and on-chain analysis. All source citations are included in the assessment. This document is for internal compliance use only.<br><br>Generated: ${now}</div>
+
+<h2>4. Career Timeline</h2>
+<table><tr><th>Period</th><th>Phase</th><th>Organization</th><th>Location</th><th style="text-align:right">Cumulative Wealth</th></tr>${timelineRows}</table>
+
+<h2>5. Career Phase Detail — Wealth Claims &amp; Source Citations</h2>
+${phaseDetailHtml}
+
+<div class="page-break"></div>
+
+<h2>6. Related Entity Network</h2>
+<p style="font-size:12px;color:#6b7280;margin-bottom:8px;">${report.companyNodes.length} direct entities — verified via FilEasy CorpVerify</p>
+<div style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;">${entityHtml}</div>
+
+<h2>7. Wealth Narrative</h2>
+${narrativeHtml}
+
+<div class="page-break"></div>
+
+<h2>8. PEP / Sanctions Screening</h2>
+<div style="padding:12px 16px;border-radius:8px;border:1px solid ${scrStatusColor}33;background:${scrStatusColor}08;margin-bottom:16px;">
+	<div style="font-size:10px;text-transform:uppercase;color:#6b7280">Screening Status</div>
+	<div style="font-size:16px;font-weight:700;color:${scrStatusColor};margin-top:2px">${scr.overallStatus}</div>
+</div>
+<table>
+	<tr><td style="padding:4px 0;font-size:13px;color:#6b7280;width:180px">Subject</td><td style="padding:4px 0;font-size:13px">${scr.subjectName}${scr.subjectNameCn ? ` (${scr.subjectNameCn})` : ""}</td></tr>
+	<tr><td style="padding:4px 0;font-size:13px;color:#6b7280">Last Screened</td><td style="padding:4px 0;font-size:13px">${scr.lastScreened}</td></tr>
+	<tr><td style="padding:4px 0;font-size:13px;color:#6b7280">Lists Checked</td><td style="padding:4px 0;font-size:13px">${scr.listsChecked.join(", ")}</td></tr>
+	<tr><td style="padding:4px 0;font-size:13px;color:#6b7280">PEP Hits</td><td style="padding:4px 0;font-size:13px;font-weight:600;color:${scr.pepHits > 0 ? "#d97706" : "#16a34a"}">${scr.pepHits}${scr.pepDetails ? ` — ${scr.pepDetails}` : ""}</td></tr>
+	<tr><td style="padding:4px 0;font-size:13px;color:#6b7280">Sanctions Hits</td><td style="padding:4px 0;font-size:13px;font-weight:600;color:${scr.sanctionsHits > 0 ? "#dc2626" : "#16a34a"}">${scr.sanctionsHits}</td></tr>
+	<tr><td style="padding:4px 0;font-size:13px;color:#6b7280">Adverse Media</td><td style="padding:4px 0;font-size:13px;font-weight:600;color:${scr.adverseMedia > 0 ? "#d97706" : "#16a34a"}">${scr.adverseMedia}${scr.adverseMediaDetails ? ` — ${scr.adverseMediaDetails}` : ""}</td></tr>
+</table>
+
+<h2>9. Source Citations (${sourcesArr.length} total)</h2>
+<table><tr><th style="text-align:center;width:30px">#</th><th>Source</th><th>Type</th><th>Date</th><th style="text-align:center">Link</th></tr>${sourceRows}</table>
+
+<div class="page-break"></div>
+
+<h2>10. Client-Submitted Documents</h2>
+<p style="font-size:12px;color:#6b7280;margin-bottom:8px;">${report.clientDocuments.filter((d) => d.status === "verified").length} of ${report.clientDocuments.length} documents verified</p>
+<table><tr><th>Document</th><th>Type</th><th>Status</th><th>Date</th><th>Submitted By</th><th>Gov. Authority</th></tr>${docRows}</table>
+
+<h2>11. Cross-Reference Verification</h2>
+<div style="padding:8px 14px;border-radius:8px;background:#f3f4f6;margin-bottom:12px;display:flex;align-items:center;gap:12px;">
+	<span style="font-size:12px;color:#6b7280;">Match Rate:</span>
+	<div style="flex:1;height:8px;border-radius:4px;background:#e5e7eb;overflow:hidden;"><div style="height:100%;border-radius:4px;background:#16a34a;width:${matchRate}%"></div></div>
+	<span style="font-size:13px;font-weight:700;">${matchRate}%</span>
+	<span style="font-size:11px;color:#6b7280;">(${exactCount} exact / ${report.crossReferences.length} fields)</span>
+</div>
+<table><tr><th>Field</th><th>Client Value</th><th>Client Doc</th><th>External Value</th><th>External Source</th><th style="text-align:center">Status</th><th style="text-align:center">Conf.</th></tr>${crossRefRows}</table>
+${verificationNotes ? `<div style="margin-top:12px;padding:10px 14px;border-radius:8px;background:#fafafa;border:1px solid #e5e7eb;"><div style="font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Verification Notes</div>${verificationNotes}</div>` : ""}
+
+<h2>12. Document Upload Status</h2>
+<p style="font-size:12px;color:#6b7280;margin-bottom:8px;">${uploadedCount} uploaded · ${pendingCount} pending</p>
+<table><tr><th>Document</th><th>Description</th><th style="text-align:center">Required</th><th style="text-align:center">Status</th></tr>${uploadRows}</table>
+
+<h2>13. Recommended Actions</h2>
+${actionsHtml}
+
+<!-- Footer -->
+<div style="border-top:3px solid #1e3a5f;margin-top:40px;padding-top:16px;">
+	<div style="display:flex;justify-content:space-between;align-items:flex-start;">
+		<div style="font-size:11px;color:#9ca3af;line-height:1.7;">
+			This report was generated by the <strong style="color:#0891b2;">FilEasy</strong> Wealth Intelligence Engine using verified data from international registries, regulatory filings, market data providers, and on-chain analysis across 80+ jurisdictions.<br>
+			Data sourced via <strong style="color:#0891b2;">FilEasy</strong> CorpVerify, GovVerify, and China Cross-Border APIs.<br>
+			All source citations are included in the assessment. This document is <strong>CONFIDENTIAL</strong> and for internal compliance use only.
+		</div>
+		<div style="text-align:right;font-size:11px;color:#9ca3af;white-space:nowrap;margin-left:24px;">
+			<div style="font-weight:700;color:#0891b2;">FilEasy Limited</div>
+			<div>Generated: ${now}</div>
+			<div>&copy; ${new Date().getFullYear()}</div>
+		</div>
+	</div>
+</div>
+
 </body></html>`;
 
 		const blob = new Blob([html], { type: "text/html" });
