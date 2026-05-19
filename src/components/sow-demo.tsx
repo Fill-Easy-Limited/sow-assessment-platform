@@ -2177,6 +2177,57 @@ const CROSS_VALIDATION_MOCK: Record<string, CrossValidationData> = {
 		],
 		consensusScore: 48,
 	},
+	"hnw-donald-trump": {
+		models: [
+			{
+				model: "Claude Sonnet",
+				icon: "C",
+				totalWealth: "$5.8B",
+				riskRating: "Very High",
+				keyFindings: [
+					"DJT stake valued at ~$3.5B but extreme meme-stock volatility",
+					"Real estate portfolio $2B (discounted from self-reports per NY AG fraud findings)",
+					"$TRUMP meme coin not included — regulatory status unclear",
+				],
+			},
+			{
+				model: "Gemini 2.5 Flash",
+				icon: "G",
+				totalWealth: "$8.2B",
+				riskRating: "High",
+				keyFindings: [
+					"Includes $TRUMP meme coin at $1.5B (80% supply via CIC Digital LLC)",
+					"DJT stake at $4.2B using higher share price assumptions",
+					"Golf course portfolio valued at $800M including international properties",
+				],
+			},
+			{
+				model: "GPT-4o",
+				icon: "O",
+				totalWealth: "$4.5B",
+				riskRating: "Very High",
+				keyFindings: [
+					"Conservative DJT valuation — applies 40% illiquidity discount for insider shares",
+					"Real estate deflated per NY AG findings — $1.6B after court adjustments",
+					"Excludes crypto entirely — no regulatory framework for presidential meme coins",
+				],
+			},
+		],
+		gapAnalysis: [
+			{ area: "DJT Stock Valuation", status: "disagree", detail: "Range: $2.1B-$4.2B across models. Insider lock-up discount, meme-stock volatility, and Truth Social revenue disconnect create fundamental valuation disagreement." },
+			{ area: "$TRUMP Meme Coin", status: "disagree", detail: "Claude excludes entirely, Gemini includes at $1.5B, GPT-4o excludes. No regulatory framework exists for sitting president's crypto token. Beneficial ownership chain through LLCs unclear." },
+			{ area: "Real Estate Portfolio", status: "partial", detail: "Range: $1.6B-$2.5B. NY AG fraud judgment found systematic overstatement. Models disagree on discount to apply. Mar-a-Lago valuation ($37M tax vs. $500M+ market) drives widest spread." },
+			{ area: "Brand Licensing Value", status: "partial", detail: "All models confirm $400M+ historical licensing fees. Current ongoing value disputed — some projects removed Trump name post-2016. OGE ranges too broad for precise calculation." },
+			{ area: "PEP Risk Classification", status: "agree", detail: "All models flag active PEP status (sitting president) as highest classification. Unanimous on mandatory enhanced due diligence requirement." },
+		],
+		factualVsInferred: [
+			{ category: "Income", factualPct: 60, inferredPct: 40 },
+			{ category: "Companies", factualPct: 45, inferredPct: 55 },
+			{ category: "Alternatives", factualPct: 40, inferredPct: 60 },
+			{ category: "Crypto", factualPct: 15, inferredPct: 85 },
+		],
+		consensusScore: 45,
+	},
 	"hnw-james-chen": {
 		models: [
 			{

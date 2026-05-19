@@ -2032,7 +2032,7 @@ const SRC_TRUMP: Record<string, SourceCitation> = {
 	},
 	secDJT: {
 		id: "dt3", label: "SEC EDGAR — Trump Media & Technology Group (DJT) 10-K", url: "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001849635&type=10-K", date: "2025-04-01", type: "filing",
-		...srcMeta("sec.gov", "SEC EDGAR | 10-K Annual Report | Trump Media & Technology Group", "SEC EDGAR filing showing Trump Media & Technology Group (Nasdaq: DJT) annual report. Beneficial ownership shows Donald J. Trump holding approximately 53% of outstanding shares.", "#003366"),
+		...srcMeta("sec.gov", "SEC EDGAR | 10-K Annual Report | Trump Media & Technology Group", "SEC EDGAR filing showing Trump Media & Technology Group (Nasdaq: DJT) annual report. Beneficial ownership shows Donald J. Trump holding approximately 59% of outstanding shares (~188M shares).", "#003366"),
 	},
 	nycPropertyRecords: {
 		id: "dt4", label: "NYC Dept of Finance — Trump Tower Assessment", url: "https://www.nyc.gov/site/finance/property/property.page", date: "2025-01-01", type: "registry",
@@ -2324,20 +2324,18 @@ const TRUMP_PARAMS: KeyParameter[] = [
 
 // ── Donald Trump: Narrative ────────────────────────────────────
 
-const TRUMP_NARRATIVE = `Donald Trump's estimated net worth of approximately $6.5 billion is primarily driven by two components: his controlling stake in Trump Media & Technology Group (Nasdaq: DJT) and the Trump Organization's real estate and licensing portfolio. The DJT stake (~53%, valued at ~$3.2B at current market prices) is the single largest component but carries extreme volatility — the stock has traded between $12 and $79 since its March 2024 SPAC listing.
+const TRUMP_NARRATIVE = `Donald Trump's wealth profile presents one of the most complex compliance challenges in HNW due diligence. His estimated net worth of $6.5 billion is subject to extraordinary uncertainty driven by three factors: (1) a ~59% stake in Trump Media & Technology Group (DJT) that has traded between $15-80 per share since its March 2024 SPAC listing, (2) the $TRUMP meme coin launched January 2025 with 80% of supply held by Trump-affiliated entities CIC Digital LLC and Fight Fight Fight LLC, and (3) a real estate portfolio whose valuations were found to be systematically overstated in the NY Attorney General's $454M civil fraud judgment.
 
-The Trump Organization encompasses over 500 LLCs across real estate, hospitality, golf courses, and brand licensing. Key properties include Trump Tower (725 Fifth Avenue), 40 Wall Street, and various hotel/condo developments. The golf portfolio spans 15+ courses across the US, Scotland, and Ireland. Mar-a-Lago operates as a private club with $200K+ membership fees.
+The career trajectory shows wealth originating from Fred Trump's Brooklyn/Queens real estate empire, with significant capital transferred through family structures. The Trump Organization expanded into Manhattan commercial real estate, Atlantic City casinos (resulting in six corporate bankruptcies between 1991-2014), and global brand licensing. NBC's The Apprentice (2004-2015) generated an estimated $427M and transformed the Trump name into a global licensing brand worth $400M+ in cumulative fees. However, brand licensing income, casino-era earnings, and Trump Organization distributions all carry moderate confidence due to the complexity of the 500+ LLC corporate structure and contested financial statements.
 
-Assessment reliability is significantly limited by several factors: (1) OGE financial disclosures use broad ranges rather than exact values, (2) Trump Organization entities are private with no mandatory financial reporting, (3) the NY Attorney General civil fraud case found systematic inflation of asset values on financial statements — Judge Engoron's $454M judgment cited pervasive overvaluation, (4) the 500+ LLC structure creates opacity around true beneficial ownership and cross-entity liabilities, and (5) DJT stock trades as a meme stock with limited correlation to business fundamentals (Truth Social revenue was minimal relative to market cap).
-
-Active PEP status as sitting U.S. President requires mandatory enhanced due diligence and senior management approval. The profile relies primarily on public filings and third-party estimates rather than client-provided documentation, resulting in a Grade D corroboration score.`;
+As the 47th President of the United States, Trump carries the highest PEP classification — mandatory enhanced due diligence and senior management approval are required. Key risk factors include: active PEP status, six corporate bankruptcies, the $454M NY civil fraud judgment, multiple criminal indictments (2023-2024), extreme DJT stock volatility, unregulated $TRUMP meme coin exposure, and incomplete asset divestiture questions. The corroboration grade of D reflects weak confidence across volatile and politically entangled asset classes.`;
 
 // ── Donald Trump: Client Documents ─────────────────────────────
 
 const TRUMP_CLIENT_DOCS: ClientDocument[] = [
 	{ id: "cd-dt-1", type: "other", label: "OGE Public Financial Disclosure (2025)", submittedBy: "Public record — Office of Government Ethics", submittedDate: "2025-06-15", status: "verified", fileDescription: "OGE Form 278e public financial disclosure for President Donald J. Trump. Lists 500+ entities, income ranges, assets, liabilities, and agreements. Mandatory annual filing.", verificationNotes: "Government authority filing. Discloses ranges (e.g., '$1M-$5M') not exact values. Cross-referenced against SEC DJT filings.", governmentAuthority: "U.S. Office of Government Ethics" },
 	{ id: "cd-dt-2", type: "incorporation-cert", label: "NY SOS — Trump Organization entity filings (500+ LLCs)", submittedBy: "Public record — NY Secretary of State", submittedDate: "2026-05-19", status: "verified", fileDescription: "New York Secretary of State entity search results. Over 500 active and inactive Trump-related LLCs and corporations. Filing dates, registered agent (The Trump Organization), and status.", verificationNotes: "100% verified — government authority. Entity list cross-referenced against OGE disclosure.", governmentAuthority: "New York Department of State" },
-	{ id: "cd-dt-3", type: "other", label: "SEC 10-K — Trump Media & Technology Group (DJT)", submittedBy: "Public record — SEC EDGAR", submittedDate: "2025-04-01", status: "verified", fileDescription: "Annual report for Trump Media & Technology Group Corp (Nasdaq: DJT). Beneficial ownership: Donald J. Trump holds 53% of Class A common stock. Revenue, expenses, and risk factors disclosed.", verificationNotes: "100% verified — SEC filing. Beneficial ownership cross-referenced against Nasdaq share registry.", governmentAuthority: "U.S. Securities and Exchange Commission" },
+	{ id: "cd-dt-3", type: "other", label: "SEC 10-K — Trump Media & Technology Group (DJT)", submittedBy: "Public record — SEC EDGAR", submittedDate: "2025-04-01", status: "verified", fileDescription: "Annual report for Trump Media & Technology Group Corp (Nasdaq: DJT). Beneficial ownership: Donald J. Trump holds ~59% of outstanding shares (~188M shares). Revenue, expenses, and risk factors disclosed. Lock-up expired Sept 2024.", verificationNotes: "100% verified — SEC filing. DJT share price extremely volatile ($15-80 range). Mark-to-market swings by billions.", governmentAuthority: "U.S. Securities and Exchange Commission" },
 	{ id: "cd-dt-4", type: "property-deed", label: "NYC Finance — Trump Tower (725 Fifth Ave) Assessment", submittedBy: "Public record — NYC Dept of Finance", submittedDate: "2025-01-01", status: "verified", fileDescription: "Property tax assessment for 725 Fifth Avenue (Trump Tower). Commercial condominium assessment, tax class, and ownership details.", verificationNotes: "100% verified — government authority. Assessment value may differ from market value.", governmentAuthority: "NYC Department of Finance" },
 	{ id: "cd-dt-5", type: "property-deed", label: "Palm Beach County — Mar-a-Lago Assessment", submittedBy: "Public record — Palm Beach County Property Appraiser", submittedDate: "2025-01-01", status: "verified", fileDescription: "Property appraiser record for Mar-a-Lago Club, 1100 S Ocean Blvd, Palm Beach, FL. Tax assessment and special use classification.", verificationNotes: "100% verified — government authority. Tax assessment significantly below market value due to deed restriction as social club.", governmentAuthority: "Palm Beach County Property Appraiser" },
 	{ id: "cd-dt-6", type: "other", label: "NY AG Civil Fraud Judgment — Trump Organization ($454M)", submittedBy: "Public record — NY Supreme Court", submittedDate: "2024-02-16", status: "flagged", fileDescription: "Court judgment in People of New York v. Donald J. Trump. Finding of persistent fraud in asset valuations. $454M disgorgement ordered. Three-year bar from serving as officer/director of NY corporation.", verificationNotes: "Court ruling. Findings of systematic asset inflation directly contradict self-reported valuations used in financial statements.", governmentAuthority: "New York Supreme Court" },
@@ -2346,13 +2344,16 @@ const TRUMP_CLIENT_DOCS: ClientDocument[] = [
 // ── Donald Trump: Cross-References ─────────────────────────────
 
 const TRUMP_CROSS_REFS: CrossReference[] = [
-	{ id: "xr-dt-1", field: "DJT Shareholding", clientDocLabel: "SEC 10-K (DJT)", externalSourceLabel: "Nasdaq Share Registry", clientValue: "~53% of DJT outstanding shares", externalValue: "53.1% per proxy filing", match: "exact", confidence: 100, verifiedVia: "SEC EDGAR — government authority" },
+	{ id: "xr-dt-1", field: "DJT Shareholding", clientDocLabel: "SEC 10-K (DJT)", externalSourceLabel: "Nasdaq Share Registry", clientValue: "~59% of DJT (~188M shares)", externalValue: "Confirmed via SEC proxy statement", match: "exact", confidence: 95, verifiedVia: "SEC EDGAR — government authority", notes: "Shareholding confirmed. However, mark-to-market value swings between $3B-$15B based on volatile share price." },
 	{ id: "xr-dt-2", field: "Trump Tower Ownership", clientDocLabel: "NYC Finance — 725 Fifth Ave", externalSourceLabel: "OGE Financial Disclosure", clientValue: "Trump Tower commercial condo", externalValue: "Trump Tower listed as asset ($1M-$50M range)", match: "partial", confidence: 60, verifiedVia: "NYC ACRIS + OGE — both government", notes: "OGE range ($1M-$50M) too broad to confirm exact value. Forbes estimates ~$300M." },
 	{ id: "xr-dt-3", field: "Mar-a-Lago Valuation", clientDocLabel: "Palm Beach County Assessment", externalSourceLabel: "Forbes Estimate / Trump Self-Report", clientValue: "Tax assessed: ~$37M (club use restriction)", externalValue: "Trump has claimed $1B+; Forbes estimates ~$300M", match: "mismatch", confidence: 40, verifiedVia: "County records vs. external estimates", notes: "Extreme divergence between tax assessment ($37M), Forbes estimate ($300M), and Trump self-valuation ($1B+). Deed restriction limits property use to social club." },
 	{ id: "xr-dt-4", field: "Net Worth History", clientDocLabel: "OGE Financial Disclosure", externalSourceLabel: "NY AG Civil Fraud Findings", clientValue: "Reported assets on financial statements (loan applications)", externalValue: "Court found systematic inflation — Trump Tower penthouse at 30K sqft was actually 11K sqft", match: "mismatch", confidence: 30, verifiedVia: "NY Supreme Court judgment", notes: "Judge Engoron found persistent and pervasive fraud in asset valuations. Penthouse tripled in reported size. Financial statement reliability is severely compromised." },
 	{ id: "xr-dt-5", field: "Income — The Apprentice", clientDocLabel: "OGE Filing — NBC Income", externalSourceLabel: "NYT Tax Return Investigation", clientValue: "OGE: NBC Universal income (range)", externalValue: "NYT: ~$427M total Apprentice-related income", match: "partial", confidence: 65, verifiedVia: "OGE filing + investigative journalism", notes: "OGE uses ranges not exact figures. NYT obtained tax return data that provided more precise income figures." },
 	{ id: "xr-dt-6", field: "Federal Income Tax", clientDocLabel: "N/A — tax returns not provided", externalSourceLabel: "NYT Investigation (2020)", clientValue: "Tax returns never voluntarily released", externalValue: "Paid $750 federal income tax in 2016 and 2017", match: "not-available", confidence: 45, verifiedVia: "Investigative journalism — not officially confirmed", notes: "Trump is the only modern president who refused to voluntarily release tax returns. NYT obtained records independently." },
 	{ id: "xr-dt-7", field: "Entity Count", clientDocLabel: "NY SOS Entity Search", externalSourceLabel: "OGE Financial Disclosure", clientValue: "500+ active/inactive LLCs in NY alone", externalValue: "OGE lists 500+ entities with income", match: "exact", confidence: 85, verifiedVia: "NY Secretary of State + OGE — both government" },
+	{ id: "xr-dt-8", field: "$TRUMP Meme Coin Holdings", clientDocLabel: "CoinGecko Market Data", externalSourceLabel: "On-chain Solana Analysis", clientValue: "80% of $TRUMP supply held by CIC Digital / Fight Fight Fight LLC", externalValue: "On-chain data confirms concentrated token holdings", match: "partial", confidence: 30, verifiedVia: "On-chain analysis — wallet attribution probabilistic", notes: "Token ownership structure confirmed but actual beneficial ownership chain from LLCs to Trump personally is not formally documented. Regulatory status of meme coin is unclear." },
+	{ id: "xr-dt-9", field: "NY Civil Fraud Judgment", clientDocLabel: "NY AG Court Filing", externalSourceLabel: "OGE Disclosure — Liabilities", clientValue: "$454M judgment (under appeal)", externalValue: "Not listed as liability in OGE disclosure", match: "mismatch", confidence: 85, verifiedVia: "NY Supreme Court — government authority", notes: "Judgment under appeal. If upheld, $454M liability significantly impacts net worth calculation." },
+	{ id: "xr-dt-10", field: "Brand Licensing Revenue", clientDocLabel: "OGE Disclosure — Income", externalSourceLabel: "Forbes Brand Analysis", clientValue: "Licensing income listed in OGE ranges", externalValue: "Forbes estimates $400M+ cumulative licensing fees", match: "partial", confidence: 50, verifiedVia: "OGE ranges + Forbes investigative reporting", notes: "Brand licensing income is significant but exact figures unavailable. Global deals in Turkey, India, Panama, Philippines. Some projects have removed the Trump name." },
 ];
 
 // ── Donald Trump: Report Assembly ──────────────────────────────
@@ -2362,15 +2363,15 @@ const TRUMP_REPORT: HnwReport = {
 		id: "hnw-donald-trump",
 		name: "Donald Trump",
 		dateOfBirth: "1946-06-14",
-		age: 79,
+		age: 80,
 		nationality: "American",
-		residences: ["Palm Beach, Florida", "New York, New York"],
+		residences: ["Washington, DC", "Palm Beach, FL (Mar-a-Lago)", "New York, NY (Trump Tower)"],
 		primaryIndustry: "Real Estate / Media / Politics",
 		estimatedNetWorthUSD: 6_500_000_000,
-		netWorthSource: "Forbes Real-Time Billionaires Index",
+		netWorthSource: "Forbes / Bloomberg (highly volatile — DJT + $TRUMP meme coin)",
 		riskRating: "High",
-		riskScore: 72,
-		profileSummary: "Former U.S. President (2017-2021, 2025-present) and real estate mogul. Wealth derived from inherited real estate empire, licensing deals, media ventures, and Trump Media & Technology Group (DJT). Active PEP status with complex ownership through hundreds of LLCs. Assessment relies primarily on public financial disclosures and external benchmarking rather than client-provided documents, resulting in lower corroboration confidence.",
+		riskScore: 75,
+		profileSummary: "47th President of the United States. Wealth derived from Trump Organization real estate, DJT/TMTG stock (~59%), brand licensing, and $TRUMP meme coin. Active PEP — highest classification. Six corporate bankruptcies. $454M NY civil fraud judgment under appeal. Extreme wealth volatility due to DJT stock and crypto exposure.",
 	},
 	careerTimeline: TRUMP_CAREER,
 	totalEstimatedWealthUSD: 6_500_000_000,
@@ -2385,32 +2386,37 @@ const TRUMP_REPORT: HnwReport = {
 	crossReferences: TRUMP_CROSS_REFS,
 	uploadSlots: UPLOAD_SLOTS,
 	corroborationScores: {
-		consistency: 48,
+		consistency: 45,
 		correctness: 55,
-		completeness: 52,
+		completeness: 40,
 		masReference: "MAS Notice 626 / Guidelines to Notice 626 (Prevention of Money Laundering and Countering the Financing of Terrorism) — §6.18–6.22 Source of Wealth Verification",
 	},
 	agentVerification: {
 		agentId: "fe-verify-v2",
 		agentName: "Fill Easy Verification Agent",
 		timestamp: new Date().toISOString(),
-		overallStatus: "requires-review",
+		overallStatus: "flagged",
 		checks: [
-			{ id: "ck-dt-1", category: "consistency", label: "Career-to-wealth trajectory alignment", status: "warn", detail: "Inherited wealth (~$413M per NYT) + real estate + TV income + DJT stock. Trajectory is broadly plausible but self-reported figures have been judicially found to be inflated. NY AG fraud judgment creates systemic doubt about historical asset representations." },
-			{ id: "ck-dt-2", category: "correctness", label: "DJT stock valuation reliability", status: "flag", detail: "DJT constitutes ~50% of net worth. Stock is extremely volatile (range $12-$79) with meme-stock characteristics. Truth Social revenue was ~$4.1M in FY2023 — market cap disconnected from fundamentals. Lock-up restrictions apply." },
-			{ id: "ck-dt-3", category: "correctness", label: "Real estate valuation accuracy", status: "flag", detail: "NY AG civil fraud case found systematic inflation of property values on financial statements. Trump Tower penthouse reported as 30,000 sqft when actually 10,996 sqft. Historical financial statements cannot be relied upon for valuation." },
-			{ id: "ck-dt-4", category: "completeness", label: "OGE disclosure limitations", status: "warn", detail: "OGE Form 278e uses broad ranges (e.g., '$1M-$5M', '$5M-$25M') rather than exact values. 500+ entities listed but individual entity valuations are not disclosed. Aggregate wealth calculation requires significant estimation." },
-			{ id: "ck-dt-5", category: "completeness", label: "Tax return non-disclosure", status: "flag", detail: "Tax returns have never been voluntarily released. NYT investigative reporting (2020) is the primary source for income data. Without official tax documentation, income verification is incomplete." },
-			{ id: "ck-dt-6", category: "consistency", label: "PEP status — active head of state", status: "flag", detail: "Active PEP as sitting U.S. President. Mandatory enhanced due diligence. All transactions subject to heightened scrutiny. Senior management sign-off required for onboarding." },
+			{ id: "ck-dt-1", category: "consistency", label: "Career-to-wealth trajectory alignment", status: "warn", detail: "Fred Trump family transfers → Manhattan real estate → casino bankruptcies → Apprentice brand reinvention → political career → DJT/crypto. Trajectory is credible but punctuated by six corporate bankruptcies and disputed asset valuations." },
+			{ id: "ck-dt-2", category: "consistency", label: "Net worth vs. historical claims", status: "flag", detail: "Trump has historically claimed net worth of $10B+. NY AG found systematic overstatement of asset values in financial statements. Forbes and Bloomberg estimates significantly lower. Self-reported figures unreliable." },
+			{ id: "ck-dt-3", category: "correctness", label: "DJT/TMTG SEC filings", status: "pass", detail: "SEC filings confirm ~59% ownership of DJT shares. SPAC merger S-4 and 10-K filings verified. However, DJT trades at extreme volatility ($15-80 range) making mark-to-market highly unstable." },
+			{ id: "ck-dt-4", category: "correctness", label: "Real estate valuations — government records", status: "flag", detail: "NYC ACRIS and county property records provide assessed values. NY AG judgment found Trump inflated values by 17-39% across multiple properties. Mar-a-Lago assessed at $37M vs. self-reported $739M. Fundamental reliability issue." },
+			{ id: "ck-dt-5", category: "correctness", label: "$TRUMP meme coin attribution", status: "flag", detail: "$TRUMP launched Jan 2025 on Solana. 80% held by CIC Digital LLC and Fight Fight Fight LLC. Beneficial ownership chain from LLCs to Trump personally not formally documented. Regulatory status entirely unclear." },
+			{ id: "ck-dt-6", category: "completeness", label: "Trump Organization structure opacity", status: "flag", detail: "500+ LLCs under Trump Organization umbrella. Full corporate structure not publicly available. Many entities are single-asset vehicles. Intercompany transactions and guarantees not independently verified." },
+			{ id: "ck-dt-7", category: "completeness", label: "PEP classification and divestiture", status: "flag", detail: "Active PEP — sitting President of the United States. No blind trust established. Management transferred to sons but ownership retained. Emoluments and conflicts of interest extensively debated. Mandatory EDD required." },
+			{ id: "ck-dt-8", category: "completeness", label: "Criminal proceedings impact", status: "warn", detail: "Multiple criminal indictments (2023-2024) in NY, Georgia, and federal courts. Potential fines, penalties, and legal costs not fully quantified. Impact on net worth calculation uncertain." },
+			{ id: "ck-dt-9", category: "consistency", label: "Casino bankruptcy pattern", status: "pass", detail: "Six corporate bankruptcies (1991-2014) are well-documented in federal court records. All were corporate Chapter 11 filings, not personal bankruptcy. Pattern consistent with aggressive leveraging strategy." },
+			{ id: "ck-dt-10", category: "correctness", label: "Brand licensing income verification", status: "warn", detail: "OGE discloses income in broad ranges, not exact figures. Forbes estimates $400M+ cumulative licensing fees but some global projects have removed the Trump name post-2016. Current licensing revenue unclear." },
 		],
-		summary: "Donald Trump's wealth profile presents significant corroboration challenges. The NY AG civil fraud judgment fundamentally undermines reliance on self-reported asset values. DJT stock (50% of net worth) trades as a meme stock with extreme volatility. OGE financial disclosures use ranges rather than exact values. Active PEP status as sitting President requires mandatory enhanced due diligence. Recommend independent property valuations and senior management review before any onboarding decision.",
+		summary: "Donald Trump's wealth profile receives a D corroboration grade reflecting fundamental challenges: (1) active PEP status as sitting President requiring highest-level EDD, (2) NY AG finding of systematic asset overstatement, (3) extreme volatility in DJT stock and $TRUMP meme coin, (4) 500+ LLC structure with limited transparency, and (5) multiple ongoing criminal proceedings with unquantified financial impact. The OGE and SEC filings provide some anchor points, but self-reported valuations are unreliable per court findings. Senior management approval is mandatory before any onboarding decision.",
 		recommendations: [
-			"CRITICAL: PEP — active head of state. Senior management approval mandatory before any engagement",
-			"Commission independent real estate appraisals — cannot rely on self-reported values per NY AG findings",
-			"Monitor DJT stock daily — constitutes ~50% of net worth with extreme volatility",
-			"Request detailed LLC structure chart — 500+ entities create significant opacity",
-			"Obtain independent tax analysis — client has never voluntarily released tax returns",
-			"Review all ongoing litigation and potential liability impact on net worth",
+			"MANDATORY: Obtain senior management approval — active PEP (head of state) requires board-level sign-off per MAS Notice 626",
+			"Commission independent real estate appraisals — NY AG judgment invalidates self-reported values as reference points",
+			"Implement daily mark-to-market for DJT holdings — share price swings can move net worth estimate by $3B+ in days",
+			"Engage external counsel to assess $TRUMP meme coin regulatory status — no precedent for sitting president's crypto token",
+			"Map full Trump Organization LLC structure (500+ entities) — current visibility is insufficient for KYC/AML purposes",
+			"Monitor all criminal proceedings and assess potential financial penalties impact on net worth",
+			"Verify beneficial ownership chain for CIC Digital LLC and Fight Fight Fight LLC ($TRUMP token holders)",
 		],
 	},
 	corroborationGrade: "D",
