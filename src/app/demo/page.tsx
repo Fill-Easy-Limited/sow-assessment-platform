@@ -25,13 +25,16 @@ export default function DemoPage() {
 								HNW Wealth Intelligence
 							</h1>
 							<p className="text-[11px] text-white/45 leading-tight tracking-wide">
-								AI-powered source of wealth · International data sources
+								Powered by <span className="text-sky-300 font-semibold">FilEasy</span> · AI-powered source of wealth · International data sources
 							</p>
 						</div>
 					</div>
-					<span className="text-[9px] font-bold tracking-[0.2em] uppercase px-2.5 py-1 rounded-md bg-sky-500/15 text-sky-300 border border-sky-400/15 backdrop-blur-sm">
-						Demo
-					</span>
+					<div className="flex items-center gap-3">
+						<span className="hidden sm:inline text-[10px] text-white/30 tracking-wide">CorpVerify · GovVerify · China Cross-Border</span>
+						<span className="text-[9px] font-bold tracking-[0.2em] uppercase px-2.5 py-1 rounded-md bg-sky-500/15 text-sky-300 border border-sky-400/15 backdrop-blur-sm">
+							Demo
+						</span>
+					</div>
 				</div>
 			</header>
 
@@ -44,11 +47,16 @@ export default function DemoPage() {
 			<footer className="bg-gradient-to-r from-[#081620] via-[#0a1e2c] to-[#081620] text-white/35 border-t border-white/5">
 				<div className="max-w-6xl mx-auto w-full px-6 sm:px-10 py-5">
 					<div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px]">
-						<p className="tracking-wide">
-							This is a demonstration environment with simulated data. All names, identifiers, and financial figures are fictional.
-						</p>
+						<div>
+							<p className="tracking-wide">
+								This is a demonstration environment with simulated data. All names, identifiers, and financial figures are fictional.
+							</p>
+							<p className="text-white/20 tracking-wide mt-1">
+								Data sourced via <span className="text-sky-400/60 font-semibold">FilEasy</span> CorpVerify, GovVerify, and China Cross-Border APIs across 80+ jurisdictions.
+							</p>
+						</div>
 						<p className="text-white/20 shrink-0 tracking-wider">
-							&copy; {new Date().getFullYear()} Confidential
+							&copy; {new Date().getFullYear()} <span className="text-sky-400/40 font-semibold">FilEasy</span> Limited
 						</p>
 					</div>
 				</div>
