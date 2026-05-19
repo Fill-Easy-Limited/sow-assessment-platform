@@ -2177,6 +2177,57 @@ const CROSS_VALIDATION_MOCK: Record<string, CrossValidationData> = {
 		],
 		consensusScore: 48,
 	},
+	"hnw-james-chen": {
+		models: [
+			{
+				model: "Claude Sonnet",
+				icon: "C",
+				totalWealth: "$375M",
+				riskRating: "Low",
+				keyFindings: [
+					"Goldman Sachs MD compensation verified at $18M over 10 years",
+					"Meridian Capital PE carry well-documented via MAS/ACRA",
+					"Conservative family office with no speculative assets",
+				],
+			},
+			{
+				model: "Gemini 2.5 Flash",
+				icon: "G",
+				totalWealth: "$390M",
+				riskRating: "Low",
+				keyFindings: [
+					"Singapore real estate appreciation adds $25M to portfolio value",
+					"Blue-chip equity portfolio independently verified via SGX data",
+					"Clean PEP/sanctions screening across all jurisdictions",
+				],
+			},
+			{
+				model: "GPT-4o",
+				icon: "O",
+				totalWealth: "$370M",
+				riskRating: "Low",
+				keyFindings: [
+					"Single-jurisdiction profile simplifies verification significantly",
+					"IRAS filings cross-check perfectly with DBS bank statements",
+					"No offshore structures or cross-border complexity identified",
+				],
+			},
+		],
+		gapAnalysis: [
+			{ area: "Goldman Sachs Compensation", status: "agree", detail: "All models confirm $15-20M range for Goldman Sachs MD-level compensation in Singapore during the 1990s." },
+			{ area: "Meridian Capital PE Returns", status: "agree", detail: "Fund performance (2.2-2.8x MOIC) and carried interest calculations consistent across all models." },
+			{ area: "Singapore Real Estate", status: "agree", detail: "Property valuations confirmed via SLA/URA records. All models agree on current market values." },
+			{ area: "Portfolio Composition", status: "agree", detail: "Conservative allocation (equities, bonds, PE, real estate) consistently described. No speculative assets found." },
+			{ area: "Net Worth Estimate", status: "partial", detail: "Range $370M-$390M — narrow 5% variance reflecting minor differences in PE fund-of-funds mark-to-market." },
+		],
+		factualVsInferred: [
+			{ category: "Income", factualPct: 95, inferredPct: 5 },
+			{ category: "Companies", factualPct: 90, inferredPct: 10 },
+			{ category: "Investments", factualPct: 85, inferredPct: 15 },
+			{ category: "Alternatives", factualPct: 92, inferredPct: 8 },
+		],
+		consensusScore: 88,
+	},
 };
 
 function CrossLLMValidationSection({ report }: { report: HnwReport }) {

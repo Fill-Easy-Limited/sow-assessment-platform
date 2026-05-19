@@ -1,4 +1,4 @@
-/* ═══════════════════════════════════════════════════════════════
+﻿/* ═══════════════════════════════════════════════════════════════
    HNW Wealth Intelligence — Data Model & Mock Data
    Four reference cases: Jack Ma, Yat Siu, Donald Trump & James Chen Wei
    ═══════════════════════════════════════════════════════════════ */
@@ -1494,6 +1494,370 @@ const UPLOAD_SLOTS: DocumentUploadSlot[] = [
 	{ id: "up-8", type: "source-of-funds", label: "Source of Initial Funds Declaration", description: "Signed declaration explaining the origin of initial capital used to build wealth. Required for compliance.", required: true, status: "uploaded" },
 ];
 
+// ── James Chen Wei: Sources ────────────────────────────────────
+
+const SRC_CHEN: Record<string, SourceCitation> = {
+	masLicensing: {
+		id: "cw1", label: "MAS Capital Markets Services Licence — Meridian Capital Partners", url: "https://eservices.mas.gov.sg/fid", date: "2000-06-15", type: "filing",
+		...srcMeta("mas.gov.sg", "MAS | Financial Institutions Directory — Meridian Capital Partners Pte. Ltd.", "MAS Financial Institutions Directory record for Meridian Capital Partners Pte. Ltd. Capital Markets Services licence holder. CMS licence number CMS100••••. Fund management category. Licence active from 2000.", "#003366"),
+	},
+	acraRegistry: {
+		id: "cw2", label: "Fill Easy API: Singapore ACRA — Meridian Capital Partners Pte. Ltd.", url: "https://www.filleasy.hk/", type: "registry",
+		...srcMeta("filleasy.hk", "Fill Easy | CorpVerify — Singapore ACRA BizFile+ — Meridian Capital Partners", "Fill Easy CorpVerify API query result for Singapore ACRA BizFile+. Entity: Meridian Capital Partners Pte. Ltd. UEN: 200012345D. Incorporated 2000-06-01. Directors: CHEN Wei, DAVID Tan. Registered at 1 Raffles Place. Filing status current.", "#0066aa"),
+		companySearchTemplate: {
+			registryName: "Singapore ACRA — BizFile+ (via Fill Easy CorpVerify)",
+			registryUrl: "https://www.filleasy.hk/",
+			searchFields: [
+				{ label: "Entity Name", value: "Meridian Capital Partners Pte. Ltd." },
+				{ label: "UEN", value: "200012345D" },
+				{ label: "Entity Type", value: "Private Company Limited by Shares" },
+			],
+			jurisdiction: "Republic of Singapore",
+			searchType: "Entity Name / UEN Search (via Fill Easy CorpVerify)",
+		},
+	},
+	acraFamilyOffice: {
+		id: "cw3", label: "Fill Easy API: Singapore ACRA — Chen Wei Family Office Pte. Ltd.", url: "https://www.filleasy.hk/", type: "registry",
+		...srcMeta("filleasy.hk", "Fill Easy | CorpVerify — Singapore ACRA BizFile+ — Chen Wei Family Office", "Fill Easy CorpVerify API query result for Singapore ACRA BizFile+. Entity: Chen Wei Family Office Pte. Ltd. UEN: 201012345G. Incorporated 2010-03-15. Sole director: CHEN Wei. Registered at 8 Marina View. Filing status current.", "#0066aa"),
+		companySearchTemplate: {
+			registryName: "Singapore ACRA — BizFile+ (via Fill Easy CorpVerify)",
+			registryUrl: "https://www.filleasy.hk/",
+			searchFields: [
+				{ label: "Entity Name", value: "Chen Wei Family Office Pte. Ltd." },
+				{ label: "UEN", value: "201012345G" },
+				{ label: "Entity Type", value: "Exempt Private Company" },
+			],
+			jurisdiction: "Republic of Singapore",
+			searchType: "Entity Name / UEN Search (via Fill Easy CorpVerify)",
+		},
+	},
+	sgxListings: {
+		id: "cw4", label: "SGX: Meridian Capital exit — Singha Logistics IPO ($420M)", url: "https://www.sgx.com/", date: "2007-11-15", type: "market-data",
+		...srcMeta("sgx.com", "SGX | Singha Logistics Holdings — IPO Prospectus", "SGX listing prospectus for Singha Logistics Holdings Pte Ltd. IPO raised S$560M ($420M). Pre-IPO investor Meridian Capital Partners held 12% stake, acquired at Series A in 2003. Lockup period 6 months.", "#003366"),
+	},
+	irasFilings: {
+		id: "cw5", label: "IRAS Tax Filing — Chen Wei Individual Income Tax (YA 2025)", url: "https://www.iras.gov.sg/", type: "public-record",
+		...srcMeta("iras.gov.sg", "IRAS | myTax Portal — Individual Income Tax Filing Confirmation", "Inland Revenue Authority of Singapore myTax Portal filing confirmation for Chen Wei. Year of Assessment 2025. Employment income, dividend income, and capital gains declared. Tax residency: Singapore.", "#cc0000"),
+	},
+	goldmanSachsSG: {
+		id: "cw6", label: "Goldman Sachs Singapore — Employment Verification (1990-2000)", url: "https://www.goldmansachs.com/", date: "2000-06-01", type: "public-record",
+		...srcMeta("goldmansachs.com", "Goldman Sachs | Human Resources — Employment Verification", "Goldman Sachs Singapore employment verification letter for CHEN Wei. Dates of employment: July 1990 to June 2000. Final title: Managing Director, Investment Banking Division. Compensation details referenced in confidential HR records.", "#003087"),
+	},
+	sgLandAuthority: {
+		id: "cw7", label: "Fill Easy API: SLA — Sentosa Cove Property Record", url: "https://www.filleasy.hk/", type: "registry",
+		...srcMeta("filleasy.hk", "Fill Easy | Singapore Land Authority — Property Search — Sentosa Cove", "Fill Easy API property search result for Singapore Land Authority. Sentosa Cove waterfront bungalow. Lot area 15,000 sq ft. Owner: CHEN Wei. Purchase date: 2012. Current valuation per URA market data.", "#0066aa"),
+		companySearchTemplate: {
+			registryName: "Singapore Land Authority (via Fill Easy API)",
+			registryUrl: "https://www.filleasy.hk/",
+			searchFields: [
+				{ label: "Owner Name", value: "CHEN Wei" },
+				{ label: "Property Address", value: "Sentosa Cove, Singapore" },
+				{ label: "Search Type", value: "Owner Name Search" },
+			],
+			jurisdiction: "Republic of Singapore",
+			searchType: "Property Owner Search (via Fill Easy API)",
+		},
+	},
+	sgLandOrchard: {
+		id: "cw8", label: "Fill Easy API: SLA — Nassim Road Good Class Bungalow", url: "https://www.filleasy.hk/", type: "registry",
+		...srcMeta("filleasy.hk", "Fill Easy | Singapore Land Authority — Property Search — Nassim Road", "Fill Easy API property search result for Singapore Land Authority. Nassim Road Good Class Bungalow. Land area 20,000 sq ft. Owner: CHEN Wei. Purchase date: 2015. URA transaction records confirmed.", "#0066aa"),
+		companySearchTemplate: {
+			registryName: "Singapore Land Authority (via Fill Easy API)",
+			registryUrl: "https://www.filleasy.hk/",
+			searchFields: [
+				{ label: "Owner Name", value: "CHEN Wei" },
+				{ label: "Property Address", value: "Nassim Road, Singapore" },
+				{ label: "Search Type", value: "Owner Name Search" },
+			],
+			jurisdiction: "Republic of Singapore",
+			searchType: "Property Owner Search (via Fill Easy API)",
+		},
+	},
+	masNotice: {
+		id: "cw9", label: "MAS Notice 626 — Compliance Filing for Chen Wei Family Office", url: "https://www.mas.gov.sg/regulation/notices/notice-626", type: "filing",
+		...srcMeta("mas.gov.sg", "MAS | Notice 626 — AML/CFT Compliance for Family Offices", "MAS regulatory compliance filing for Chen Wei Family Office Pte. Ltd. under Notice 626. Enhanced CDD documentation submitted. SOW declaration accepted. Compliance status: Satisfactory.", "#003366"),
+	},
+	dbsWealth: {
+		id: "cw10", label: "DBS Private Banking — Portfolio Statement (Q1 2026)", url: "https://www.dbs.com.sg/private-banking/", type: "public-record",
+		...srcMeta("dbs.com.sg", "DBS Private Banking | Quarterly Portfolio Statement — Chen Wei", "DBS Private Banking quarterly portfolio statement for Chen Wei. Period: Jan-Mar 2026. Blue-chip equity holdings (DBS, OCBC, SGX, Singtel), fixed income positions, PE fund distributions, and dividend income.", "#e60012"),
+	},
+	sgxBlueChip: {
+		id: "cw11", label: "SGX: Blue-chip equity portfolio — DBS, OCBC, UOB, Singtel", url: "https://www.sgx.com/", type: "market-data",
+		...srcMeta("sgx.com", "SGX | Market Data — Straits Times Index Components", "SGX market data for Straits Times Index blue-chip constituents. DBS Group Holdings, OCBC Bank, UOB, Singtel, CapitaLand Investment — all held in Chen Wei Family Office portfolio per DBS custody records.", "#003366"),
+	},
+	forbesSGWealth: {
+		id: "cw12", label: "Forbes Singapore Rich List — Chen Wei (#78)", url: "https://www.forbes.com/lists/singapore-billionaires/", date: "2025-08-01", type: "estimate",
+		...srcMeta("forbes.com", "Forbes | Singapore's 50 Richest 2025", "Forbes Singapore wealth list showing Chen Wei ranked #78 with estimated net worth of S$510M (~$380M USD). Source of wealth: Private equity, family office investments.", "#c4112f"),
+	},
+	meritisExit: {
+		id: "cw13", label: "Business Times: Meridian Capital exits Meritis Healthcare at 4.2x", url: "https://www.businesstimes.com.sg/", date: "2006-03-20", type: "news",
+		...srcMeta("businesstimes.com.sg", "Meridian Capital Exits Meritis Healthcare at 4.2x Return | Business Times", "Business Times Singapore reporting on Meridian Capital Partners' exit from Meritis Healthcare Holdings at 4.2x multiple on invested capital. Entry at $12M (2002), exit at $50.4M via trade sale to IHH Healthcare.", "#003d7a"),
+	},
+	uraPropertyData: {
+		id: "cw14", label: "URA Property Transaction Data — Districts 9, 10, Sentosa", url: "https://www.ura.gov.sg/realEstateIIWeb/", type: "public-record",
+		...srcMeta("ura.gov.sg", "URA | Real Estate Information System — Private Property Transactions", "Urban Redevelopment Authority property transaction database showing private residential transactions in prime districts (9, 10, Sentosa). Used to verify Chen Wei property valuations against market benchmarks.", "#003366"),
+	},
+};
+
+// ── James Chen Wei: Career Timeline ────────────────────────────
+
+const CHEN_WEI_CAREER: CareerPhase[] = [
+	{
+		id: "cw-1", title: "Goldman Sachs Singapore", organization: "Goldman Sachs (Singapore) Pte. Ltd.", role: "Analyst → Managing Director",
+		startYear: 1990, endYear: 2000, location: "Singapore",
+		description: "Joined Goldman Sachs Singapore as an analyst in the Investment Banking Division after graduating from NUS with First Class Honours in Economics. Rose through the ranks over a decade to Managing Director, specialising in Southeast Asia M&A and capital markets. Accumulated approximately $18M in total compensation through salary, bonuses, and deferred equity.",
+		categories: [
+			{ category: "income", claims: [
+				{ id: "cw1-1", description: "Goldman Sachs cumulative compensation 1990-2000 (salary, bonuses, deferred equity — verified via GS HR records and IRAS filings)", estimatedValueUSD: 18_000_000, confidence: 95, sources: [SRC_CHEN.goldmanSachsSG, SRC_CHEN.irasFilings] },
+			], subtotalUSD: 18_000_000, avgConfidence: 95 },
+		],
+		phaseWealthUSD: 18_000_000, cumulativeWealthUSD: 18_000_000,
+		keyEvents: ["1990: Joined Goldman Sachs Singapore as analyst", "1995: Promoted to Vice President", "1998: Promoted to Managing Director", "2000: Departed to co-found Meridian Capital Partners"],
+	},
+	{
+		id: "cw-2", title: "Meridian Capital Partners", organization: "Meridian Capital Partners Pte. Ltd.", role: "Co-Founder & Managing Partner",
+		startYear: 2000, endYear: 2010, location: "Singapore",
+		description: "Co-founded Meridian Capital Partners, a private equity firm focused on Southeast Asian mid-market companies. Raised Fund I ($200M, 2001) and Fund II ($500M, 2005). Achieved several successful exits including Meritis Healthcare (4.2x), Singha Logistics (IPO, 3.8x), and Pacific Minerals (2.5x). AUM grew to $2B by 2008. Chen Wei's carried interest and co-investment returns totalled approximately $85M over the decade.",
+		categories: [
+			{ category: "income", claims: [
+				{ id: "cw2-1", description: "Management fees and salary at Meridian Capital (2% annual on AUM, co-founder share — MAS CMS licence records)", estimatedValueUSD: 12_000_000, confidence: 90, sources: [SRC_CHEN.masLicensing, SRC_CHEN.irasFilings] },
+			], subtotalUSD: 12_000_000, avgConfidence: 90 },
+			{ category: "companies", claims: [
+				{ id: "cw2-2", description: "Carried interest from Meridian Capital Fund I & II (20% carry on $200M and $500M funds, multiple successful exits — ACRA filings, SGX records)", estimatedValueUSD: 65_000_000, confidence: 85, sources: [SRC_CHEN.acraRegistry, SRC_CHEN.sgxListings, SRC_CHEN.meritisExit, SRC_CHEN.masLicensing] },
+			], subtotalUSD: 65_000_000, avgConfidence: 85 },
+			{ category: "investments", claims: [
+				{ id: "cw2-3", description: "Personal co-investments in Meridian portfolio companies (GP co-invest alongside fund)", estimatedValueUSD: 20_000_000, confidence: 80, sources: [SRC_CHEN.acraRegistry, SRC_CHEN.sgxListings] },
+			], subtotalUSD: 20_000_000, avgConfidence: 80 },
+		],
+		phaseWealthUSD: 97_000_000, cumulativeWealthUSD: 115_000_000,
+		keyEvents: ["2000: Co-founded Meridian Capital Partners, MAS CMS licence obtained", "2001: Fund I ($200M) closed", "2002: Invested in Meritis Healthcare ($12M)", "2005: Fund II ($500M) closed", "2006: Meritis Healthcare exit at 4.2x ($50.4M)", "2007: Singha Logistics IPO on SGX at 3.8x", "2008: AUM reaches $2B"],
+	},
+	{
+		id: "cw-3", title: "Family Office Establishment", organization: "Chen Wei Family Office Pte. Ltd.", role: "Founder & Chief Investment Officer",
+		startYear: 2010, endYear: 2020, location: "Singapore",
+		description: "Established Chen Wei Family Office to manage personal and family wealth of approximately $150M. Diversified across Singapore real estate (Sentosa Cove waterfront bungalow, Nassim Road GCB), blue-chip equities (SGX-listed banks and REITs), PE fund-of-funds, and fixed income. Conservative allocation focused on capital preservation and steady income generation. Grew portfolio to approximately $300M by 2020.",
+		categories: [
+			{ category: "investments", claims: [
+				{ id: "cw3-1", description: "Blue-chip equity portfolio (DBS, OCBC, UOB, Singtel, CapitaLand) — SGX market data and DBS custody records", estimatedValueUSD: 85_000_000, confidence: 90, sources: [SRC_CHEN.sgxBlueChip, SRC_CHEN.dbsWealth] },
+				{ id: "cw3-2", description: "PE fund-of-funds allocations (co-investments with Temasek-linked funds and established GPs)", estimatedValueUSD: 45_000_000, confidence: 80, sources: [SRC_CHEN.acraFamilyOffice, SRC_CHEN.masNotice] },
+				{ id: "cw3-3", description: "Fixed income portfolio (Singapore government bonds, investment-grade corporate bonds)", estimatedValueUSD: 40_000_000, confidence: 95, sources: [SRC_CHEN.dbsWealth, SRC_CHEN.masNotice] },
+			], subtotalUSD: 170_000_000, avgConfidence: 88 },
+			{ category: "alternatives", claims: [
+				{ id: "cw3-4", description: "Sentosa Cove waterfront bungalow (purchased 2012, S$18M — Fill Easy SLA confirmed)", estimatedValueUSD: 15_000_000, confidence: 95, sources: [SRC_CHEN.sgLandAuthority, SRC_CHEN.uraPropertyData] },
+				{ id: "cw3-5", description: "Nassim Road Good Class Bungalow (purchased 2015, S$38M — Fill Easy SLA confirmed)", estimatedValueUSD: 32_000_000, confidence: 95, sources: [SRC_CHEN.sgLandOrchard, SRC_CHEN.uraPropertyData] },
+			], subtotalUSD: 47_000_000, avgConfidence: 95 },
+			{ category: "income", claims: [
+				{ id: "cw3-6", description: "Dividend and interest income from portfolio (2010-2020, IRAS filings)", estimatedValueUSD: 25_000_000, confidence: 90, sources: [SRC_CHEN.irasFilings, SRC_CHEN.dbsWealth] },
+			], subtotalUSD: 25_000_000, avgConfidence: 90 },
+		],
+		phaseWealthUSD: 242_000_000, cumulativeWealthUSD: 300_000_000,
+		keyEvents: ["2010: Chen Wei Family Office established (ACRA registered)", "2012: Acquired Sentosa Cove waterfront bungalow (S$18M)", "2013: Portfolio allocation formalised — 40% equities, 25% PE, 20% fixed income, 15% real estate", "2015: Acquired Nassim Road GCB (S$38M)", "2018: Family office AUM reaches $250M"],
+	},
+	{
+		id: "cw-4", title: "Current Wealth Management", organization: "Chen Wei Family Office Pte. Ltd.", role: "Founder & CIO",
+		startYear: 2020, endYear: null, location: "Singapore",
+		description: "Continued conservative wealth management through COVID-19 and market volatility. Portfolio weathered downturns well due to defensive allocation. Increased fixed income weighting during 2022 rate hikes. Current net worth approximately $380M, primarily in Singapore real estate (appreciated significantly), blue-chip equities, PE fund stakes, and fixed income. No crypto exposure, no leveraged positions, no controversial assets.",
+		categories: [
+			{ category: "investments", claims: [
+				{ id: "cw4-1", description: "Blue-chip equity portfolio — SGX-listed banks, REITs, and Straits Times Index components (DBS custody confirmed)", estimatedValueUSD: 110_000_000, confidence: 92, sources: [SRC_CHEN.sgxBlueChip, SRC_CHEN.dbsWealth] },
+				{ id: "cw4-2", description: "PE fund-of-funds and co-investment stakes (legacy Meridian + new commitments, MAS-regulated)", estimatedValueUSD: 55_000_000, confidence: 82, sources: [SRC_CHEN.acraFamilyOffice, SRC_CHEN.masNotice, SRC_CHEN.masLicensing] },
+				{ id: "cw4-3", description: "Fixed income — SG government bonds, investment-grade corporate (DBS custody + MAS)", estimatedValueUSD: 65_000_000, confidence: 95, sources: [SRC_CHEN.dbsWealth, SRC_CHEN.masNotice] },
+			], subtotalUSD: 230_000_000, avgConfidence: 90 },
+			{ category: "alternatives", claims: [
+				{ id: "cw4-4", description: "Sentosa Cove waterfront bungalow (current valuation S$28M, appreciated from S$18M — URA data + Fill Easy SLA)", estimatedValueUSD: 21_000_000, confidence: 92, sources: [SRC_CHEN.sgLandAuthority, SRC_CHEN.uraPropertyData] },
+				{ id: "cw4-5", description: "Nassim Road Good Class Bungalow (current valuation S$55M, appreciated from S$38M — URA data + Fill Easy SLA)", estimatedValueUSD: 41_000_000, confidence: 92, sources: [SRC_CHEN.sgLandOrchard, SRC_CHEN.uraPropertyData] },
+			], subtotalUSD: 62_000_000, avgConfidence: 92 },
+			{ category: "income", claims: [
+				{ id: "cw4-6", description: "Annual dividend and interest income (~$6-8M/year, IRAS filed)", estimatedValueUSD: 28_000_000, confidence: 90, sources: [SRC_CHEN.irasFilings, SRC_CHEN.dbsWealth] },
+			], subtotalUSD: 28_000_000, avgConfidence: 90 },
+			{ category: "companies", claims: [
+				{ id: "cw4-7", description: "Residual GP interest in Meridian Capital (legacy carried interest distributions, ACRA verified)", estimatedValueUSD: 15_000_000, confidence: 85, sources: [SRC_CHEN.acraRegistry, SRC_CHEN.masLicensing] },
+				{ id: "cw4-8", description: "Chen Wei Family Office entity value (operating entity + cash reserves)", estimatedValueUSD: 45_000_000, confidence: 88, sources: [SRC_CHEN.acraFamilyOffice, SRC_CHEN.dbsWealth] },
+			], subtotalUSD: 60_000_000, avgConfidence: 87 },
+		],
+		phaseWealthUSD: 380_000_000, cumulativeWealthUSD: 380_000_000,
+		keyEvents: ["2020: Conservative positioning protects portfolio during COVID-19 downturn", "2022: Increased fixed income allocation during rate hiking cycle", "2024: Net worth reaches $380M per Forbes Singapore Rich List", "2025: MAS compliance review — satisfactory rating", "2026: Full SOW assessment completed — Grade A corroboration"],
+	},
+];
+
+// ── James Chen Wei: Narrative ──────────────────────────────────
+
+const CHEN_WEI_NARRATIVE = `James Chen Wei's wealth profile represents a textbook example of well-documented, conservative wealth accumulation through traditional financial services and private equity. His estimated net worth of $380M is traceable through a clear career trajectory: a decade at Goldman Sachs Singapore rising to Managing Director ($18M cumulative compensation), followed by the co-founding of Meridian Capital Partners ($85M in carried interest and management fees from two successful PE funds with AUM reaching $2B), and subsequent establishment of the Chen Wei Family Office in 2010.
+
+The family office manages a conservatively allocated portfolio: approximately 30% in SGX-listed blue-chip equities (DBS, OCBC, UOB, Singtel), 17% in fixed income (Singapore government and investment-grade corporate bonds), 14% in PE fund-of-funds, and 16% in prime Singapore real estate (Sentosa Cove waterfront bungalow and Nassim Road Good Class Bungalow, both verified via Fill Easy SLA property search). There is no exposure to cryptocurrency, speculative assets, or leveraged positions.
+
+All material wealth sources are verified through government authorities: MAS Capital Markets Services licence records for Meridian Capital, IRAS individual income tax filings, Singapore ACRA registrations for both Meridian and the family office (retrieved via Fill Easy CorpVerify), SLA property records (via Fill Easy API), and DBS Private Banking custody confirmations. The assessment draws on 14 independent data sources, all within a single jurisdiction (Singapore), eliminating cross-border complexity. Chen Wei is not a PEP, has zero sanctions hits, zero adverse media findings, and no controversial associations.`;
+
+// ── James Chen Wei: Key Parameters ─────────────────────────────
+
+const CHEN_WEI_PARAMS: KeyParameter[] = [
+	{ label: "Wealth Plausibility", value: "Very High — career trajectory from Goldman Sachs to PE to family office clearly explains $380M", status: "normal" },
+	{ label: "Source Diversity", value: "14 sources across MAS, ACRA, IRAS, SLA, SGX — all government or regulated institutions (Fill Easy multi-registry)", status: "normal" },
+	{ label: "Overall Confidence", value: `${overallConfidence(CHEN_WEI_CAREER)}%`, status: "normal" },
+	{ label: "Regulatory Exposure", value: "None — clean MAS compliance record, no regulatory actions or fines", status: "normal" },
+	{ label: "PEP Status", value: "Clear — no PEP matches, no political exposure", status: "normal" },
+	{ label: "Wealth Volatility", value: "Low — conservative portfolio with no crypto, no leveraged positions", status: "normal" },
+];
+
+// ── James Chen Wei: Data Sources ───────────────────────────────
+
+const CHEN_WEI_SOURCES: DataSourceDef[] = [
+	{ id: "ds-cw-1", name: "MAS Financial Institutions Directory — CMS Licence", provider: "Monetary Authority of Singapore", category: "Regulatory Filings", delayMs: 1200 },
+	{ id: "ds-cw-2", name: "Fill Easy — Singapore ACRA Registry Search", provider: "Fill Easy Ltd / SG ACRA", category: "Corporate Registry", delayMs: 1500 },
+	{ id: "ds-cw-3", name: "SGX Historical Market Data", provider: "Singapore Exchange", category: "Market Data", delayMs: 1100 },
+	{ id: "ds-cw-4", name: "IRAS Individual Income Tax Records", provider: "Inland Revenue Authority of Singapore", category: "Tax Records", delayMs: 1600 },
+	{ id: "ds-cw-5", name: "Fill Easy — SLA Property Records Search", provider: "Fill Easy Ltd / SG SLA", category: "Property Records", delayMs: 1400 },
+	{ id: "ds-cw-6", name: "URA Property Transaction Data", provider: "Urban Redevelopment Authority", category: "Property Records", delayMs: 1300 },
+	{ id: "ds-cw-7", name: "DBS Private Banking — Custody Records", provider: "DBS Bank (MAS-regulated)", category: "Banking Records", delayMs: 1000 },
+	{ id: "ds-cw-8", name: "Forbes Singapore Rich List", provider: "Forbes Media", category: "Wealth Estimates", delayMs: 800 },
+	{ id: "ds-cw-9", name: "OFAC / EU / UN Sanctions Lists", provider: "Multi-jurisdictional", category: "Sanctions Screening", delayMs: 900 },
+	{ id: "ds-cw-10", name: "PEP Database (Global)", provider: "World-Check / Dow Jones", category: "PEP Screening", delayMs: 1100 },
+	{ id: "ds-cw-11", name: "Dow Jones Adverse Media Screening", provider: "Dow Jones Risk & Compliance", category: "Adverse Media", delayMs: 1400 },
+	{ id: "ds-cw-12", name: "Goldman Sachs — Employment Verification", provider: "Goldman Sachs (Singapore)", category: "Employment Records", delayMs: 1700 },
+	{ id: "ds-cw-13", name: "MAS Notice 626 — Compliance Filings", provider: "Monetary Authority of Singapore", category: "Regulatory Filings", delayMs: 1200 },
+	{ id: "ds-cw-14", name: "Business Times Singapore — Media Archive", provider: "Singapore Press Holdings", category: "Media Records", delayMs: 900 },
+];
+
+// ── James Chen Wei: Company Nodes ──────────────────────────────
+
+const CHEN_WEI_COMPANIES: CompanyNode[] = [
+	{
+		name: "Chen Wei Family Office Pte. Ltd.", role: "Founder & CIO", ownership: "100%", status: "active", valuation: "$380M AUM",
+		type: "holding", jurisdiction: "Singapore",
+		children: [
+			{ name: "Blue-chip equity portfolio", role: "SGX-listed banks, REITs (DBS, OCBC, UOB, Singtel)", status: "active", type: "investment", jurisdiction: "Singapore", valuation: "$110M" },
+			{ name: "Fixed income portfolio", role: "SG government bonds + investment-grade corporate", status: "active", type: "investment", jurisdiction: "Singapore", valuation: "$65M" },
+			{ name: "PE fund-of-funds", role: "Commitments to Temasek-linked and established GPs", status: "active", type: "fund", jurisdiction: "Singapore", valuation: "$55M" },
+			{ name: "Cash and liquid reserves", role: "DBS Private Banking deposits", status: "active", type: "investment", jurisdiction: "Singapore", valuation: "$45M" },
+		],
+	},
+	{
+		name: "Meridian Capital Partners Pte. Ltd.", role: "Co-Founder & Former Managing Partner", ownership: "Co-GP interest", status: "active", valuation: "AUM $2B (legacy)",
+		type: "fund", jurisdiction: "Singapore",
+		children: [
+			{ name: "Fund I ($200M, 2001)", role: "Fully realised — 2.8x net MOIC", status: "exited", type: "fund", jurisdiction: "Singapore" },
+			{ name: "Fund II ($500M, 2005)", role: "Fully realised — 2.2x net MOIC", status: "exited", type: "fund", jurisdiction: "Singapore" },
+			{ name: "Meritis Healthcare (exited)", role: "4.2x return — trade sale to IHH Healthcare", status: "exited", type: "investment", jurisdiction: "Singapore" },
+			{ name: "Singha Logistics (exited)", role: "3.8x return — SGX IPO", status: "exited", type: "investment", jurisdiction: "Singapore" },
+			{ name: "Pacific Minerals (exited)", role: "2.5x return — strategic sale", status: "exited", type: "investment", jurisdiction: "Indonesia" },
+		],
+	},
+	{
+		name: "Real estate portfolio", role: "Personal holdings", status: "active", valuation: "$62M",
+		type: "holding", jurisdiction: "Singapore",
+		children: [
+			{ name: "Sentosa Cove waterfront bungalow", role: "Purchased 2012 at S$18M — current S$28M", status: "active", type: "investment", jurisdiction: "Singapore", valuation: "$21M" },
+			{ name: "Nassim Road Good Class Bungalow", role: "Purchased 2015 at S$38M — current S$55M", status: "active", type: "investment", jurisdiction: "Singapore", valuation: "$41M" },
+		],
+	},
+];
+
+// ── James Chen Wei: Client Documents ───────────────────────────
+
+const CHEN_WEI_CLIENT_DOCS: ClientDocument[] = [
+	{ id: "cd-cw-1", type: "passport", label: "Singapore Passport — CHEN Wei (陈伟)", submittedBy: "Client (directly)", submittedDate: "2026-04-01", status: "verified", fileDescription: "Republic of Singapore passport. Name: CHEN WEI (陈伟). DOB: 15 MAR 1968. Passport No: E72••••15. Valid through 2033.", verificationNotes: "Name and DOB match ACRA directorship records for Meridian Capital Partners and Chen Wei Family Office (Fill Easy CorpVerify). Singapore citizen confirmed.", governmentAuthority: "Immigration & Checkpoints Authority of Singapore" },
+	{ id: "cd-cw-2", type: "tax-return", label: "IRAS Individual Income Tax — YA 2025 Filing", submittedBy: "Client (via KPMG Singapore)", submittedDate: "2026-04-10", status: "verified", fileDescription: "IRAS myTax Portal filing confirmation for Year of Assessment 2025. Comprehensive income declared: employment income (nil — retired from active management), dividend income, interest income, and capital gains from PE distributions.", verificationNotes: "Income amounts cross-checked against DBS bank statements and SGX dividend records. All figures consistent. IRAS filing status confirmed.", governmentAuthority: "Inland Revenue Authority of Singapore (IRAS)" },
+	{ id: "cd-cw-3", type: "bank-statement", label: "DBS Private Banking — SGD Portfolio Statement (Q1 2026)", submittedBy: "Client (via DBS Wealth Management)", submittedDate: "2026-04-15", status: "verified", fileDescription: "DBS Private Banking quarterly statement for account ending ••3847. Period: Jan-Mar 2026. Shows blue-chip equity holdings, fixed income positions, PE fund distributions, dividend income, and cash balances.", verificationNotes: "Equity holdings match SGX market data. Dividend income cross-verified against corporate dividend calendars. PE distributions consistent with Meridian Capital fund schedule.", governmentAuthority: "Monetary Authority of Singapore (MAS) — regulated institution" },
+	{ id: "cd-cw-4", type: "incorporation-cert", label: "Fill Easy API: ACRA — Meridian Capital Partners Pte. Ltd.", submittedBy: "Fill Easy API — automated retrieval", submittedDate: "2026-05-19", status: "verified", fileDescription: "Singapore ACRA BizFile+ record for Meridian Capital Partners Pte. Ltd. (UEN: 200012345D). Incorporated 2000-06-01. Directors: CHEN Wei, DAVID Tan. MAS CMS licence holder. Filing status current.", verificationNotes: "100% verified — government authority. Fill Easy CorpVerify returned ACRA exact match. MAS CMS licence cross-referenced.", governmentAuthority: "Singapore ACRA (via Fill Easy CorpVerify)" },
+	{ id: "cd-cw-5", type: "incorporation-cert", label: "Fill Easy API: ACRA — Chen Wei Family Office Pte. Ltd.", submittedBy: "Fill Easy API — automated retrieval", submittedDate: "2026-05-19", status: "verified", fileDescription: "Singapore ACRA BizFile+ record for Chen Wei Family Office Pte. Ltd. (UEN: 201012345G). Incorporated 2010-03-15. Sole director: CHEN Wei. Exempt private company. Filing status current.", verificationNotes: "100% verified — government authority. Fill Easy CorpVerify returned ACRA exact match.", governmentAuthority: "Singapore ACRA (via Fill Easy CorpVerify)" },
+	{ id: "cd-cw-6", type: "property-deed", label: "Fill Easy API: SLA — Sentosa Cove Waterfront Bungalow", submittedBy: "Fill Easy API — automated retrieval", submittedDate: "2026-05-19", status: "verified", fileDescription: "Singapore Land Authority property record for Sentosa Cove waterfront bungalow. Lot area 15,000 sq ft. Owner: CHEN Wei. Purchase date: 2012. Purchase price: S$18M. Current estimated value: S$28M per URA data.", verificationNotes: "100% verified — government authority. Fill Easy API returned SLA property record with registered owner and transaction history. URA price index applied.", governmentAuthority: "Singapore Land Authority (via Fill Easy API)" },
+	{ id: "cd-cw-7", type: "property-deed", label: "Fill Easy API: SLA — Nassim Road Good Class Bungalow", submittedBy: "Fill Easy API — automated retrieval", submittedDate: "2026-05-19", status: "verified", fileDescription: "Singapore Land Authority property record for Nassim Road GCB. Land area 20,000 sq ft. Owner: CHEN Wei. Purchase date: 2015. Purchase price: S$38M. Current estimated value: S$55M per URA data.", verificationNotes: "100% verified — government authority. Fill Easy API returned SLA property record with full transaction history.", governmentAuthority: "Singapore Land Authority (via Fill Easy API)" },
+	{ id: "cd-cw-8", type: "reference-letter", label: "Goldman Sachs — Employment Verification Letter", submittedBy: "Client (via Goldman Sachs HR, Singapore)", submittedDate: "2026-04-20", status: "verified", fileDescription: "Goldman Sachs Singapore employment verification letter confirming CHEN Wei's employment from July 1990 to June 2000. Final title: Managing Director, Investment Banking Division. Compensation level referenced.", verificationNotes: "Verified directly with Goldman Sachs HR department. Employment dates and title confirmed. Compensation bracket consistent with MD-level at Goldman Sachs in the 1990s.", governmentAuthority: "N/A (employer verification)" },
+];
+
+// ── James Chen Wei: Cross-References ───────────────────────────
+
+const CHEN_WEI_CROSS_REFS: CrossReference[] = [
+	{ id: "xr-cw-1", field: "Full Name", clientDocLabel: "Singapore Passport", externalSourceLabel: "Fill Easy: ACRA — Meridian Capital Partners", clientValue: "CHEN WEI (陈伟)", externalValue: "CHEN Wei — Director", match: "exact", confidence: 100, verifiedVia: "Fill Easy CorpVerify (ACRA) — government authority" },
+	{ id: "xr-cw-2", field: "Date of Birth", clientDocLabel: "Singapore Passport", externalSourceLabel: "Goldman Sachs Employment Verification", clientValue: "15 MAR 1968", externalValue: "March 15, 1968", match: "exact", confidence: 100, verifiedVia: "Goldman Sachs HR department" },
+	{ id: "xr-cw-3", field: "Meridian Capital Directorship", clientDocLabel: "Fill Easy: ACRA — Meridian Capital Partners", externalSourceLabel: "MAS Financial Institutions Directory", clientValue: "Director since 2000 (UEN: 200012345D)", externalValue: "CMS licence holder — Fund Management", match: "exact", confidence: 100, verifiedVia: "Fill Easy CorpVerify (ACRA) + MAS FID — government authorities" },
+	{ id: "xr-cw-4", field: "Family Office Registration", clientDocLabel: "Fill Easy: ACRA — Chen Wei Family Office", externalSourceLabel: "MAS Notice 626 Compliance Filing", clientValue: "UEN: 201012345G, incorporated 2010", externalValue: "MAS compliance status: Satisfactory", match: "exact", confidence: 100, verifiedVia: "Fill Easy CorpVerify (ACRA) + MAS — government authorities" },
+	{ id: "xr-cw-5", field: "Sentosa Cove Property", clientDocLabel: "Fill Easy: SLA — Sentosa Cove Bungalow", externalSourceLabel: "URA Property Transaction Data", clientValue: "Owner: CHEN Wei, purchased 2012 at S$18M", externalValue: "Sentosa Cove transaction recorded at S$18M (2012)", match: "exact", confidence: 100, verifiedVia: "Fill Easy (SLA) + URA — government authorities" },
+	{ id: "xr-cw-6", field: "Nassim Road Property", clientDocLabel: "Fill Easy: SLA — Nassim Road GCB", externalSourceLabel: "URA Property Transaction Data", clientValue: "Owner: CHEN Wei, purchased 2015 at S$38M", externalValue: "Nassim Road GCB transaction recorded at S$38M (2015)", match: "exact", confidence: 100, verifiedVia: "Fill Easy (SLA) + URA — government authorities" },
+	{ id: "xr-cw-7", field: "Dividend Income (Q1 2026)", clientDocLabel: "DBS Bank Statement", externalSourceLabel: "SGX Dividend Records — DBS, OCBC, Singtel", clientValue: "$1.8M dividend income received", externalValue: "$1.78M calculated from shareholdings x declared dividends", match: "exact", confidence: 100, verifiedVia: "DBS custody records + SGX market data" },
+	{ id: "xr-cw-8", field: "Tax Filing — Income", clientDocLabel: "IRAS YA 2025 Filing", externalSourceLabel: "DBS Portfolio Statement", clientValue: "Total income declared: S$9.2M", externalValue: "Dividend + interest + PE distributions = S$9.15M", match: "exact", confidence: 100, verifiedVia: "IRAS + DBS (MAS-regulated) — government authorities" },
+	{ id: "xr-cw-9", field: "Goldman Sachs Employment", clientDocLabel: "Goldman Sachs Employment Verification", externalSourceLabel: "Forbes Singapore Rich List Profile", clientValue: "Goldman Sachs MD, 1990-2000", externalValue: "Source of wealth: Goldman Sachs → PE → family office", match: "exact", confidence: 95, verifiedVia: "Goldman Sachs HR + Forbes profile" },
+	{ id: "xr-cw-10", field: "Net Worth Estimate", clientDocLabel: "Client self-declaration", externalSourceLabel: "Forbes Singapore Rich List 2025", clientValue: "$380M estimated net worth", externalValue: "S$510M (~$380M) — ranked #78", match: "exact", confidence: 90, verifiedVia: "Forbes estimate + portfolio analysis cross-check" },
+];
+
+// ── James Chen Wei: Report ─────────────────────────────────────
+
+const CHEN_WEI_REPORT: HnwReport = {
+	profile: {
+		id: "hnw-james-chen",
+		name: "James Chen Wei",
+		nameCn: "陈伟",
+		dateOfBirth: "1968-03-15",
+		age: 58,
+		nationality: "Singaporean",
+		residences: ["Singapore"],
+		primaryIndustry: "Private Equity / Family Office",
+		estimatedNetWorthUSD: 380_000_000,
+		netWorthSource: "Forbes Singapore Rich List 2025",
+		riskRating: "Low",
+		riskScore: 22,
+		profileSummary: "Singaporean citizen with straightforward wealth trajectory from Goldman Sachs to private equity to family office management. Net worth of $380M is well-documented through MAS, ACRA, IRAS, and SLA records. No PEP exposure, no sanctions hits, no adverse media. Conservative portfolio with no crypto or speculative assets. Grade A corroboration.",
+	},
+	careerTimeline: CHEN_WEI_CAREER,
+	totalEstimatedWealthUSD: 380_000_000,
+	wealthByCategory: aggregateWealth(CHEN_WEI_CAREER),
+	overallConfidence: overallConfidence(CHEN_WEI_CAREER),
+	narrative: CHEN_WEI_NARRATIVE,
+	keyParameters: CHEN_WEI_PARAMS,
+	dataSources: CHEN_WEI_SOURCES,
+	companyNodes: CHEN_WEI_COMPANIES,
+	screeningResult: PEP_SCREENING[3],
+	clientDocuments: CHEN_WEI_CLIENT_DOCS,
+	crossReferences: CHEN_WEI_CROSS_REFS,
+	uploadSlots: UPLOAD_SLOTS,
+	corroborationScores: {
+		consistency: 15,
+		correctness: 12,
+		completeness: 18,
+		masReference: "MAS Notice 626 / Guidelines to Notice 626 (Prevention of Money Laundering and Countering the Financing of Terrorism) — §6.18–6.22 Source of Wealth Verification",
+	},
+	agentVerification: {
+		agentId: "fe-verify-v2",
+		agentName: "Fill Easy Verification Agent",
+		timestamp: new Date().toISOString(),
+		overallStatus: "verified",
+		checks: [
+			{ id: "ck-cw-1", category: "consistency", label: "Career-to-wealth trajectory alignment", status: "pass", detail: "Goldman Sachs (1990-2000, $18M compensation) → Meridian Capital co-founding (2000-2010, $85M in carry/fees) → Family Office ($380M). Career progression is consistent with documented wealth accumulation. No unexplained jumps or gaps." },
+			{ id: "ck-cw-2", category: "consistency", label: "Income proportional to declared roles", status: "pass", detail: "Goldman Sachs MD compensation ($18M over 10 years) is consistent with industry benchmarks for Singapore MDs in the 1990s. PE carried interest proportional to fund size and performance." },
+			{ id: "ck-cw-3", category: "correctness", label: "ACRA registrations verified", status: "pass", detail: "Both Meridian Capital Partners (UEN: 200012345D) and Chen Wei Family Office (UEN: 201012345G) confirmed via Fill Easy CorpVerify. Directorship records match passport details." },
+			{ id: "ck-cw-4", category: "correctness", label: "Property ownership confirmed", status: "pass", detail: "Sentosa Cove bungalow (S$18M, 2012) and Nassim Road GCB (S$38M, 2015) both confirmed via Fill Easy SLA property search. Current valuations cross-checked against URA price indices." },
+			{ id: "ck-cw-5", category: "correctness", label: "Investment portfolio cross-referenced", status: "pass", detail: "DBS Private Banking custody records match SGX market data for equity holdings. Dividend income cross-verified against corporate dividend calendars. Fixed income positions confirmed." },
+			{ id: "ck-cw-6", category: "correctness", label: "Tax filings consistent with portfolio", status: "pass", detail: "IRAS YA 2025 filing shows total declared income of S$9.2M. This matches DBS portfolio statement dividend + interest + PE distributions of S$9.15M. Negligible variance (<1%)." },
+			{ id: "ck-cw-7", category: "completeness", label: "All material wealth sources identified", status: "pass", detail: "Single-jurisdiction profile (Singapore only) with complete documentation chain: employment → PE → family office. No offshore structures, no undisclosed entities, no material gaps." },
+			{ id: "ck-cw-8", category: "completeness", label: "PEP and sanctions screening complete", status: "pass", detail: "Screened against 7 lists (OFAC SDN, EU Consolidated, UN Security Council, MAS, SFC, World-Check PEP, Dow Jones Watchlist). Zero hits across all categories. No adverse media findings." },
+		],
+		summary: "James Chen Wei's wealth profile achieves the highest level of corroboration. All eight verification checks passed. The career-to-wealth trajectory is fully consistent, all material assets are verified through government authorities (MAS, ACRA, IRAS, SLA via Fill Easy), and there are no identified gaps in documentation. The single-jurisdiction nature of the profile (entirely Singapore-based) significantly simplifies verification. Recommend standard monitoring at quarterly frequency.",
+		recommendations: [
+			"Maintain quarterly screening schedule — no enhanced monitoring required",
+			"Request updated DBS portfolio statement annually for ongoing verification",
+			"Monitor Forbes Singapore Rich List for consistency with declared net worth",
+			"Standard PEP/sanctions re-screening per MAS Notice 626 requirements",
+		],
+	},
+	corroborationGrade: "A",
+	fourEyeCheck: {
+		analyst: { name: "Sarah Chen", role: "Senior Compliance Analyst", timestamp: "2026-05-19T10:00:00Z" },
+		reviewer: { name: "Michael Wong", role: "Head of Financial Crime", timestamp: "2026-05-19T14:30:00Z" },
+		status: "approved",
+		signOffHistory: [
+			{ action: "Drafted", by: "Sarah Chen", at: "2026-05-19T10:00:00Z", comment: "Clean profile — all sources verified, Grade A corroboration" },
+			{ action: "Reviewed", by: "Michael Wong", at: "2026-05-19T12:00:00Z", comment: "Concur with assessment — straightforward wealth trajectory" },
+			{ action: "Approved", by: "Michael Wong", at: "2026-05-19T14:30:00Z", comment: "Approved for onboarding — standard quarterly monitoring" },
+		],
+	},
+	personalRelationships: [
+		{ id: "pr-cw-1", name: "Lin Mei Hua", relationship: "spouse", notes: "Homemaker, Singaporean citizen. No independent business activities. Joint ownership of family residence.", linkedEntities: [] },
+		{ id: "pr-cw-2", name: "Chen Jia Wen", relationship: "child", notes: "Daughter, age 28. Graduate of Imperial College London. Analyst at Temasek Holdings.", linkedEntities: [] },
+		{ id: "pr-cw-3", name: "Chen Jia Ming", relationship: "child", notes: "Son, age 25. Graduate of NUS Business School. Junior associate at McKinsey Singapore.", linkedEntities: [] },
+		{ id: "pr-cw-4", name: "David Tan", relationship: "associate", notes: "Co-founder of Meridian Capital Partners. Former Goldman Sachs colleague.", linkedEntities: ["Meridian Capital Partners Pte. Ltd."] },
+	],
+};
+
 // ── Assemble Reports ────────────────────────────────────────────
 
 const JACK_MA_REPORT: HnwReport = {
@@ -1718,7 +2082,39 @@ const SRC_TRUMP: Record<string, SourceCitation> = {
 	},
 	djtStock: {
 		id: "dt10", label: "Nasdaq: DJT Historical Share Price", url: "https://finance.yahoo.com/quote/DJT/history/", type: "market-data",
-		...srcMeta("finance.yahoo.com", "DJT Historical Data | Yahoo Finance", "Yahoo Finance historical price chart for Trump Media & Technology Group (DJT). IPO via SPAC merger March 2024. Extreme volatility — range from $12 to $79. Current market cap ~$6B.", "#410093"),
+		...srcMeta("finance.yahoo.com", "DJT Historical Data | Yahoo Finance", "Yahoo Finance historical price chart for Trump Media & Technology Group (DJT). IPO via SPAC merger March 2024. Extreme volatility — range from $15 to $80.", "#410093"),
+	},
+	trumpMemeCoin: {
+		id: "dt11", label: "CoinGecko — $TRUMP Meme Coin Market Data", url: "https://www.coingecko.com/en/coins/official-trump", date: "2025-01-18", type: "market-data",
+		...srcMeta("coingecko.com", "$TRUMP (Official Trump) Price & Market Data | CoinGecko", "CoinGecko market data for $TRUMP meme coin launched January 18, 2025 on Solana. Peak ~$75. 80% supply held by CIC Digital LLC and Fight Fight Fight LLC.", "#8bc53f"),
+	},
+	atlanticCityBankruptcies: {
+		id: "dt12", label: "PACER — Atlantic City Casino Bankruptcy Filings (6 cases)", url: "https://www.uscourts.gov/", date: "2014-09-09", type: "public-record",
+		...srcMeta("uscourts.gov", "PACER | Trump Entertainment Resorts — Chapter 11 Filings", "U.S. Courts PACER records for six Trump-affiliated corporate bankruptcies (1991-2014).", "#003366"),
+	},
+	nbcApprentice: {
+		id: "dt13", label: "NBC — The Apprentice Production Deal (2004-2015)", url: "https://variety.com/", date: "2004-01-08", type: "news",
+		...srcMeta("variety.com", "Trump's 'Apprentice' Deal Worth $427M Over Run | Variety", "Variety reporting on Trump's Apprentice compensation estimated at $427M total.", "#000000"),
+	},
+	doralFinancials: {
+		id: "dt14", label: "Miami-Dade County — Trump National Doral Property Records", url: "https://www.miamidade.gov/pa/", type: "registry",
+		...srcMeta("miamidade.gov", "Miami-Dade Property Appraiser | Trump National Doral", "Miami-Dade County records for Trump National Doral golf resort. 800+ acres, four courses.", "#004488"),
+	},
+	wallStProperty: {
+		id: "dt15", label: "NYC DOF — 40 Wall Street Property Records", url: "https://a836-acris.nyc.gov/", type: "registry",
+		...srcMeta("nyc.gov", "NYC ACRIS | 40 Wall Street — Trump Building", "NYC ACRIS records for 40 Wall Street (Trump Building). 71-story office tower, ground lease.", "#003399"),
+	},
+	brandLicensing: {
+		id: "dt16", label: "Forbes: Trump Brand Licensing Revenue Analysis", url: "https://www.forbes.com/sites/danalexander/", date: "2023-06-01", type: "estimate",
+		...srcMeta("forbes.com", "Forbes | Inside Trump's Brand Licensing Empire", "Forbes analysis of Trump brand licensing — $400M+ cumulative fees from global hotel/residential projects.", "#c4112f"),
+	},
+	chicagoTower: {
+		id: "dt17", label: "Cook County — Trump International Hotel & Tower Chicago", url: "https://www.cookcountyassessor.com/", type: "registry",
+		...srcMeta("cookcountyassessor.com", "Cook County Assessor | Trump International Hotel & Tower", "Cook County records for Trump International Hotel & Tower, 401 N Wabash Ave. 98-story mixed-use.", "#003399"),
+	},
+	secSpac: {
+		id: "dt18", label: "SEC — DWAC/TMTG SPAC Merger S-4 Filing", url: "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001849635&type=S-4", date: "2024-03-22", type: "filing",
+		...srcMeta("sec.gov", "SEC EDGAR | DWAC/TMTG SPAC Merger — S-4 Filing", "SEC S-4 for DWAC/TMTG SPAC merger. Lock-up provisions, share structure, insider ownership.", "#003366"),
 	},
 };
 
@@ -1806,25 +2202,26 @@ const TRUMP_CAREER: CareerPhase[] = [
 	{
 		id: "dt-6", title: "Post-Presidency & DJT", organization: "Trump Organization / Trump Media (DJT)", role: "47th President of the United States",
 		startYear: 2021, endYear: null, location: "Mar-a-Lago, FL / Washington, D.C.",
-		description: "Launched Truth Social via Trump Media & Technology Group, which went public via SPAC merger in March 2024 (Nasdaq: DJT). DJT stock is extremely volatile — market cap swung between $2B and $10B. Trump holds ~53% of DJT shares (subject to lock-up). Re-elected 47th President in November 2024. Ongoing legal proceedings including NY civil fraud judgment ($454M).",
+		description: "Founded Trump Media & Technology Group (Truth Social). TMTG went public via SPAC merger with DWAC in March 2024 (Nasdaq: DJT). Trump holds ~59% of DJT shares (lock-up expired Sept 2024). DJT extremely volatile ($15-80 range). Launched $TRUMP meme coin on Solana (Jan 2025) — peaked at ~$75, highly volatile. Elected 47th President (Nov 2024). NY civil fraud judgment of $454M. Multiple criminal indictments (2023-2024). Active PEP — highest classification.",
 		categories: [
 			{ category: "companies", claims: [
-				{ id: "dt6-1", description: "Trump Media & Technology Group (DJT) — ~53% stake, current market cap ~$6B, Trump's share ~$3.2B (SEC 10-K filing)", estimatedValueUSD: 3_200_000_000, confidence: 70, sources: [SRC_TRUMP.secDJT, SRC_TRUMP.djtStock] },
-				{ id: "dt6-2", description: "Trump Organization real estate and licensing portfolio (NYC properties, hotels, licensing deals — 500+ LLCs)", estimatedValueUSD: 2_000_000_000, confidence: 45, sources: [SRC_TRUMP.forbesTrump, SRC_TRUMP.nycPropertyRecords, SRC_TRUMP.nySOS, SRC_TRUMP.ogeDisclosure] },
-			], subtotalUSD: 5_200_000_000, avgConfidence: 58 },
+				{ id: "dt6-1", description: "~59% stake in Trump Media & Technology Group (DJT) — extremely volatile ($15-80/share, ~188M shares)", estimatedValueUSD: 3_500_000_000, confidence: 40, sources: [SRC_TRUMP.secDJT, SRC_TRUMP.djtStock, SRC_TRUMP.secSpac] },
+				{ id: "dt6-2", description: "Trump Organization real estate portfolio (Trump Tower, 40 Wall St, Doral, Chicago, licensing — 500+ LLCs)", estimatedValueUSD: 2_000_000_000, confidence: 55, sources: [SRC_TRUMP.forbesTrump, SRC_TRUMP.nycPropertyRecords, SRC_TRUMP.wallStProperty, SRC_TRUMP.chicagoTower, SRC_TRUMP.nySOS, SRC_TRUMP.ogeDisclosure] },
+			], subtotalUSD: 5_500_000_000, avgConfidence: 48 },
 			{ category: "alternatives", claims: [
-				{ id: "dt6-3", description: "Golf courses worldwide (Trump National Doral, Turnberry, Aberdeen, 15+ courses)", estimatedValueUSD: 700_000_000, confidence: 50, sources: [SRC_TRUMP.forbesTrump, SRC_TRUMP.ogeDisclosure] },
-				{ id: "dt6-4", description: "Mar-a-Lago private club (membership $200K+, events revenue, Palm Beach County assessed)", estimatedValueUSD: 300_000_000, confidence: 55, sources: [SRC_TRUMP.palmBeachCounty, SRC_TRUMP.forbesTrump] },
-			], subtotalUSD: 1_000_000_000, avgConfidence: 53 },
+				{ id: "dt6-3", description: "Golf courses worldwide (Trump National Doral, Turnberry, Bedminster, Aberdeen — 15+ courses)", estimatedValueUSD: 600_000_000, confidence: 60, sources: [SRC_TRUMP.forbesTrump, SRC_TRUMP.doralFinancials, SRC_TRUMP.ogeDisclosure] },
+				{ id: "dt6-4", description: "Mar-a-Lago estate and club (Palm Beach — assessed vs. market value highly disputed)", estimatedValueUSD: 500_000_000, confidence: 45, sources: [SRC_TRUMP.palmBeachCounty, SRC_TRUMP.nyAGFraud, SRC_TRUMP.forbesTrump] },
+			], subtotalUSD: 1_100_000_000, avgConfidence: 53 },
 			{ category: "income", claims: [
-				{ id: "dt6-5", description: "Book deals, speaking fees, NFT sales (Trump Digital Trading Cards — $4.6M+), crypto venture (World Liberty Financial)", estimatedValueUSD: 100_000_000, confidence: 60, sources: [SRC_TRUMP.ogeDisclosure, SRC_TRUMP.fecFilings] },
-			], subtotalUSD: 100_000_000, avgConfidence: 60 },
-			{ category: "investments", claims: [
-				{ id: "dt6-6", description: "Cash reserves and investment portfolio (limited detail in OGE filings — ranges disclosed not exact values)", estimatedValueUSD: 200_000_000, confidence: 35, sources: [SRC_TRUMP.ogeDisclosure, SRC_TRUMP.bloombergTrump] },
-			], subtotalUSD: 200_000_000, avgConfidence: 35 },
+				{ id: "dt6-5", description: "Trump Organization management fees, licensing, and golf course revenue (per OGE disclosure)", estimatedValueUSD: 300_000_000, confidence: 55, sources: [SRC_TRUMP.ogeDisclosure, SRC_TRUMP.brandLicensing] },
+			], subtotalUSD: 300_000_000, avgConfidence: 55 },
+			{ category: "crypto", claims: [
+				{ id: "dt6-6", description: "$TRUMP meme coin — 80% supply held by CIC Digital LLC / Fight Fight Fight LLC (Trump-affiliated entities)", estimatedValueUSD: 1_500_000_000, confidence: 25, sources: [SRC_TRUMP.trumpMemeCoin, SRC_TRUMP.forbesTrump] },
+				{ id: "dt6-7", description: "World Liberty Financial DeFi venture and other crypto-related interests", estimatedValueUSD: 200_000_000, confidence: 20, sources: [SRC_TRUMP.trumpMemeCoin, SRC_TRUMP.bloombergTrump] },
+			], subtotalUSD: 1_700_000_000, avgConfidence: 24 },
 		],
-		phaseWealthUSD: 6_500_000_000, cumulativeWealthUSD: 6_500_000_000,
-		keyEvents: ["2021-01: Leaves White House", "2022: Trump Digital Trading Cards NFT launch", "2023: Multiple criminal indictments", "2024-02: NY civil fraud judgment ($454M)", "2024-03: DJT goes public via SPAC (Nasdaq)", "2024-11: Elected 47th President", "2025: Re-enters White House"],
+		phaseWealthUSD: 8_600_000_000, cumulativeWealthUSD: 8_600_000_000,
+		keyEvents: ["2021-01: Founded Trump Media & Technology Group", "2023: Multiple criminal indictments (NY, GA, Federal)", "2024-02: NY civil fraud judgment — $454M", "2024-03: TMTG/DJT goes public via SPAC merger", "2024-09: DJT lock-up expires, shares volatile", "2024-11: Elected 47th President", "2025-01-18: $TRUMP meme coin launched on Solana, peaks ~$75"],
 	},
 ];
 
@@ -1841,8 +2238,14 @@ const TRUMP_SOURCES: DataSourceDef[] = [
 	{ id: "ds-8", name: "FEC Campaign Finance Records", provider: "Federal Election Commission", category: "Regulatory Filings", delayMs: 1100 },
 	{ id: "ds-9", name: "Dow Jones Adverse Media Screening", provider: "Dow Jones Risk & Compliance", category: "Adverse Media", delayMs: 1700 },
 	{ id: "ds-10", name: "OFAC / EU / UN Sanctions Lists", provider: "Multi-jurisdictional", category: "Sanctions Screening", delayMs: 900 },
-	{ id: "ds-11", name: "PEP Database (Global)", provider: "World-Check / Dow Jones", category: "PEP Screening", delayMs: 1000 },
+	{ id: "ds-11", name: "PEP Database (Global) — Head of State", provider: "World-Check / Dow Jones", category: "PEP Screening", delayMs: 1000 },
 	{ id: "ds-12", name: "Nasdaq Historical Market Data (DJT)", provider: "Nasdaq", category: "Market Data", delayMs: 1200 },
+	{ id: "ds-13", name: "CoinGecko — $TRUMP Meme Coin Data", provider: "CoinGecko", category: "Crypto Market Data", delayMs: 900 },
+	{ id: "ds-14", name: "PACER — Federal Bankruptcy Court Records", provider: "U.S. Courts", category: "Court Records", delayMs: 1900 },
+	{ id: "ds-15", name: "Miami-Dade County — Property Records", provider: "Miami-Dade County PA", category: "Property Records", delayMs: 1400 },
+	{ id: "ds-16", name: "Cook County — Chicago Property Records", provider: "Cook County Assessor", category: "Property Records", delayMs: 1500 },
+	{ id: "ds-17", name: "NY Attorney General — Civil Fraud Records", provider: "NY AG Office", category: "Court Records", delayMs: 2000 },
+	{ id: "ds-18", name: "Trump Organization Brand Licensing Data", provider: "Forbes / Bloomberg", category: "Company Intelligence", delayMs: 1700 },
 ];
 
 // ── Donald Trump: Company Nodes ────────────────────────────────
@@ -1860,24 +2263,50 @@ const TRUMP_COMPANIES: CompanyNode[] = [
 		],
 	},
 	{
-		name: "Trump Media & Technology Group (Nasdaq: DJT)", role: "Chairman / Majority Shareholder", ownership: "~53%", status: "ipo", valuation: "~$6B market cap",
+		name: "Trump Media & Technology Group (Nasdaq: DJT)", role: "Chairman, majority shareholder", ownership: "~59%", status: "ipo", valuation: "Volatile ($2-15B mcap range)",
 		type: "holding", jurisdiction: "Delaware / Nasdaq",
 		children: [
 			{ name: "Truth Social", role: "Social media platform", status: "active", type: "subsidiary", jurisdiction: "USA" },
+			{ name: "Truth+", role: "Streaming service (planned)", status: "pending", type: "subsidiary", jurisdiction: "USA" },
 		],
 	},
 	{
-		name: "Trump Golf", role: "Owner / Operator", status: "active", valuation: "~$700M",
+		name: "Trump Hotels & Golf Properties", role: "Owner/Operator", ownership: "100%", status: "active", valuation: "~$600M",
 		type: "holding", jurisdiction: "Multi-jurisdictional",
 		children: [
-			{ name: "Trump National Doral (Miami)", role: "Golf resort", status: "active", type: "subsidiary", jurisdiction: "Florida" },
-			{ name: "Trump Turnberry (Scotland)", role: "Golf resort", status: "active", type: "subsidiary", jurisdiction: "United Kingdom" },
-			{ name: "Trump International Golf Links (Aberdeen)", role: "Golf course", status: "active", type: "subsidiary", jurisdiction: "United Kingdom" },
-			{ name: "15+ Additional US courses", role: "Various clubs", status: "active", type: "subsidiary", jurisdiction: "USA" },
+			{ name: "Trump National Doral (Miami)", role: "800-acre, 4 championship courses", status: "active", type: "subsidiary", jurisdiction: "Florida", valuation: "~$200M" },
+			{ name: "Trump National Bedminster", role: "Golf club, New Jersey", status: "active", type: "subsidiary", jurisdiction: "New Jersey" },
+			{ name: "Trump Turnberry (Scotland)", role: "Links golf course", status: "active", type: "subsidiary", jurisdiction: "Scotland" },
+			{ name: "Trump International Doonbeg (Ireland)", role: "Golf resort", status: "active", type: "subsidiary", jurisdiction: "Ireland" },
+			{ name: "Trump International Hotel & Tower (Chicago)", role: "98-story mixed-use tower", status: "active", type: "subsidiary", jurisdiction: "Illinois", valuation: "~$250M" },
 		],
 	},
-	{ name: "Mar-a-Lago Club", role: "Owner / Operator", status: "active", valuation: "~$300M", type: "subsidiary", jurisdiction: "Palm Beach, Florida" },
-	{ name: "World Liberty Financial", role: "DeFi crypto venture", status: "active", type: "investment", jurisdiction: "USA" },
+	{
+		name: "Mar-a-Lago Club", role: "Owner", ownership: "100%", status: "active", valuation: "$350-500M (disputed)",
+		type: "holding", jurisdiction: "Palm Beach, Florida",
+	},
+	{
+		name: "CIC Digital LLC / Fight Fight Fight LLC", role: "Beneficial owner", ownership: "80% of $TRUMP supply", status: "active", valuation: "Highly volatile",
+		type: "holding", jurisdiction: "USA",
+		children: [
+			{ name: "$TRUMP meme coin (Solana)", role: "80% supply controlled, launched Jan 2025", status: "active", type: "token", valuation: "Peaked ~$75, highly volatile" },
+		],
+	},
+	{
+		name: "World Liberty Financial", role: "Affiliated DeFi venture", ownership: "Affiliated", status: "active",
+		type: "holding", jurisdiction: "USA",
+		children: [
+			{ name: "WLFI token", role: "DeFi governance token", status: "active", type: "token" },
+		],
+	},
+	{
+		name: "Trump brand licensing portfolio", role: "Licensor", ownership: "Brand IP", status: "active", valuation: "$400M+ cumulative",
+		type: "holding", jurisdiction: "Global",
+		children: [
+			{ name: "Trump Hotels (licensed)", role: "Global hotel licensing deals", status: "active", type: "subsidiary", jurisdiction: "Global" },
+			{ name: "Trump Residential (licensed)", role: "Residential tower licensing", status: "active", type: "subsidiary", jurisdiction: "Global" },
+		],
+	},
 ];
 
 // ── Donald Trump: Key Parameters ───────────────────────────────
@@ -2005,333 +2434,9 @@ const TRUMP_REPORT: HnwReport = {
 	],
 };
 
-// ── James Chen Wei: Sources ────────────────────────────────────
 
-const SRC_CHEN: Record<string, SourceCitation> = {
-	irasTax: {
-		id: "jc1", label: "IRAS Tax Assessment Notice — James Chen Wei (10yr history)", url: "https://www.iras.gov.sg/", date: "2025-12-31", type: "public-record",
-		...srcMeta("iras.gov.sg", "IRAS | Individual Income Tax Assessment — Chen Wei", "Inland Revenue Authority of Singapore individual income tax assessment for Chen Wei. 10-year filing history showing consistent income declarations from employment, investments, and trust distributions.", "#003399"),
-	},
-	cpfStatement: {
-		id: "jc2", label: "CPF Board — Contribution Statement (2005-2012)", url: "https://www.cpf.gov.sg/", date: "2012-12-31", type: "public-record",
-		...srcMeta("cpf.gov.sg", "CPF Board | Contribution History — Chen Wei", "Central Provident Fund Board contribution statement showing mandatory employer contributions from Temasek Holdings (2005-2012). Monthly contributions consistent with declared salary.", "#003399"),
-	},
-	acraEntity: {
-		id: "jc3", label: "Fill Easy API: Singapore ACRA — Chen Family Office Pte. Ltd.", url: "https://www.filleasy.hk/", type: "registry",
-		...srcMeta("filleasy.hk", "Fill Easy | CorpVerify — Singapore ACRA — Chen Family Office", "Fill Easy CorpVerify API query result for Singapore ACRA BizFile+. Entity: Chen Family Office Pte. Ltd. UEN: 201523456B. Directors: CHEN Wei. Registered capital, filing history, and secretary details returned.", "#0066aa"),
-		companySearchTemplate: {
-			registryName: "Singapore ACRA — BizFile+ (via Fill Easy CorpVerify)",
-			registryUrl: "https://www.filleasy.hk/",
-			searchFields: [
-				{ label: "Entity Name", value: "Chen Family Office Pte. Ltd." },
-				{ label: "UEN", value: "201523456B" },
-				{ label: "Director Name", value: "CHEN Wei" },
-			],
-			jurisdiction: "Republic of Singapore",
-			searchType: "Entity Name / UEN Search (via Fill Easy CorpVerify)",
-		},
-	},
-	acraFamilyTrust: {
-		id: "jc4", label: "Fill Easy API: Singapore ACRA — Chen Family Trust Pte. Ltd.", url: "https://www.filleasy.hk/", type: "registry",
-		...srcMeta("filleasy.hk", "Fill Easy | CorpVerify — Singapore ACRA — Chen Family Trust", "Fill Easy CorpVerify API query result for Singapore ACRA. Entity: Chen Family Trust Pte. Ltd. UEN: 201234567C. Trustee entity for the Chen family inheritance trust. Established via Rajah & Tann.", "#0066aa"),
-	},
-	slaProperty: {
-		id: "jc5", label: "Fill Easy API: Singapore Land Authority — Residential Property", url: "https://www.filleasy.hk/", type: "registry",
-		...srcMeta("filleasy.hk", "Fill Easy | SLA Property Search — Chen Wei", "Fill Easy API property search result for Singapore Land Authority. Sentosa Cove residential property. Owner: CHEN Wei. Purchase date 2017. Caveat and ownership records returned.", "#0066aa"),
-		companySearchTemplate: {
-			registryName: "Singapore Land Authority (via Fill Easy API)",
-			registryUrl: "https://www.filleasy.hk/",
-			searchFields: [
-				{ label: "Owner Name", value: "CHEN Wei" },
-				{ label: "Property Type", value: "Landed — Good Class Bungalow (Sentosa)" },
-				{ label: "Search Type", value: "Owner Name Search" },
-			],
-			jurisdiction: "Republic of Singapore",
-			searchType: "Property Owner Search (via Fill Easy API)",
-		},
-	},
-	gsEmployment: {
-		id: "jc6", label: "Goldman Sachs — Employment Verification Letter", url: "https://www.goldmansachs.com/", date: "2005-06-30", type: "public-record",
-		...srcMeta("goldmansachs.com", "Goldman Sachs | Employment Verification — Chen Wei", "Goldman Sachs HR department employment verification letter. Confirms: Chen Wei, Investment Banking Associate to Vice President, London/Singapore offices, 1995-2005. Compensation details per employment contract.", "#002147"),
-	},
-	temasekHR: {
-		id: "jc7", label: "Temasek Holdings — Employment Confirmation", url: "https://www.temasek.com.sg/", date: "2012-12-31", type: "public-record",
-		...srcMeta("temasek.com.sg", "Temasek Holdings | HR Confirmation — Chen Wei", "Temasek Holdings Pte Ltd HR department employment confirmation. Confirms: Chen Wei, Senior Investment Director, 2005-2012. Carried interest entitlements and performance bonus structure described.", "#003366"),
-	},
-	rajahTann: {
-		id: "jc8", label: "Rajah & Tann — Chen Family Trust Deed", url: "https://www.rajahtannasia.com/", date: "2012-06-15", type: "filing",
-		...srcMeta("rajahtannasia.com", "Rajah & Tann | Trust Deed — Chen Family Trust", "Rajah & Tann Singapore LLP trust documentation. Chen Family Trust established 2012 following father's passing. Trust deed, schedule of assets (SGD 120M initial corpus), beneficiary designations, and trustee powers.", "#1a237e"),
-	},
-	independentVal: {
-		id: "jc9", label: "KPMG Independent Valuation — Chen Family Office Portfolio (2025)", url: "https://www.kpmg.com.sg/", date: "2025-12-31", type: "estimate",
-		...srcMeta("kpmg.com.sg", "KPMG | Independent Valuation Report — Chen Family Office", "KPMG Singapore independent valuation of Chen Family Office investment portfolio as at 31 December 2025. Total portfolio fair value SGD 510M (~$380M). Methodology: IFRS 13 fair value hierarchy.", "#00338d"),
-	},
-	auditedPortfolio: {
-		id: "jc10", label: "EY Audited Portfolio Statement — Chen Family Office (FY2025)", url: "https://www.ey.com/", date: "2025-12-31", type: "filing",
-		...srcMeta("ey.com", "EY | Audited Financial Statements — Chen Family Office Pte. Ltd.", "Ernst & Young LLP Singapore audited financial statements for Chen Family Office Pte. Ltd. FY2025. Clean audit opinion. Total assets SGD 510M. Investment portfolio breakdown by asset class.", "#ffe600"),
-	},
-};
 
-// ── James Chen Wei: Career Timeline ────────────────────────────
-
-const CHEN_CAREER: CareerPhase[] = [
-	{
-		id: "jc-1", title: "Goldman Sachs", organization: "Goldman Sachs", role: "Investment Banking Associate to VP",
-		startYear: 1995, endYear: 2005, location: "London / Singapore",
-		description: "Joined Goldman Sachs Investment Banking Division in London after graduating from LSE. Transferred to Singapore office in 2000. Promoted to Vice President in 2002. Total compensation over 10 years approximately $8M (base + bonuses), fully verified via employment contracts, payslips, and IRAS tax filings.",
-		categories: [
-			{ category: "income", claims: [
-				{ id: "jc1-1", description: "Goldman Sachs total compensation 1995-2005 (salary + bonuses, verified via employment contract, payslips, and IRAS 10-year tax history)", estimatedValueUSD: 8_000_000, confidence: 100, sources: [SRC_CHEN.gsEmployment, SRC_CHEN.irasTax] },
-			], subtotalUSD: 8_000_000, avgConfidence: 100 },
-		],
-		phaseWealthUSD: 8_000_000, cumulativeWealthUSD: 8_000_000,
-		keyEvents: ["1995: Joined Goldman Sachs IBD (London)", "2000: Transferred to Singapore office", "2002: Promoted to Vice President", "2005: Departed for Temasek Holdings"],
-	},
-	{
-		id: "jc-2", title: "Temasek Holdings", organization: "Temasek Holdings", role: "Senior Investment Director",
-		startYear: 2005, endYear: 2012, location: "Singapore",
-		description: "Joined Temasek Holdings as Investment Director, promoted to Senior Investment Director in 2008. Focused on Southeast Asian infrastructure and technology investments. Total compensation ~$17M over 7 years including salary, bonuses, and carried interest. All verified via employment contract, CPF contribution statements, and IRAS filings.",
-		categories: [
-			{ category: "income", claims: [
-				{ id: "jc2-1", description: "Temasek salary + bonuses + carried interest 2005-2012 (verified via employment contract, CPF statements, IRAS tax filings)", estimatedValueUSD: 17_000_000, confidence: 100, sources: [SRC_CHEN.temasekHR, SRC_CHEN.cpfStatement, SRC_CHEN.irasTax] },
-			], subtotalUSD: 17_000_000, avgConfidence: 100 },
-		],
-		phaseWealthUSD: 17_000_000, cumulativeWealthUSD: 25_000_000,
-		keyEvents: ["2005: Joined Temasek Holdings", "2008: Promoted to Senior Investment Director", "2012: Departed to manage family affairs"],
-	},
-	{
-		id: "jc-3", title: "Family Inheritance", organization: "Chen Family Trust", role: "Beneficiary / Settlor",
-		startYear: 2012, endYear: 2015, location: "Singapore",
-		description: "Father passed away in 2012. Inherited SGD 120M (~$90M USD) from father's textile manufacturing business in Malaysia/Singapore. Trust established via Rajah & Tann with full documentation — trust deed, probate records, bank statements showing settlement, and ACRA registration of trust entity. All documents independently verified.",
-		categories: [
-			{ category: "companies", claims: [
-				{ id: "jc3-1", description: "Inheritance from father — SGD 120M (~$90M) from textile manufacturing business (trust deed, probate documents, bank settlement statements, ACRA registration via Fill Easy)", estimatedValueUSD: 90_000_000, confidence: 100, sources: [SRC_CHEN.rajahTann, SRC_CHEN.acraFamilyTrust, SRC_CHEN.irasTax] },
-			], subtotalUSD: 90_000_000, avgConfidence: 100 },
-		],
-		phaseWealthUSD: 90_000_000, cumulativeWealthUSD: 115_000_000,
-		keyEvents: ["2012: Father passes away", "2012: Chen Family Trust established via Rajah & Tann", "2013: Probate completed, SGD 120M transferred to trust", "2014: Trust assets deployed to investment portfolio"],
-	},
-	{
-		id: "jc-4", title: "Chen Family Office", organization: "Chen Family Office Pte. Ltd.", role: "Founder & CIO",
-		startYear: 2015, endYear: 2022, location: "Singapore",
-		description: "Established Chen Family Office Pte. Ltd. in Singapore to manage family wealth. Diversified into private equity funds, Singapore real estate, and public equities. All investments documented with audited portfolio statements from EY. ACRA registration verified via Fill Easy CorpVerify.",
-		categories: [
-			{ category: "investments", claims: [
-				{ id: "jc4-1", description: "PE fund commitments (3 Singapore/ASEAN-focused PE funds, quarterly statements available)", estimatedValueUSD: 80_000_000, confidence: 90, sources: [SRC_CHEN.auditedPortfolio, SRC_CHEN.acraEntity] },
-				{ id: "jc4-2", description: "Public equities portfolio (SGX + global — EY audited, custodied at DBS)", estimatedValueUSD: 120_000_000, confidence: 95, sources: [SRC_CHEN.auditedPortfolio, SRC_CHEN.independentVal] },
-			], subtotalUSD: 200_000_000, avgConfidence: 93 },
-			{ category: "alternatives", claims: [
-				{ id: "jc4-3", description: "Singapore residential real estate — Sentosa Cove GCB ($22M, SLA records via Fill Easy) + Orchard Rd condo ($8M)", estimatedValueUSD: 30_000_000, confidence: 100, sources: [SRC_CHEN.slaProperty] },
-			], subtotalUSD: 30_000_000, avgConfidence: 100 },
-			{ category: "companies", claims: [
-				{ id: "jc4-4", description: "Chen Family Trust corpus — grown from SGD 120M to SGD 180M through reinvestment (KPMG independently valued)", estimatedValueUSD: 135_000_000, confidence: 90, sources: [SRC_CHEN.rajahTann, SRC_CHEN.independentVal, SRC_CHEN.acraFamilyTrust] },
-			], subtotalUSD: 135_000_000, avgConfidence: 90 },
-		],
-		phaseWealthUSD: 365_000_000, cumulativeWealthUSD: 320_000_000,
-		keyEvents: ["2015: Chen Family Office Pte. Ltd. incorporated", "2017: Sentosa Cove property purchased", "2019: First PE fund commitment", "2021: Portfolio reaches SGD 400M"],
-	},
-	{
-		id: "jc-5", title: "Current Portfolio", organization: "Chen Family Office Pte. Ltd.", role: "Founder & CIO",
-		startYear: 2022, endYear: null, location: "Singapore / London",
-		description: "Continues active management of diversified portfolio. KPMG independent valuation as at Dec 2025 confirms SGD 510M (~$380M) total portfolio. EY provides annual audit with clean opinion. Full documentation trail maintained — tax returns, bank statements, portfolio statements, trust deed, property records all current.",
-		categories: [
-			{ category: "investments", claims: [
-				{ id: "jc5-1", description: "PE fund portfolio — 4 active commitments across Singapore, ASEAN, and European buyout funds (quarterly NAV statements, audited)", estimatedValueUSD: 95_000_000, confidence: 90, sources: [SRC_CHEN.auditedPortfolio, SRC_CHEN.independentVal] },
-				{ id: "jc5-2", description: "Public equities — diversified global portfolio custodied at DBS Private Banking (EY audited, KPMG valued)", estimatedValueUSD: 75_000_000, confidence: 95, sources: [SRC_CHEN.auditedPortfolio, SRC_CHEN.independentVal] },
-			], subtotalUSD: 170_000_000, avgConfidence: 93 },
-			{ category: "alternatives", claims: [
-				{ id: "jc5-3", description: "Singapore real estate — Sentosa Cove GCB (current valuation SGD 32M) + Orchard Rd condo (SGD 12M) — SLA records via Fill Easy", estimatedValueUSD: 33_000_000, confidence: 100, sources: [SRC_CHEN.slaProperty, SRC_CHEN.independentVal] },
-				{ id: "jc5-4", description: "London residential property — Mayfair flat (GBP 4.5M) acquired 2019", estimatedValueUSD: 5_700_000, confidence: 90, sources: [SRC_CHEN.independentVal] },
-			], subtotalUSD: 38_700_000, avgConfidence: 95 },
-			{ category: "companies", claims: [
-				{ id: "jc5-5", description: "Chen Family Trust — current NAV SGD 200M (~$150M) including original inheritance and reinvested returns (KPMG valued)", estimatedValueUSD: 150_000_000, confidence: 90, sources: [SRC_CHEN.rajahTann, SRC_CHEN.independentVal, SRC_CHEN.acraFamilyTrust] },
-			], subtotalUSD: 150_000_000, avgConfidence: 90 },
-			{ category: "income", claims: [
-				{ id: "jc5-6", description: "Annual investment income — dividends, interest, distributions (~$4M/year, verified via IRAS and bank statements)", estimatedValueUSD: 21_300_000, confidence: 95, sources: [SRC_CHEN.irasTax, SRC_CHEN.auditedPortfolio] },
-			], subtotalUSD: 21_300_000, avgConfidence: 95 },
-		],
-		phaseWealthUSD: 380_000_000, cumulativeWealthUSD: 380_000_000,
-		keyEvents: ["2022: KPMG engaged for independent portfolio valuation", "2023: EY first annual audit completed", "2024: PE fund distributions of $12M received", "2025: KPMG confirms SGD 510M total portfolio value"],
-	},
-];
-
-// ── James Chen Wei: Data Sources ───────────────────────────────
-
-const CHEN_SOURCES: DataSourceDef[] = [
-	{ id: "ds-1", name: "IRAS Individual Income Tax (10yr)", provider: "Inland Revenue Authority of Singapore", category: "Tax Records", delayMs: 1800 },
-	{ id: "ds-2", name: "CPF Board Contribution History", provider: "Central Provident Fund Board", category: "Employment Records", delayMs: 1200 },
-	{ id: "ds-3", name: "Fill Easy — Singapore ACRA BizFile+", provider: "Fill Easy Ltd / SG ACRA", category: "Corporate Registry", delayMs: 1500 },
-	{ id: "ds-4", name: "Fill Easy — Singapore Land Authority", provider: "Fill Easy Ltd / SG SLA", category: "Property Records", delayMs: 1400 },
-	{ id: "ds-5", name: "Goldman Sachs HR Verification", provider: "Goldman Sachs Group Inc.", category: "Employment Records", delayMs: 1600 },
-	{ id: "ds-6", name: "Temasek Holdings HR Confirmation", provider: "Temasek Holdings Pte Ltd", category: "Employment Records", delayMs: 1700 },
-	{ id: "ds-7", name: "Rajah & Tann — Trust Documentation", provider: "Rajah & Tann Singapore LLP", category: "Trust & Structures", delayMs: 2000 },
-	{ id: "ds-8", name: "KPMG Independent Valuation (2025)", provider: "KPMG Singapore", category: "Valuations", delayMs: 2200 },
-	{ id: "ds-9", name: "EY Audited Portfolio Statement", provider: "Ernst & Young LLP Singapore", category: "Audit Reports", delayMs: 2000 },
-	{ id: "ds-10", name: "OFAC / EU / UN Sanctions Lists", provider: "Multi-jurisdictional", category: "Sanctions Screening", delayMs: 900 },
-	{ id: "ds-11", name: "PEP Database (Global)", provider: "World-Check / Dow Jones", category: "PEP Screening", delayMs: 1000 },
-	{ id: "ds-12", name: "Dow Jones Adverse Media Screening", provider: "Dow Jones Risk & Compliance", category: "Adverse Media", delayMs: 1400 },
-];
-
-// ── James Chen Wei: Company Nodes ──────────────────────────────
-
-const CHEN_COMPANIES: CompanyNode[] = [
-	{
-		name: "Chen Family Office Pte. Ltd.", role: "Founder & CIO", ownership: "100%", status: "active", valuation: "SGD 510M AUM",
-		type: "holding", jurisdiction: "Singapore",
-		children: [
-			{ name: "PE Fund Portfolio (4 funds)", role: "LP commitments", status: "active", type: "fund", jurisdiction: "Singapore / ASEAN / Europe", valuation: "$95M NAV" },
-			{ name: "Public Equities Portfolio", role: "DBS Private Banking custody", status: "active", type: "investment", jurisdiction: "Global", valuation: "$75M" },
-			{ name: "Fixed Income / Cash", role: "Treasury management", status: "active", type: "investment", jurisdiction: "Singapore", valuation: "$21M" },
-		],
-	},
-	{
-		name: "Chen Family Trust", role: "Beneficiary / Settlor", ownership: "Beneficiary", status: "active", valuation: "SGD 200M",
-		type: "trust", jurisdiction: "Singapore",
-		children: [
-			{ name: "Trust corpus (inherited assets)", role: "Original SGD 120M + reinvested returns", status: "active", type: "investment", jurisdiction: "Singapore" },
-			{ name: "Rajah & Tann (trustee counsel)", role: "Trust administration", status: "active", type: "subsidiary", jurisdiction: "Singapore" },
-		],
-	},
-	{
-		name: "Singapore Property Portfolio", role: "Personal assets", status: "active", valuation: "~SGD 44M",
-		type: "holding", jurisdiction: "Singapore",
-		children: [
-			{ name: "Sentosa Cove GCB", role: "Primary residence", status: "active", type: "investment", jurisdiction: "Singapore", valuation: "SGD 32M" },
-			{ name: "Orchard Road condo", role: "Investment property", status: "active", type: "investment", jurisdiction: "Singapore", valuation: "SGD 12M" },
-		],
-	},
-	{ name: "London Mayfair flat", role: "Secondary residence", status: "active", type: "investment", jurisdiction: "United Kingdom", valuation: "GBP 4.5M" },
-];
-
-// ── James Chen Wei: Key Parameters ─────────────────────────────
-
-const CHEN_PARAMS: KeyParameter[] = [
-	{ label: "Wealth Plausibility", value: "High — employment income (GS/Temasek) + inheritance + investment returns clearly documented", status: "normal" },
-	{ label: "Source Diversity", value: "10 sources — government records, Big-4 audit, independent valuation, employment verification", status: "normal" },
-	{ label: "Overall Confidence", value: `${overallConfidence(CHEN_CAREER)}%`, status: "normal" },
-	{ label: "Regulatory Exposure", value: "None — no regulatory actions, sanctions, or adverse media", status: "normal" },
-	{ label: "PEP Status", value: "Clear — no PEP matches, no political connections identified", status: "normal" },
-	{ label: "Wealth Volatility", value: "Low — diversified portfolio with audited valuations, no crypto or meme-stock exposure", status: "normal" },
-	{ label: "Jurisdictional Complexity", value: "Low — primarily Singapore with one London property. Single tax residence.", status: "normal" },
-	{ label: "Transparency Score", value: "Excellent — 10yr tax returns, EY audit, KPMG valuation, full document trail", status: "normal" },
-];
-
-// ── James Chen Wei: Narrative ──────────────────────────────────
-
-const CHEN_NARRATIVE = `James Chen Wei's estimated net worth of approximately $380 million (SGD 510M) represents a well-documented wealth profile built from three clearly verifiable sources: (1) employment income from Goldman Sachs (1995-2005, ~$8M) and Temasek Holdings (2005-2012, ~$17M), verified via employment contracts, payslips, CPF contribution statements, and 10 years of IRAS tax filings; (2) a SGD 120M inheritance from his father's textile manufacturing business in 2012, fully documented through probate records, trust deed (Rajah & Tann), bank settlement statements, and ACRA-registered trust entity; and (3) investment returns from a diversified portfolio managed through the Chen Family Office Pte. Ltd.
-
-The family office, incorporated in Singapore in 2015 and verified via Fill Easy CorpVerify (ACRA), manages a portfolio independently valued by KPMG at SGD 510M as at December 2025. Ernst & Young provides annual audited financial statements with clean opinions. The portfolio is diversified across PE fund commitments (4 funds, $95M), public equities ($75M custodied at DBS Private Banking), the Chen Family Trust ($150M NAV), and Singapore/London real estate ($39M).
-
-Singapore Land Authority records (via Fill Easy API) confirm property ownership — Sentosa Cove Good Class Bungalow and Orchard Road condominium. A London Mayfair flat was acquired in 2019. All properties have current independent valuations.
-
-This profile represents the gold standard of SOW corroboration. Every material wealth source has a verifiable paper trail: tax returns (10yr), employment contracts, CPF statements, trust deed, probate records, bank statements, property deeds, audited financials, and independent valuations. No PEP exposure, no adverse media, no sanctions hits, and no regulatory concerns. The corroboration grade of A reflects comprehensive documentation across all wealth categories.`;
-
-// ── James Chen Wei: Client Documents ───────────────────────────
-
-const CHEN_CLIENT_DOCS: ClientDocument[] = [
-	{ id: "cd-jc-1", type: "passport", label: "Singapore Passport — Chen Wei (陈伟)", submittedBy: "Client (directly)", submittedDate: "2026-04-01", status: "verified", fileDescription: "Republic of Singapore passport. Name: CHEN WEI (陈伟). DOB: 15 MAR 1972. Passport No: K••••••89. Valid through 2032.", verificationNotes: "Name and DOB match IRAS records and Goldman Sachs employment letter. Singapore citizen status confirmed.", governmentAuthority: "Immigration & Checkpoints Authority (ICA), Singapore" },
-	{ id: "cd-jc-2", type: "tax-return", label: "IRAS Tax Assessment — 10-Year History (2016-2025)", submittedBy: "Client (via KPMG Singapore)", submittedDate: "2026-04-05", status: "verified", fileDescription: "IRAS individual income tax assessment notices for 10 consecutive years (2016-2025). Shows employment income, investment income, trust distributions, and property income.", verificationNotes: "100% verified — government authority. 10 years of consistent filing with no anomalies. Income matches employment records and investment portfolio distributions.", governmentAuthority: "Inland Revenue Authority of Singapore (IRAS)" },
-	{ id: "cd-jc-3", type: "bank-statement", label: "DBS Private Banking — SGD & USD Accounts (6 months)", submittedBy: "Client (via DBS Wealth Management)", submittedDate: "2026-04-10", status: "verified", fileDescription: "DBS Private Banking statements for SGD and USD accounts. Period: Oct 2025 - Mar 2026. Shows investment income credits, PE fund distributions, trust distributions, and property rental income.", verificationNotes: "All credits cross-referenced against EY audited portfolio and IRAS filings. DBS is MAS-regulated institution.", governmentAuthority: "Monetary Authority of Singapore (MAS) — regulated institution" },
-	{ id: "cd-jc-4", type: "trust-deed", label: "Rajah & Tann — Chen Family Trust Deed (2012)", submittedBy: "Client (via Rajah & Tann Singapore LLP)", submittedDate: "2026-04-08", status: "verified", fileDescription: "Trust deed for Chen Family Trust established June 2012. Settlor: Chen Wei. Initial corpus: SGD 120M from father's estate. Beneficiaries: Chen Wei, Chen Li Hua (spouse), Chen Ming (son), Chen Mei (daughter). Trustee: Chen Family Trust Pte. Ltd.", verificationNotes: "Trust deed cross-referenced against ACRA registration (Fill Easy CorpVerify). Initial corpus matches probate records. Beneficiary designations clear.", governmentAuthority: "Singapore ACRA (via Fill Easy CorpVerify)" },
-	{ id: "cd-jc-5", type: "property-deed", label: "Fill Easy API: SLA — Sentosa Cove GCB", submittedBy: "Fill Easy API — automated retrieval", submittedDate: "2026-05-19", status: "verified", fileDescription: "Singapore Land Authority caveat and ownership record for Sentosa Cove Good Class Bungalow. Owner: CHEN Wei. Purchase: 2017. Current valuation per URA transacted prices.", verificationNotes: "100% verified — government authority. Fill Easy API returned SLA records with full ownership chain.", governmentAuthority: "Singapore Land Authority (via Fill Easy API)" },
-	{ id: "cd-jc-6", type: "other", label: "KPMG Independent Valuation Report (Dec 2025)", submittedBy: "KPMG Singapore", submittedDate: "2026-02-15", status: "verified", fileDescription: "KPMG independent valuation of Chen Family Office entire portfolio. SGD 510M total fair value. IFRS 13 compliant. Covers PE funds, equities, real estate, and trust assets.", verificationNotes: "Big-4 independent valuation. Methodology reviewed and consistent with industry standards. Cross-referenced against EY audit.", governmentAuthority: "N/A (Big-4 independent valuation)" },
-	{ id: "cd-jc-7", type: "other", label: "EY Audited Financial Statements — FY2025", submittedBy: "Ernst & Young LLP Singapore", submittedDate: "2026-03-01", status: "verified", fileDescription: "Audited financial statements for Chen Family Office Pte. Ltd. FY ending 31 Dec 2025. Clean (unmodified) audit opinion. Total assets SGD 510M.", verificationNotes: "Big-4 audit with clean opinion. Balance sheet cross-referenced against KPMG valuation. No qualifications or emphasis of matter.", governmentAuthority: "N/A (Big-4 audit)" },
-	{ id: "cd-jc-8", type: "other", label: "Goldman Sachs Employment Verification (1995-2005)", submittedBy: "Goldman Sachs HR (via client request)", submittedDate: "2026-04-20", status: "verified", fileDescription: "Goldman Sachs Group Inc. employment verification letter. Confirms: Chen Wei employed as Investment Banking Associate (1995) to Vice President (2005). London and Singapore offices.", verificationNotes: "Employment period and roles verified. Compensation details consistent with IRAS tax filings for relevant years.", governmentAuthority: "N/A (employer verification)" },
-	{ id: "cd-jc-9", type: "other", label: "CPF Contribution Statement (2005-2012)", submittedBy: "Client (via CPF Board portal)", submittedDate: "2026-04-12", status: "verified", fileDescription: "Central Provident Fund Board contribution history showing mandatory employer contributions from Temasek Holdings Pte Ltd, 2005-2012. Monthly contributions consistent with declared salary.", verificationNotes: "100% verified — government authority. CPF contributions match declared employment income on IRAS filings.", governmentAuthority: "Central Provident Fund Board, Singapore" },
-	{ id: "cd-jc-10", type: "incorporation-cert", label: "Fill Easy API: ACRA — Chen Family Office Pte. Ltd.", submittedBy: "Fill Easy API — automated retrieval", submittedDate: "2026-05-19", status: "verified", fileDescription: "ACRA BizFile+ record for Chen Family Office Pte. Ltd. (UEN: 201523456B). Director: CHEN Wei. Registered capital, filing history, and secretary details.", verificationNotes: "100% verified — government authority. Fill Easy CorpVerify returned exact match.", governmentAuthority: "Singapore ACRA (via Fill Easy CorpVerify)" },
-];
-
-// ── James Chen Wei: Cross-References ───────────────────────────
-
-const CHEN_CROSS_REFS: CrossReference[] = [
-	{ id: "xr-jc-1", field: "Full Name", clientDocLabel: "Singapore Passport", externalSourceLabel: "IRAS Tax Records", clientValue: "CHEN WEI (陈伟)", externalValue: "CHEN WEI — taxpayer", match: "exact", confidence: 100, verifiedVia: "IRAS — government authority" },
-	{ id: "xr-jc-2", field: "Employment — Goldman Sachs", clientDocLabel: "GS Employment Verification", externalSourceLabel: "IRAS Tax Filings (1995-2005)", clientValue: "IB Associate to VP, 1995-2005", externalValue: "GS employment income declared 1995-2005", match: "exact", confidence: 100, verifiedVia: "IRAS + employer — double verification" },
-	{ id: "xr-jc-3", field: "Employment — Temasek", clientDocLabel: "Temasek HR Confirmation", externalSourceLabel: "CPF Board Contributions", clientValue: "Senior Investment Director, 2005-2012", externalValue: "Temasek employer contributions 2005-2012", match: "exact", confidence: 100, verifiedVia: "CPF Board — government authority" },
-	{ id: "xr-jc-4", field: "Inheritance Amount", clientDocLabel: "Rajah & Tann Trust Deed", externalSourceLabel: "DBS Bank Settlement Statement", clientValue: "SGD 120M initial trust corpus", externalValue: "SGD 120M credited from estate settlement", match: "exact", confidence: 100, verifiedVia: "Trust deed + bank statement — dual verification" },
-	{ id: "xr-jc-5", field: "Family Office Registration", clientDocLabel: "Fill Easy: ACRA — Chen Family Office", externalSourceLabel: "MAS Licensed Fund Registry", clientValue: "UEN: 201523456B, Director: CHEN Wei", externalValue: "MAS-registered family office", match: "exact", confidence: 100, verifiedVia: "Fill Easy CorpVerify (ACRA) + MAS — government authority" },
-	{ id: "xr-jc-6", field: "Property — Sentosa Cove", clientDocLabel: "Fill Easy: SLA — Property Search", externalSourceLabel: "URA Transacted Price Data", clientValue: "GCB, Owner: CHEN Wei, purchased 2017", externalValue: "Sentosa Cove GCB transacted SGD 22M (2017)", match: "exact", confidence: 100, verifiedVia: "SLA via Fill Easy + URA — government authority" },
-	{ id: "xr-jc-7", field: "Portfolio Value", clientDocLabel: "KPMG Independent Valuation", externalSourceLabel: "EY Audited Financials", clientValue: "SGD 510M total (KPMG, Dec 2025)", externalValue: "SGD 510M total assets (EY audit, Dec 2025)", match: "exact", confidence: 100, verifiedVia: "Dual Big-4 verification (KPMG valuation + EY audit)" },
-	{ id: "xr-jc-8", field: "Trust Beneficiaries", clientDocLabel: "Rajah & Tann Trust Deed", externalSourceLabel: "Fill Easy: ACRA — Chen Family Trust Pte. Ltd.", clientValue: "Chen Wei, Chen Li Hua, Chen Ming, Chen Mei", externalValue: "Trust entity registered — ACRA confirms directors", match: "exact", confidence: 100, verifiedVia: "Fill Easy CorpVerify (ACRA) — government authority" },
-	{ id: "xr-jc-9", field: "Tax Filing Consistency", clientDocLabel: "IRAS 10-Year Tax History", externalSourceLabel: "DBS Bank Statements + EY Audit", clientValue: "Investment income: ~SGD 5.4M/yr (avg)", externalValue: "DBS credits ~SGD 5.2-5.6M/yr, EY audit confirms", match: "exact", confidence: 100, verifiedVia: "Triple verification: IRAS + DBS + EY" },
-];
-
-// ── James Chen Wei: Report Assembly ────────────────────────────
-
-const CHEN_REPORT: HnwReport = {
-	profile: {
-		id: "hnw-james-chen",
-		name: "James Chen Wei",
-		nameCn: "陈伟",
-		dateOfBirth: "1972-03-15",
-		age: 54,
-		nationality: "Singaporean",
-		residences: ["Singapore", "London"],
-		primaryIndustry: "Private Equity / Family Office",
-		estimatedNetWorthUSD: 380_000_000,
-		netWorthSource: "Client Declaration + Verified Documents",
-		riskRating: "Low",
-		riskScore: 15,
-		profileSummary: "Singapore-based private equity professional with well-documented wealth from inheritance, employment income at Goldman Sachs and Temasek, and diversified investment portfolio. All major wealth sources supported by verifiable documentation including tax returns, bank statements, employment contracts, trust deeds, and independent valuations. Family trust established through Rajah & Tann with full documentation. Represents the gold standard of SOW corroboration.",
-	},
-	careerTimeline: CHEN_CAREER,
-	totalEstimatedWealthUSD: 380_000_000,
-	wealthByCategory: aggregateWealth(CHEN_CAREER),
-	overallConfidence: overallConfidence(CHEN_CAREER),
-	narrative: CHEN_NARRATIVE,
-	keyParameters: CHEN_PARAMS,
-	dataSources: CHEN_SOURCES,
-	companyNodes: CHEN_COMPANIES,
-	screeningResult: PEP_SCREENING[3],
-	clientDocuments: CHEN_CLIENT_DOCS,
-	crossReferences: CHEN_CROSS_REFS,
-	uploadSlots: UPLOAD_SLOTS,
-	corroborationScores: {
-		consistency: 12,
-		correctness: 15,
-		completeness: 18,
-		masReference: "MAS Notice 626 / Guidelines to Notice 626 (Prevention of Money Laundering and Countering the Financing of Terrorism) — §6.18–6.22 Source of Wealth Verification",
-	},
-	agentVerification: {
-		agentId: "fe-verify-v2",
-		agentName: "Fill Easy Verification Agent",
-		timestamp: new Date().toISOString(),
-		overallStatus: "verified",
-		checks: [
-			{ id: "ck-jc-1", category: "consistency", label: "Career-to-wealth trajectory alignment", status: "pass", detail: "Goldman Sachs (1995-2005, $8M) + Temasek (2005-2012, $17M) + inheritance (SGD 120M, 2012) + investment returns. Clear linear progression fully documented with employment records, CPF statements, and tax filings." },
-			{ id: "ck-jc-2", category: "consistency", label: "Income proportional to declared roles", status: "pass", detail: "GS VP compensation (~$800K/yr avg) and Temasek Senior Director (~$2.4M/yr avg with carry) are consistent with industry benchmarks for these roles and seniority levels." },
-			{ id: "ck-jc-3", category: "correctness", label: "Employment verification — dual source", status: "pass", detail: "Goldman Sachs HR letter + IRAS tax filings provide independent verification of employment. Temasek HR + CPF Board contributions provide second independent verification. No discrepancies." },
-			{ id: "ck-jc-4", category: "correctness", label: "Inheritance documentation complete", status: "pass", detail: "Rajah & Tann trust deed, probate records, bank settlement statements, and ACRA registration all cross-reference consistently. SGD 120M amount verified across all documents." },
-			{ id: "ck-jc-5", category: "correctness", label: "Portfolio independently valued and audited", status: "pass", detail: "KPMG independent valuation (SGD 510M) and EY audit (clean opinion, SGD 510M total assets) provide dual Big-4 verification. Valuations agree to within 1%." },
-			{ id: "ck-jc-6", category: "completeness", label: "Property ownership verified", status: "pass", detail: "Singapore Land Authority records (via Fill Easy API) confirm Sentosa Cove and Orchard Road property ownership. URA transacted price data used for current valuation. London property deed also verified." },
-			{ id: "ck-jc-7", category: "completeness", label: "Tax filing completeness", status: "pass", detail: "10 consecutive years of IRAS tax filings provided and verified. Investment income on tax returns matches DBS bank statement credits and EY audited financial statements. Triple verification achieved." },
-			{ id: "ck-jc-8", category: "completeness", label: "Trust structure transparent", status: "pass", detail: "Chen Family Trust — full trust deed, named beneficiaries (Chen Wei, spouse, two children), ACRA-registered trust entity, Rajah & Tann as counsel. No opaque structures or undisclosed beneficiaries." },
-		],
-		summary: "James Chen Wei's wealth profile achieves the highest level of corroboration across all three MAS assessment dimensions. Every material wealth source has a verifiable documentary trail: 10 years of tax returns, employment verification from two blue-chip institutions, CPF contribution records, trust deed with named beneficiaries, probate records, bank statements, ACRA registrations, property deeds, KPMG independent valuation, and EY audited financials. All eight verification checks passed with no flags or warnings. This profile represents the gold standard for SOW corroboration.",
-		recommendations: [
-			"Standard ongoing monitoring — annual review cycle is sufficient given low risk rating",
-			"Request updated KPMG valuation annually to maintain current portfolio verification",
-			"Standard PEP/sanctions re-screening on quarterly schedule",
-		],
-	},
-	corroborationGrade: "A",
-	fourEyeCheck: {
-		analyst: { name: "Sarah Chen", role: "Senior Compliance Analyst", timestamp: "2026-05-19T11:00:00Z" },
-		reviewer: { name: "Michael Wong", role: "Head of Financial Crime", timestamp: "2026-05-19T14:30:00Z" },
-		status: "approved",
-		signOffHistory: [
-			{ action: "Drafted", by: "Sarah Chen", at: "2026-05-19T11:00:00Z", comment: "Comprehensive documentation. All sources verified. Recommending approval." },
-			{ action: "Reviewed", by: "Michael Wong", at: "2026-05-19T14:30:00Z", comment: "Approved — exemplary corroboration. No follow-up items." },
-		],
-	},
-	personalRelationships: [
-		{ id: "pr-jc-1", name: "Chen Li Hua", relationship: "spouse", notes: "Homemaker, named beneficiary of Chen Family Trust" },
-		{ id: "pr-jc-2", name: "Chen Ming", relationship: "child", notes: "Son, named beneficiary of Chen Family Trust. University student (Cambridge)." },
-		{ id: "pr-jc-3", name: "Chen Mei", relationship: "child", notes: "Daughter, named beneficiary of Chen Family Trust. Secondary school student." },
-		{ id: "pr-jc-4", name: "Chen Tai Wei (father, deceased)", relationship: "parent", notes: "Founder of Chen Textile Manufacturing. Source of SGD 120M inheritance. Passed away 2012.", linkedEntities: ["Chen Family Trust"] },
-	],
-};
-
-export const HNW_CASES: HnwReport[] = [JACK_MA_REPORT, YAT_SIU_REPORT, TRUMP_REPORT, CHEN_REPORT];
+export const HNW_CASES: HnwReport[] = [JACK_MA_REPORT, YAT_SIU_REPORT, TRUMP_REPORT, CHEN_WEI_REPORT];
 
 /* ═══════════════════════════════════════════════════════════════
    Compliance Chatbot — hardcoded conversations per subject
@@ -2385,8 +2490,9 @@ export const CHATBOT_ATTENTION_AREAS: Record<string, CaseAttentionArea[]> = {
 		{ id: "dt-6", title: "Multiple Criminal and Civil Proceedings", severity: "info", description: "Multiple criminal indictments (2023-2024), NY civil fraud judgment ($454M), and E. Jean Carroll verdicts. Ongoing legal exposure may materially impact net worth through judgments, fines, and legal costs.", section: "Risk Parameters" },
 	],
 	"hnw-james-chen": [
-		{ id: "jc-1", title: "Exemplary Documentation — Gold Standard", severity: "info", description: "All wealth sources fully documented with verifiable paper trail: 10yr tax returns, employment contracts, CPF statements, trust deed, probate records, bank statements, property deeds, EY audit, and KPMG valuation. No action items.", section: "Overview" },
-		{ id: "jc-2", title: "Annual Valuation Refresh", severity: "info", description: "KPMG independent valuation and EY audit are current as at December 2025. Standard annual refresh should be scheduled for Q1 2027 to maintain up-to-date portfolio verification.", section: "Investments" },
+		{ id: "jc-1", title: "Exemplary Documentation — Gold Standard", severity: "info", description: "All wealth sources fully documented through Singapore government authorities: Goldman Sachs employment verification, MAS CMS licence records, ACRA registrations (Fill Easy CorpVerify), IRAS tax filings, SLA property records (Fill Easy API), DBS Private Banking custody confirmations. All 8 verification checks passed. No action items.", section: "Overview" },
+		{ id: "jc-2", title: "Annual Portfolio Review", severity: "info", description: "DBS Private Banking portfolio statement current as of Q1 2026. Standard annual refresh should be scheduled for Q1 2027 to maintain up-to-date portfolio verification and IRAS filing cross-check.", section: "Investments" },
+		{ id: "jc-3", title: "Single Jurisdiction — Simplified Verification", severity: "info", description: "Entire wealth profile is Singapore-based — no offshore structures, no cross-border complexity. All regulatory bodies (MAS, ACRA, IRAS, SLA) are accessible via Fill Easy API for ongoing verification.", section: "Risk Parameters" },
 	],
 };
 
@@ -2415,9 +2521,9 @@ export const CHATBOT_REMINDERS: Record<string, ChatReminder[]> = {
 		{ id: "r-dt-6", label: "Schedule weekly PEP/sanctions/adverse media re-screening", dueDate: "2026-05-26", priority: "high", completed: false },
 	],
 	"hnw-james-chen": [
-		{ id: "r-jc-1", label: "Schedule annual KPMG portfolio valuation refresh (Q1 2027)", dueDate: "2027-01-15", priority: "low", completed: false },
-		{ id: "r-jc-2", label: "Standard quarterly PEP/sanctions re-screening", dueDate: "2026-08-01", priority: "low", completed: false },
-		{ id: "r-jc-3", label: "Request updated EY audited financials when available (FY2026)", dueDate: "2027-03-01", priority: "low", completed: false },
+		{ id: "r-jc-1", label: "Request updated DBS Private Banking portfolio statement (Q2 2026)", dueDate: "2026-07-15", priority: "low", completed: false },
+		{ id: "r-jc-2", label: "Standard quarterly PEP/sanctions re-screening per MAS Notice 626", dueDate: "2026-08-01", priority: "low", completed: false },
+		{ id: "r-jc-3", label: "Monitor Forbes Singapore Rich List 2026 for net worth consistency", dueDate: "2026-08-15", priority: "low", completed: false },
 	],
 };
 
@@ -2447,9 +2553,9 @@ export const CHATBOT_INITIAL_MESSAGES: Record<string, ChatMessage[]> = {
 	],
 	"hnw-james-chen": [
 		{ id: "jc-c1", role: "assistant", text: "I've completed the Source of Wealth assessment for James Chen Wei. This is a LOW RISK case with exemplary documentation:", timestamp: "Just now" },
-		{ id: "jc-c2", role: "assistant", text: "🟢 VERIFIED: All wealth sources fully corroborated. Employment income verified via Goldman Sachs and Temasek employment letters + CPF Board contributions + 10 years of IRAS tax filings.", timestamp: "Just now" },
-		{ id: "jc-c3", role: "assistant", text: "🟢 VERIFIED: SGD 120M inheritance from father's textile business — trust deed (Rajah & Tann), probate records, bank settlement statements, and ACRA registration all cross-reference consistently.", timestamp: "Just now" },
-		{ id: "jc-c4", role: "assistant", text: "🟢 VERIFIED: Current portfolio valued at SGD 510M with dual Big-4 verification — KPMG independent valuation + EY audited financials (clean opinion). All eight verification checks passed.", timestamp: "Just now" },
-		{ id: "jc-c5", role: "assistant", text: "Overall corroboration grade: A (~88% confidence). Four-eye check approved by Michael Wong. No follow-up items required — standard annual monitoring cycle applies. Would you like to review any section in detail?", timestamp: "Just now" },
+		{ id: "jc-c2", role: "assistant", text: "VERIFIED: All wealth sources fully corroborated. Career trajectory from Goldman Sachs MD ($18M compensation, verified via GS HR + IRAS) to Meridian Capital Partners co-founder ($85M in PE carry, verified via MAS CMS licence + ACRA + SGX) to family office establishment.", timestamp: "Just now" },
+		{ id: "jc-c3", role: "assistant", text: "VERIFIED: Current portfolio of $380M (SGD 510M) managed via Chen Wei Family Office Pte. Ltd. (ACRA: UEN 201012345G). Blue-chip equities, fixed income, PE fund-of-funds, and prime Singapore real estate — all confirmed through DBS Private Banking custody, SGX market data, and Fill Easy SLA property records.", timestamp: "Just now" },
+		{ id: "jc-c4", role: "assistant", text: "VERIFIED: Two Singapore properties confirmed via Fill Easy API — Sentosa Cove bungalow (S$28M current) and Nassim Road GCB (S$55M current). Both cross-referenced against URA transaction data. All 8 verification checks passed with zero flags.", timestamp: "Just now" },
+		{ id: "jc-c5", role: "assistant", text: "Overall corroboration grade: A (~88% confidence). Four-eye check approved by Michael Wong. No follow-up items required — standard quarterly monitoring cycle applies. Would you like to review any section in detail?", timestamp: "Just now" },
 	],
 };
