@@ -1624,6 +1624,11 @@ function WealthClaimRow({ claim, onSourceClick }: { claim: WealthClaim; onSource
 			</div>
 			<div className="flex items-center gap-3">
 				<ConfidenceBar value={claim.confidence} />
+				{claim.savingRate !== undefined && (
+					<span className="text-[10px] font-heading font-medium px-1.5 py-0.5 rounded bg-cyan-500/10 text-cyan-700 border border-cyan-500/20 shrink-0">
+						{claim.savingRate}% saving rate
+					</span>
+				)}
 				<div className="flex items-center gap-1.5 flex-wrap">
 					{claim.sources.map((src) => (
 						<SourceBadge key={src.id} source={src} onClick={onSourceClick} />
@@ -2022,7 +2027,15 @@ function NarrativeSection({ narrative, report }: { narrative: string; report: Hn
 
 			<div className="space-y-3">
 				{(expanded ? paragraphs : preview).map((para, i) => (
-					<p key={i} className="text-sm text-muted-foreground leading-relaxed">{para}</p>
+					<p key={i} className="text-sm text-muted-foreground leading-relaxed">
+						{para.split(/(\[[^\]]+\]\([^)]+\))/).map((segment, j) => {
+							const linkMatch = segment.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+							if (linkMatch) {
+								return <a key={j} href={linkMatch[2]} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">{linkMatch[1]}</a>;
+							}
+							return <span key={j}>{segment}</span>;
+						})}
+					</p>
 				))}
 			</div>
 			{paragraphs.length > 2 && (
@@ -3202,6 +3215,7 @@ function DownloadReportButton({ report }: { report: HnwReport }) {
 							<div style="font-size:10px;color:#6b7280;">Confidence:</div>
 							<div style="flex:0 0 100px;height:6px;border-radius:3px;background:#e5e7eb;overflow:hidden;"><div style="height:100%;border-radius:3px;background:${confColor(claim.confidence)};width:${claim.confidence}%"></div></div>
 							<span style="font-size:11px;font-weight:600;color:${confColor(claim.confidence)}">${claim.confidence}%</span>
+							${claim.savingRate !== undefined ? `<span style="font-size:10px;padding:1px 6px;border-radius:4px;background:rgba(6,182,212,0.1);color:#0e7490;border:1px solid rgba(6,182,212,0.2);">${claim.savingRate}% saving rate</span>` : ""}
 						</div>
 						<div style="margin-top:4px;">${srcList}</div>
 					</div>`;
@@ -3251,7 +3265,7 @@ function DownloadReportButton({ report }: { report: HnwReport }) {
 
 		/* ── Section 7: Narrative ── */
 		const narrativeHtml = report.narrative.split("\n\n").map((para) =>
-			`<p style="margin:0 0 12px 0;font-size:13px;line-height:1.7;color:#374151;">${para}</p>`
+			`<p style="margin:0 0 12px 0;font-size:13px;line-height:1.7;color:#374151;">${para.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" style="color:#2563eb;text-decoration:none;font-weight:500;">$1</a>')}</p>`
 		).join("");
 
 		/* ── Section 8: Source Citations ── */

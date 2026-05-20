@@ -79,6 +79,7 @@ export interface WealthClaim {
 	description: string;
 	estimatedValueUSD: number;
 	confidence: number; // 0-100
+	savingRate?: number; // 0-100, percentage of income plausibly saved
 	sources: SourceCitation[];
 }
 
@@ -544,7 +545,7 @@ const JACK_MA_CAREER: CareerPhase[] = [
 		description: "Taught English at a local university after graduating from Hangzhou Normal University. Monthly salary approximately $12-20. Built foundational communication skills and first visited the US in 1995 where he encountered the internet.",
 		categories: [
 			{ category: "income", claims: [
-				{ id: "jm1-1", description: "University lecturer salary (~$15/month for 7 years, confirmed via NBS education sector wage tables)", estimatedValueUSD: 12_600, confidence: 100, sources: [SRC_MA.chinaSalaryStats, SRC_MA.chinaIIT] },
+				{ id: "jm1-1", description: "University lecturer salary (~$15/month for 7 years, confirmed via NBS education sector wage tables)", estimatedValueUSD: 12_600, confidence: 100, savingRate: 15, sources: [SRC_MA.chinaSalaryStats, SRC_MA.chinaIIT] },
 			], subtotalUSD: 12_600, avgConfidence: 100 },
 		],
 		phaseWealthUSD: 12_600, cumulativeWealthUSD: 12_600,
@@ -556,7 +557,7 @@ const JACK_MA_CAREER: CareerPhase[] = [
 		description: "Founded China Pages (Zhongguo Huangye), one of China's first internet companies. Partnered with Hangzhou Telecom, eventually lost control. Moved to Beijing to work on a government e-commerce project for MOFTEC (Ministry of Foreign Trade). Both ventures generated minimal personal wealth.",
 		categories: [
 			{ category: "income", claims: [
-				{ id: "jm2-1", description: "Salary and earnings from China Pages and MOFTEC (~$500/month, cross-checked against NBS sector wage data)", estimatedValueUSD: 24_000, confidence: 85, sources: [SRC_MA.prcWageData, SRC_MA.chinaIIT] },
+				{ id: "jm2-1", description: "Salary and earnings from China Pages and MOFTEC (~$500/month, cross-checked against NBS sector wage data)", estimatedValueUSD: 24_000, confidence: 85, savingRate: 20, sources: [SRC_MA.prcWageData, SRC_MA.chinaIIT] },
 			], subtotalUSD: 24_000, avgConfidence: 85 },
 			{ category: "companies", claims: [
 				{ id: "jm2-2", description: "China Pages equity (diluted after Hangzhou Telecom partnership, exited near-zero — Fill Easy SAMR search + Clark biography)", estimatedValueUSD: 0, confidence: 50, sources: [SRC_MA.alibabaBio, SRC_MA.samr] },
@@ -571,7 +572,7 @@ const JACK_MA_CAREER: CareerPhase[] = [
 		description: "Founded Alibaba with 17 co-founders in his apartment with $60K pooled savings. Built Alibaba.com (B2B), launched Taobao (2003) to defeat eBay in China, created Alipay (2004). Raised successive rounds: Goldman Sachs $5M (1999), SoftBank $20M (2000), Yahoo $1B for 40% stake (2005). By 2014, Alibaba was China's dominant e-commerce platform.",
 		categories: [
 			{ category: "income", claims: [
-				{ id: "jm3-1", description: "CEO compensation at Alibaba Group (salary + bonuses, 1999-2014, benchmarked via Equilar)", estimatedValueUSD: 5_000_000, confidence: 75, sources: [SRC_MA.equilarComp, SRC_MA.chinaIIT] },
+				{ id: "jm3-1", description: "CEO compensation at Alibaba Group (salary + bonuses, 1999-2014, benchmarked via Equilar)", estimatedValueUSD: 5_000_000, confidence: 75, savingRate: 60, sources: [SRC_MA.equilarComp, SRC_MA.chinaIIT] },
 			], subtotalUSD: 5_000_000, avgConfidence: 75 },
 			{ category: "companies", claims: [
 				{ id: "jm3-2", description: "Pre-IPO Alibaba Group equity stake (accumulated ~8.9% through founding shares, Fill Easy SAMR + HK CR verified)", estimatedValueUSD: 1_500_000_000, confidence: 80, sources: [SRC_MA.goldmanSachs, SRC_MA.softbank, SRC_MA.yahooAcq, SRC_MA.samr, SRC_MA.sharespostPreIPO, SRC_MA.filleasyAlibabaHK] },
@@ -643,9 +644,10 @@ const JACK_MA_CAREER: CareerPhase[] = [
 				{ id: "jm6-6", description: "Art collection, wine cellar, other luxury assets (benchmarked via Wealth-X UHNW report)", estimatedValueUSD: 70_000_000, confidence: 40, sources: [SRC_MA.wealthXReport, SRC_MA.forbes2024] },
 			], subtotalUSD: 705_000_000, avgConfidence: 75 },
 			{ category: "income", claims: [
-				{ id: "jm6-15", description: "Accumulated Alibaba (BABA) dividend income since 2014 IPO — ~4.5% stake, regular quarterly dividends totaling ~$745M over 10 years (SEC 20-F filings)", estimatedValueUSD: 745_000_000, confidence: 55, sources: [SRC_MA.sec20F, SRC_MA.babaPrice, SRC_MA.forbes2024] },
-				{ id: "jm6-16", description: "Cash reserves, bank deposits and liquid assets — estimated from Blue Pool Capital AUM benchmarks and Wealth-X UHNW cash allocation models", estimatedValueUSD: 500_000_000, confidence: 35, sources: [SRC_MA.bluePoolCapital, SRC_MA.wealthXReport] },
-			], subtotalUSD: 1_245_000_000, avgConfidence: 45 },
+				{ id: "jm6-15", description: "Accumulated Alibaba (BABA) dividend income since 2014 IPO — ~4.5% stake, regular quarterly dividends totaling ~$745M over 10 years (SEC 20-F filings)", estimatedValueUSD: 745_000_000, confidence: 55, savingRate: 95, sources: [SRC_MA.sec20F, SRC_MA.babaPrice, SRC_MA.forbes2024] },
+				{ id: "jm6-16", description: "Cash reserves, bank deposits and liquid assets — estimated from Blue Pool Capital AUM benchmarks and Wealth-X UHNW cash allocation models", estimatedValueUSD: 500_000_000, confidence: 35, savingRate: 100, sources: [SRC_MA.bluePoolCapital, SRC_MA.wealthXReport] },
+				{ id: "jm6-17", description: "Estimated rental income from HK Victoria Peak mansion and Singapore properties (partial commercial use, Fill Easy Land Registry + SLA records)", estimatedValueUSD: 8_000_000, confidence: 45, savingRate: 85, sources: [SRC_MA.hkLandReg, SRC_MA.sgProperties] },
+			], subtotalUSD: 1_253_000_000, avgConfidence: 45 },
 		],
 		phaseWealthUSD: 25_500_000_000, cumulativeWealthUSD: 25_500_000_000,
 		keyEvents: ["2023-04: $2.4B Alibaba shares transferred to Singapore trust", "2023-06: Alibaba splits into 6 business groups", "2024: Wife Zhang Ying acquires S$50M Singapore shophouses", "2024: Focus on agriculture technology and education", "2025: Yunfeng Financial buys 10,000 ETH ($44M)"],
@@ -882,7 +884,7 @@ const YAT_SIU_CAREER: CareerPhase[] = [
 		description: "Born in Vienna to a Chinese-Austrian family. Joined Atari in his teens as one of their youngest employees. Worked on the Atari Falcon and other projects before Atari's decline. Gained foundational experience in gaming and technology.",
 		categories: [
 			{ category: "income", claims: [
-				{ id: "ys1-1", description: "Atari software engineer salary (1990-1995, verified via BLS occupational wage data)", estimatedValueUSD: 150_000, confidence: 90, sources: [SRC_SIU.blsWages] },
+				{ id: "ys1-1", description: "Atari software engineer salary (1990-1995, verified via BLS occupational wage data)", estimatedValueUSD: 150_000, confidence: 90, savingRate: 25, sources: [SRC_SIU.blsWages] },
 			], subtotalUSD: 150_000, avgConfidence: 90 },
 		],
 		phaseWealthUSD: 150_000, cumulativeWealthUSD: 150_000,
@@ -894,7 +896,7 @@ const YAT_SIU_CAREER: CareerPhase[] = [
 		description: "Founded Outblaze in Hong Kong as a white-label web services company. Grew it into a provider of messaging, community, and gaming services for major portals. Sold the messaging/community division to IBM in 2009 for an estimated $10-20M. Retained the gaming division which would eventually become Animoca Brands.",
 		categories: [
 			{ category: "income", claims: [
-				{ id: "ys2-1", description: "CEO salary at Outblaze (1998-2012, cross-checked via HK C&SD IT sector earnings and IRD filings)", estimatedValueUSD: 2_000_000, confidence: 100, sources: [SRC_SIU.hkCensusStats, SRC_SIU.hkIRD, SRC_SIU.filleasyOutblaze] },
+				{ id: "ys2-1", description: "CEO salary at Outblaze (1998-2012, cross-checked via HK C&SD IT sector earnings and IRD filings)", estimatedValueUSD: 2_000_000, confidence: 100, savingRate: 40, sources: [SRC_SIU.hkCensusStats, SRC_SIU.hkIRD, SRC_SIU.filleasyOutblaze] },
 			], subtotalUSD: 2_000_000, avgConfidence: 100 },
 			{ category: "companies", claims: [
 				{ id: "ys2-2", description: "Sale of Outblaze messaging division to IBM (~$10-20M, Siu retained majority — HK CR confirmed via Fill Easy)", estimatedValueUSD: 15_000_000, confidence: 85, sources: [SRC_SIU.ibmAcq, SRC_SIU.hkCompanies, SRC_SIU.filleasyOutblaze] },
@@ -915,7 +917,7 @@ const YAT_SIU_CAREER: CareerPhase[] = [
 				{ id: "ys3-1", description: "Animoca Brands ASX listing equity (co-founder stake ~55%, Fill Easy ASIC + HK CR verified, ASX market cap AU$20-50M)", estimatedValueUSD: 20_000_000, confidence: 95, sources: [SRC_SIU.asxListing, SRC_SIU.asxHistorical, SRC_SIU.asicRegistry, SRC_SIU.filleasyHKCR] },
 			], subtotalUSD: 20_000_000, avgConfidence: 95 },
 			{ category: "income", claims: [
-				{ id: "ys3-2", description: "Chairman compensation at Animoca Brands (ASX annual report + Fill Easy ASIC verification)", estimatedValueUSD: 1_500_000, confidence: 100, sources: [SRC_SIU.asxAnnualReport, SRC_SIU.asicRegistry] },
+				{ id: "ys3-2", description: "Chairman compensation at Animoca Brands (ASX annual report + Fill Easy ASIC verification)", estimatedValueUSD: 1_500_000, confidence: 100, savingRate: 50, sources: [SRC_SIU.asxAnnualReport, SRC_SIU.asicRegistry] },
 			], subtotalUSD: 1_500_000, avgConfidence: 100 },
 		],
 		phaseWealthUSD: 21_500_000, cumulativeWealthUSD: 41_650_000,
@@ -1000,7 +1002,8 @@ const YAT_SIU_CAREER: CareerPhase[] = [
 				{ id: "ys6-14", description: "Accumulated CEO/Chairman compensation from Animoca Brands (2014-present, ASX remuneration disclosures + estimated post-delisting salary)", estimatedValueUSD: 35_000_000, confidence: 45, sources: [SRC_SIU.asxAnnualReport, SRC_SIU.animocaFinancials] },
 				{ id: "ys6-15", description: "Historical Outblaze IBM sale proceeds and reinvested earnings (~$15M acquisition, founder share estimated at 60-70%)", estimatedValueUSD: 28_000_000, confidence: 60, sources: [SRC_SIU.ibmAcq, SRC_SIU.hkIRD] },
 				{ id: "ys6-11", description: "Advisory/board compensation — ApeCoin DAO (~$250K/yr), DigitalX, Hex Trust, speaking fees, and consulting", estimatedValueUSD: 2_000_000, confidence: 75, sources: [SRC_SIU.apeCoinDAO] },
-			], subtotalUSD: 65_000_000, avgConfidence: 60 },
+				{ id: "ys6-re", description: "Rental income from Hong Kong residential properties (Fill Easy HK Land Registry confirmed)", estimatedValueUSD: 1_200_000, confidence: 80, savingRate: 90, sources: [SRC_SIU.hkLandRegistry] },
+			], subtotalUSD: 66_200_000, avgConfidence: 65 },
 		],
 		phaseWealthUSD: 2_400_000_000, cumulativeWealthUSD: 2_400_000_000,
 		keyEvents: ["2023: SAND drops below $0.50", "2023-06: HK launches virtual asset regulatory framework", "2024-07: MOCA token launches ($29.3M raised)", "2024-12: X/Twitter account hacked (phishing)", "2025-02: Anchorpoint Financial JV gets HKMA stablecoin license", "2025-11: Files Nasdaq reverse merger with Currenc Group"],
@@ -1361,19 +1364,19 @@ export const PEP_SCREENING: PepScreeningEntry[] = [
 
 // ── Narratives ──────────────────────────────────────────────────
 
-const JACK_MA_NARRATIVE = `Jack Ma's wealth trajectory is one of the most documented in modern Chinese business history. His estimated net worth of approximately $25.5 billion is overwhelmingly derived from his founding equity in Alibaba Group, crystallized through the company's record-breaking $25 billion NYSE IPO in September 2014. SEC Form F-1 filings confirm Ma held approximately 6.2% of Alibaba shares at IPO. The wealth accumulation path from $60,000 pooled founding investment through Goldman Sachs ($5M), SoftBank ($20M), and Yahoo ($1B) rounds to public market is well-documented.
+const JACK_MA_NARRATIVE = `Jack Ma's wealth trajectory is one of the most documented in modern Chinese business history. His estimated net worth of approximately $25.5 billion according to [Forbes](https://www.forbes.com/profile/jack-ma/) is overwhelmingly derived from his founding equity in Alibaba Group, crystallized through the company's record-breaking $25 billion NYSE IPO in September 2014. [SEC Form F-1](https://www.sec.gov/Archives/edgar/data/1577552/000119312514184994/d709111df1.htm) filings confirm Ma held approximately 6.2% of Alibaba shares at IPO. The wealth accumulation path from $60,000 pooled founding investment through Goldman Sachs ($5M), SoftBank ($20M), and Yahoo ($1B) rounds to public market is well-documented.
 
-Beyond core Alibaba equity, the assessment identified a substantial portfolio of alternative assets and investments: the Blue Pool Capital family office (co-founded with Joe Tsai, AUM ~$50B), an 11.15% stake in HK-listed Yunfeng Financial Group (which purchased 10,000 ETH as strategic reserve in 2025), Yunfeng Capital PE fund (AUM ~$8B), minority stakes in Huayi Brothers and Enlight Media, and a Singapore family trust holding $2.4B in BABA shares. Real estate includes a Victoria Peak mansion (HK$1.5B, Fill Easy Land Registry confirmed), a 28,100-acre Adirondack estate ($23M via New Brandon LLC), two Bordeaux vineyards (Château de Sours and Château Guerry), and Singapore properties held via wife Zhang Ying (Good Class Bungalow ~S$40M and three Duxton Road shophouses ~S$50M). Lifestyle assets include the 88m superyacht Zen (~$200M, Feadship 2021) and a Gulfstream G650ER private jet (~$65M, registered VP-CZM in the Cayman Islands).
+Beyond core Alibaba equity, the assessment identified a substantial portfolio of alternative assets and investments: the Blue Pool Capital family office (co-founded with Joe Tsai, AUM ~$50B), an 11.15% stake in HK-listed Yunfeng Financial Group (which purchased 10,000 ETH as strategic reserve in 2025), Yunfeng Capital PE fund (AUM ~$8B), minority stakes in Huayi Brothers and Enlight Media, and a Singapore family trust holding $2.4B in BABA shares verified via [ACRA Registry](https://www.acra.gov.sg/). Real estate includes a Victoria Peak mansion (HK$1.5B, Fill Easy Land Registry confirmed) per [SCMP](https://www.scmp.com/property), a 28,100-acre Adirondack estate ($23M via New Brandon LLC), two Bordeaux vineyards (Château de Sours and Château Guerry), and Singapore properties held via wife Zhang Ying (Good Class Bungalow ~S$40M and three Duxton Road shophouses ~S$50M). Lifestyle assets include the 88m superyacht Zen (~$200M, Feadship 2021) and a Gulfstream G650ER private jet (~$65M, registered VP-CZM in the Cayman Islands).
 
 Key risk factors include significant regulatory exposure (Ant Group restructuring, $2.8B Alibaba antitrust fine), PEP near-match status from his former CPPCC membership, and ongoing uncertainty about the true value of his Ant Group stake post-restructuring (~8% of ~$70B). Singapore properties in wife's name and corporate-entity-held assets (New Brandon LLC, Brilliant Sky Blue Ltd) add jurisdictional complexity. Despite these factors, the overall wealth plausibility score is high — 20 independent data sources across 6 jurisdictions clearly explain the accumulation of wealth at this scale.`;
 
-const YAT_SIU_NARRATIVE = `Yat Siu's estimated net worth of approximately $2.4 billion represents one of the more complex wealth profiles in the technology sector. Unlike traditional tech billionaires anchored to publicly traded shares, the majority of Siu's wealth derives from his co-founder stake in Animoca Brands (last valued at $5.9B in January 2022), crypto/NFT holdings with extreme volatility, and an extensive portfolio of 540+ blockchain investments.
+const YAT_SIU_NARRATIVE = `Yat Siu's estimated net worth of approximately $2.4 billion represents one of the more complex wealth profiles in the technology sector. Unlike traditional tech billionaires anchored to publicly traded shares, the majority of Siu's wealth derives from his co-founder stake in Animoca Brands (last valued at $5.9B per [PitchBook](https://pitchbook.com/profiles/animoca-brands-profile) in January 2022), crypto/NFT holdings with extreme volatility, and an extensive portfolio of 540+ blockchain investments.
 
-The career trajectory shows credible progression: Atari (teen employee), Outblaze founding and IBM exit (~$15M), Animoca Brands ASX listing, strategic pivot to blockchain gaming via The Sandbox acquisition (2018), and explosive growth during the 2021-2022 Web3 boom. Animoca executed an aggressive acquisition strategy — nWay ($7.69M), GAMEE ($4.5M), TinyTap ($38.9M), Blowfish Studios (up to A$35M), and Eden Games (~$15.3M) — building a gaming studio portfolio with recognized IP (Power Rangers, F1 Racing, Gear.Club).
+The career trajectory shows credible progression: Atari (teen employee), Outblaze founding and [IBM exit](https://www.rttnews.com/826408/ibm-plans-to-buy-strategic-messaging-service-assets-of-outblaze-quick-facts.aspx) (~$15M), Animoca Brands [ASX listing](https://connectonline.asic.gov.au/), strategic pivot to blockchain gaming via The Sandbox acquisition (2018), and explosive growth during the 2021-2022 Web3 boom. Animoca executed an aggressive acquisition strategy — nWay ($7.69M), GAMEE ($4.5M), TinyTap ($38.9M), Blowfish Studios (up to A$35M), and Eden Games (~$15.3M) — building a gaming studio portfolio with recognized IP (Power Rangers, F1 Racing, Gear.Club).
 
 Significant developments since 2023 include: the MOCA token launch ($29.3M raised, Jul 2024), the Anchorpoint Financial JV with Standard Chartered and HKT (granted HKMA stablecoin issuer licence for HKDAP), and a Nasdaq reverse merger filing with Currenc Group (Nov 2025) at ~$1B valuation — notably below the last $5.9B private round. FY2024 financials show total assets of $4.3B, with $2.9B in off-balance sheet token reserves.
 
-However, substantial risks persist. SAND has declined ~93% from peak. Subsidiary tokens (REVV, TOWER) are effectively defunct. The Lympo subsidiary was hacked for $18.7M (Jan 2022) — 6.5x its acquisition cost. Siu's X/Twitter account was compromised via phishing (Dec 2024). NFT valuations remain highly subjective (client claims $50M vs. DappRadar floor prices of $12-18M). The ASX delisting in 2020 removed mandatory disclosure, and the overall confidence score reflects limited transparency across 19 data sources.`;
+However, substantial risks persist. [SAND](https://www.coingecko.com/en/coins/the-sandbox) has declined ~93% from peak. Subsidiary tokens (REVV, TOWER) are effectively defunct. The Lympo subsidiary was hacked for $18.7M (Jan 2022) — 6.5x its acquisition cost. Siu's X/Twitter account was compromised via phishing (Dec 2024). NFT valuations remain highly subjective (client claims $50M vs. DappRadar floor prices of $12-18M). The ASX delisting in 2020 removed mandatory disclosure, and the overall confidence score reflects limited transparency across 19 data sources.`;
 
 // ── Monitoring Table ────────────────────────────────────────────
 
@@ -1608,7 +1611,7 @@ const CHEN_WEI_CAREER: CareerPhase[] = [
 		description: "Joined Goldman Sachs Singapore as an analyst in the Investment Banking Division after graduating from NUS with First Class Honours in Economics. Rose through the ranks over a decade to Managing Director, specialising in Southeast Asia M&A and capital markets. Accumulated approximately $18M in total compensation through salary, bonuses, and deferred equity.",
 		categories: [
 			{ category: "income", claims: [
-				{ id: "cw1-1", description: "Goldman Sachs cumulative compensation 1990-2000 (salary, bonuses, deferred equity — verified via GS HR records and IRAS filings)", estimatedValueUSD: 18_000_000, confidence: 95, sources: [SRC_CHEN.goldmanSachsSG, SRC_CHEN.irasFilings] },
+				{ id: "cw1-1", description: "Goldman Sachs cumulative compensation 1990-2000 (salary, bonuses, deferred equity — verified via GS HR records and IRAS filings)", estimatedValueUSD: 18_000_000, confidence: 95, savingRate: 55, sources: [SRC_CHEN.goldmanSachsSG, SRC_CHEN.irasFilings] },
 			], subtotalUSD: 18_000_000, avgConfidence: 95 },
 		],
 		phaseWealthUSD: 18_000_000, cumulativeWealthUSD: 18_000_000,
@@ -1620,7 +1623,7 @@ const CHEN_WEI_CAREER: CareerPhase[] = [
 		description: "Co-founded Meridian Capital Partners, a private equity firm focused on Southeast Asian mid-market companies. Raised Fund I ($200M, 2001) and Fund II ($500M, 2005). Achieved several successful exits including Meritis Healthcare (4.2x), Singha Logistics (IPO, 3.8x), and Pacific Minerals (2.5x). AUM grew to $2B by 2008. Chen Wei's carried interest and co-investment returns totalled approximately $85M over the decade.",
 		categories: [
 			{ category: "income", claims: [
-				{ id: "cw2-1", description: "Management fees and salary at Meridian Capital (2% annual on AUM, co-founder share — MAS CMS licence records)", estimatedValueUSD: 12_000_000, confidence: 90, sources: [SRC_CHEN.masLicensing, SRC_CHEN.irasFilings] },
+				{ id: "cw2-1", description: "Management fees and salary at Meridian Capital (2% annual on AUM, co-founder share — MAS CMS licence records)", estimatedValueUSD: 12_000_000, confidence: 90, savingRate: 65, sources: [SRC_CHEN.masLicensing, SRC_CHEN.irasFilings] },
 			], subtotalUSD: 12_000_000, avgConfidence: 90 },
 			{ category: "companies", claims: [
 				{ id: "cw2-2", description: "Carried interest from Meridian Capital Fund I & II (20% carry on $200M and $500M funds, multiple successful exits — ACRA filings, SGX records)", estimatedValueUSD: 65_000_000, confidence: 85, sources: [SRC_CHEN.acraRegistry, SRC_CHEN.sgxListings, SRC_CHEN.meritisExit, SRC_CHEN.masLicensing] },
@@ -1647,7 +1650,7 @@ const CHEN_WEI_CAREER: CareerPhase[] = [
 				{ id: "cw3-5", description: "Nassim Road Good Class Bungalow (purchased 2015, S$38M — Fill Easy SLA confirmed)", estimatedValueUSD: 32_000_000, confidence: 95, sources: [SRC_CHEN.sgLandOrchard, SRC_CHEN.uraPropertyData] },
 			], subtotalUSD: 47_000_000, avgConfidence: 95 },
 			{ category: "income", claims: [
-				{ id: "cw3-6", description: "Dividend and interest income from portfolio (2010-2020, IRAS filings)", estimatedValueUSD: 25_000_000, confidence: 90, sources: [SRC_CHEN.irasFilings, SRC_CHEN.dbsWealth] },
+				{ id: "cw3-6", description: "Dividend and interest income from portfolio (2010-2020, IRAS filings)", estimatedValueUSD: 25_000_000, confidence: 90, savingRate: 90, sources: [SRC_CHEN.irasFilings, SRC_CHEN.dbsWealth] },
 			], subtotalUSD: 25_000_000, avgConfidence: 90 },
 		],
 		phaseWealthUSD: 242_000_000, cumulativeWealthUSD: 300_000_000,
@@ -1668,8 +1671,9 @@ const CHEN_WEI_CAREER: CareerPhase[] = [
 				{ id: "cw4-5", description: "Nassim Road Good Class Bungalow (current valuation S$55M, appreciated from S$38M — URA data + Fill Easy SLA)", estimatedValueUSD: 41_000_000, confidence: 92, sources: [SRC_CHEN.sgLandOrchard, SRC_CHEN.uraPropertyData] },
 			], subtotalUSD: 62_000_000, avgConfidence: 92 },
 			{ category: "income", claims: [
-				{ id: "cw4-6", description: "Annual dividend and interest income (~$6-8M/year, IRAS filed)", estimatedValueUSD: 28_000_000, confidence: 90, sources: [SRC_CHEN.irasFilings, SRC_CHEN.dbsWealth] },
-			], subtotalUSD: 28_000_000, avgConfidence: 90 },
+				{ id: "cw4-6", description: "Annual dividend and interest income (~$6-8M/year, IRAS filed)", estimatedValueUSD: 28_000_000, confidence: 90, savingRate: 90, sources: [SRC_CHEN.irasFilings, SRC_CHEN.dbsWealth] },
+				{ id: "cw4-re1", description: "Rental income from Sentosa Cove bungalow (partially leased, URA transaction data)", estimatedValueUSD: 1_200_000, confidence: 85, savingRate: 90, sources: [SRC_CHEN.sgLandAuthority, SRC_CHEN.uraPropertyData] },
+			], subtotalUSD: 29_200_000, avgConfidence: 88 },
 			{ category: "companies", claims: [
 				{ id: "cw4-7", description: "Residual GP interest in Meridian Capital (legacy carried interest distributions, ACRA verified)", estimatedValueUSD: 15_000_000, confidence: 85, sources: [SRC_CHEN.acraRegistry, SRC_CHEN.masLicensing] },
 				{ id: "cw4-8", description: "Chen Wei Family Office entity value (operating entity + cash reserves)", estimatedValueUSD: 45_000_000, confidence: 88, sources: [SRC_CHEN.acraFamilyOffice, SRC_CHEN.dbsWealth] },
@@ -1684,9 +1688,9 @@ const CHEN_WEI_CAREER: CareerPhase[] = [
 
 const CHEN_WEI_NARRATIVE = `James Chen Wei's wealth profile represents a textbook example of well-documented, conservative wealth accumulation through traditional financial services and private equity. His estimated net worth of $380M is traceable through a clear career trajectory: a decade at Goldman Sachs Singapore rising to Managing Director ($18M cumulative compensation), followed by the co-founding of Meridian Capital Partners ($85M in carried interest and management fees from two successful PE funds with AUM reaching $2B), and subsequent establishment of the Chen Wei Family Office in 2010.
 
-The family office manages a conservatively allocated portfolio: approximately 30% in SGX-listed blue-chip equities (DBS, OCBC, UOB, Singtel), 17% in fixed income (Singapore government and investment-grade corporate bonds), 14% in PE fund-of-funds, and 16% in prime Singapore real estate (Sentosa Cove waterfront bungalow and Nassim Road Good Class Bungalow, both verified via Fill Easy SLA property search). There is no exposure to cryptocurrency, speculative assets, or leveraged positions.
+The family office manages a conservatively allocated portfolio: approximately 30% in SGX-listed blue-chip equities (DBS, OCBC, UOB, Singtel), 17% in fixed income (Singapore government and investment-grade corporate bonds), 14% in PE fund-of-funds, and 16% in prime Singapore real estate (Sentosa Cove waterfront bungalow and Nassim Road Good Class Bungalow, both verified via [SLA Property](https://www.sla.gov.sg/) search). There is no exposure to cryptocurrency, speculative assets, or leveraged positions.
 
-All material wealth sources are verified through government authorities: MAS Capital Markets Services licence records for Meridian Capital, IRAS individual income tax filings, Singapore ACRA registrations for both Meridian and the family office (retrieved via Fill Easy CorpVerify), SLA property records (via Fill Easy API), and DBS Private Banking custody confirmations. The assessment draws on 14 independent data sources, all within a single jurisdiction (Singapore), eliminating cross-border complexity. Chen Wei is not a PEP, has zero sanctions hits, zero adverse media findings, and no controversial associations.`;
+All material wealth sources are verified through government authorities: [MAS Financial Institutions Directory](https://eservices.mas.gov.sg/fid) licence records for Meridian Capital, IRAS individual income tax filings, Singapore [ACRA BizFile](https://www.bizfile.gov.sg/) registrations for both Meridian and the family office (retrieved via Fill Easy CorpVerify), [SLA](https://www.sla.gov.sg/) property records (via Fill Easy API), and DBS Private Banking custody confirmations. The assessment draws on 14 independent data sources, all within a single jurisdiction (Singapore), eliminating cross-border complexity. Chen Wei is not a PEP, has zero sanctions hits, zero adverse media findings, and no controversial associations.`;
 
 // ── James Chen Wei: Key Parameters ─────────────────────────────
 
@@ -2154,7 +2158,7 @@ const TRUMP_CAREER: CareerPhase[] = [
 				{ id: "dt3-1", description: "Trump Organization real estate and licensing deals (brand licensing revenue growing, NYC properties appreciating)", estimatedValueUSD: 2_000_000_000, confidence: 45, sources: [SRC_TRUMP.forbesTrump, SRC_TRUMP.nycPropertyRecords] },
 			], subtotalUSD: 2_000_000_000, avgConfidence: 45 },
 			{ category: "income", claims: [
-				{ id: "dt3-2", description: "Brand licensing fees and management contracts ($5-10M/year estimated from financial disclosures)", estimatedValueUSD: 50_000_000, confidence: 50, sources: [SRC_TRUMP.ogeDisclosure] },
+				{ id: "dt3-2", description: "Brand licensing fees and management contracts ($5-10M/year estimated from financial disclosures)", estimatedValueUSD: 50_000_000, confidence: 50, savingRate: 70, sources: [SRC_TRUMP.ogeDisclosure] },
 			], subtotalUSD: 50_000_000, avgConfidence: 50 },
 			{ category: "alternatives", claims: [
 				{ id: "dt3-3", description: "Golf course acquisitions (Turnberry, Doral, multiple US courses)", estimatedValueUSD: 400_000_000, confidence: 50, sources: [SRC_TRUMP.forbesTrump] },
@@ -2169,7 +2173,7 @@ const TRUMP_CAREER: CareerPhase[] = [
 		description: "The Apprentice (NBC) debuted January 2004. Show ran 15 seasons and earned Trump an estimated $427M total from salary, producer fees, and related licensing. Also operated Trump University (settled for $25M in 2017), Miss Universe Organization, and expanded brand licensing globally.",
 		categories: [
 			{ category: "income", claims: [
-				{ id: "dt4-1", description: "The Apprentice total earnings — salary + producer fees (~$427M over run of show, per OGE disclosures and NYT)", estimatedValueUSD: 427_000_000, confidence: 65, sources: [SRC_TRUMP.ogeDisclosure, SRC_TRUMP.forbesTrump] },
+				{ id: "dt4-1", description: "The Apprentice total earnings — salary + producer fees (~$427M over run of show, per OGE disclosures and NYT)", estimatedValueUSD: 427_000_000, confidence: 65, savingRate: 60, sources: [SRC_TRUMP.ogeDisclosure, SRC_TRUMP.forbesTrump] },
 			], subtotalUSD: 427_000_000, avgConfidence: 65 },
 			{ category: "companies", claims: [
 				{ id: "dt4-2", description: "Trump Organization properties and licensing — brand value amplified by TV exposure, NYC real estate appreciation", estimatedValueUSD: 3_500_000_000, confidence: 45, sources: [SRC_TRUMP.forbesTrump, SRC_TRUMP.nycPropertyRecords, SRC_TRUMP.nySOS] },
@@ -2193,7 +2197,7 @@ const TRUMP_CAREER: CareerPhase[] = [
 				{ id: "dt5-2", description: "Golf courses and Mar-a-Lago (membership fees tripled to $200K post-election)", estimatedValueUSD: 500_000_000, confidence: 55, sources: [SRC_TRUMP.palmBeachCounty, SRC_TRUMP.ogeDisclosure] },
 			], subtotalUSD: 500_000_000, avgConfidence: 55 },
 			{ category: "income", claims: [
-				{ id: "dt5-3", description: "Presidential salary ($400K/year, donated) + ongoing Trump Organization licensing income", estimatedValueUSD: 200_000_000, confidence: 60, sources: [SRC_TRUMP.ogeDisclosure] },
+				{ id: "dt5-3", description: "Presidential salary ($400K/year, donated) + ongoing Trump Organization licensing income", estimatedValueUSD: 200_000_000, confidence: 60, savingRate: 50, sources: [SRC_TRUMP.ogeDisclosure] },
 			], subtotalUSD: 200_000_000, avgConfidence: 60 },
 		],
 		phaseWealthUSD: 3_200_000_000, cumulativeWealthUSD: 3_200_000_000,
@@ -2213,8 +2217,10 @@ const TRUMP_CAREER: CareerPhase[] = [
 				{ id: "dt6-4", description: "Mar-a-Lago estate and club (Palm Beach — assessed vs. market value highly disputed)", estimatedValueUSD: 500_000_000, confidence: 45, sources: [SRC_TRUMP.palmBeachCounty, SRC_TRUMP.nyAGFraud, SRC_TRUMP.forbesTrump] },
 			], subtotalUSD: 1_100_000_000, avgConfidence: 53 },
 			{ category: "income", claims: [
-				{ id: "dt6-5", description: "Trump Organization management fees, licensing, and golf course revenue (per OGE disclosure)", estimatedValueUSD: 300_000_000, confidence: 55, sources: [SRC_TRUMP.ogeDisclosure, SRC_TRUMP.brandLicensing] },
-			], subtotalUSD: 300_000_000, avgConfidence: 55 },
+				{ id: "dt6-5", description: "Trump Organization management fees, licensing, and golf course revenue (per OGE disclosure)", estimatedValueUSD: 300_000_000, confidence: 55, savingRate: 55, sources: [SRC_TRUMP.ogeDisclosure, SRC_TRUMP.brandLicensing] },
+				{ id: "dt6-re1", description: "Mar-a-Lago club membership fees and event income (~$200K initiation + annual dues, ~500 members)", estimatedValueUSD: 50_000_000, confidence: 55, savingRate: 40, sources: [SRC_TRUMP.palmBeachCounty, SRC_TRUMP.ogeDisclosure] },
+				{ id: "dt6-re2", description: "Trump Tower commercial rental income (retail + office floors, 725 Fifth Ave)", estimatedValueUSD: 30_000_000, confidence: 50, savingRate: 60, sources: [SRC_TRUMP.nycPropertyRecords, SRC_TRUMP.ogeDisclosure] },
+			], subtotalUSD: 380_000_000, avgConfidence: 53 },
 			{ category: "crypto", claims: [
 				{ id: "dt6-6", description: "$TRUMP meme coin — 80% supply held by CIC Digital LLC / Fight Fight Fight LLC (Trump-affiliated entities)", estimatedValueUSD: 1_500_000_000, confidence: 25, sources: [SRC_TRUMP.trumpMemeCoin, SRC_TRUMP.forbesTrump] },
 				{ id: "dt6-7", description: "World Liberty Financial DeFi venture and other crypto-related interests", estimatedValueUSD: 200_000_000, confidence: 20, sources: [SRC_TRUMP.trumpMemeCoin, SRC_TRUMP.bloombergTrump] },
@@ -2324,9 +2330,9 @@ const TRUMP_PARAMS: KeyParameter[] = [
 
 // ── Donald Trump: Narrative ────────────────────────────────────
 
-const TRUMP_NARRATIVE = `Donald Trump's wealth profile presents one of the most complex compliance challenges in HNW due diligence. His estimated net worth of $6.5 billion is subject to extraordinary uncertainty driven by three factors: (1) a ~59% stake in Trump Media & Technology Group (DJT) that has traded between $15-80 per share since its March 2024 SPAC listing, (2) the $TRUMP meme coin launched January 2025 with 80% of supply held by Trump-affiliated entities CIC Digital LLC and Fight Fight Fight LLC, and (3) a real estate portfolio whose valuations were found to be systematically overstated in the NY Attorney General's $454M civil fraud judgment.
+const TRUMP_NARRATIVE = `Donald Trump's wealth profile presents one of the most complex compliance challenges in HNW due diligence. His estimated net worth of $6.5 billion per [Forbes](https://www.forbes.com/profile/donald-trump/) is subject to extraordinary uncertainty driven by three factors: (1) a ~59% stake in Trump Media & Technology Group (DJT) per [SEC EDGAR](https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001849635&type=10-K) filings that has traded between $15-80 per share since its March 2024 SPAC listing, (2) the [$TRUMP](https://www.coingecko.com/en/coins/official-trump) meme coin launched January 2025 with 80% of supply held by Trump-affiliated entities CIC Digital LLC and Fight Fight Fight LLC, and (3) a real estate portfolio whose valuations were found to be systematically overstated in the NY Attorney General's $454M civil fraud judgment.
 
-The career trajectory shows wealth originating from Fred Trump's Brooklyn/Queens real estate empire, with significant capital transferred through family structures. The Trump Organization expanded into Manhattan commercial real estate, Atlantic City casinos (resulting in six corporate bankruptcies between 1991-2014), and global brand licensing. NBC's The Apprentice (2004-2015) generated an estimated $427M and transformed the Trump name into a global licensing brand worth $400M+ in cumulative fees. However, brand licensing income, casino-era earnings, and Trump Organization distributions all carry moderate confidence due to the complexity of the 500+ LLC corporate structure and contested financial statements.
+The career trajectory shows wealth originating from Fred Trump's Brooklyn/Queens real estate empire, with significant capital transferred through family structures. The Trump Organization expanded into Manhattan commercial real estate per [NYC Finance](https://a836-pts-access.nyc.gov/) property records, Atlantic City casinos (resulting in six corporate bankruptcies between 1991-2014), and global brand licensing. NBC's The Apprentice (2004-2015) generated an estimated $427M and transformed the Trump name into a global licensing brand worth $400M+ in cumulative fees. However, brand licensing income, casino-era earnings, and Trump Organization distributions all carry moderate confidence due to the complexity of the 500+ LLC corporate structure and contested financial statements.
 
 As the 47th President of the United States, Trump carries the highest PEP classification — mandatory enhanced due diligence and senior management approval are required. Key risk factors include: active PEP status, six corporate bankruptcies, the $454M NY civil fraud judgment, multiple criminal indictments (2023-2024), extreme DJT stock volatility, unregulated $TRUMP meme coin exposure, and incomplete asset divestiture questions. The corroboration grade of D reflects weak confidence across volatile and politically entangled asset classes.`;
 
