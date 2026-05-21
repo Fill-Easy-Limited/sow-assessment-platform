@@ -2463,6 +2463,7 @@ export interface ChatMessage {
 	role: "assistant" | "user";
 	text: string;
 	timestamp: string;
+	model?: string;
 }
 
 export interface ChatReminder {

@@ -3585,12 +3585,22 @@ ${(() => {
    ═══════════════════════════════════════════════════════════════ */
 
 function ComplianceChatbot({ profileId, profileName, riskRating, report }: { profileId: string; profileName: string; riskRating: "Low" | "Medium" | "High"; report: HnwReport }) {
+	const HK_MODELS = [
+		{ id: "anthropic/claude-sonnet-4", label: "Claude Sonnet 4", region: "APAC" },
+		{ id: "anthropic/claude-haiku-4", label: "Claude Haiku 4", region: "APAC" },
+		{ id: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash", region: "APAC" },
+		{ id: "google/gemini-2.5-pro", label: "Gemini 2.5 Pro", region: "APAC" },
+		{ id: "deepseek/deepseek-r1", label: "DeepSeek R1", region: "APAC" },
+		{ id: "deepseek/deepseek-chat-v3-0324", label: "DeepSeek V3", region: "APAC" },
+	];
 	const [isOpen, setIsOpen] = useState(false);
 	const [activeTab, setActiveTab] = useState<"chat" | "attention" | "reminders">("chat");
 	const [messages, setMessages] = useState<ChatMessage[]>(CHATBOT_INITIAL_MESSAGES[profileId] ?? []);
 	const [reminders, setReminders] = useState<ChatReminder[]>(CHATBOT_REMINDERS[profileId] ?? []);
 	const [inputValue, setInputValue] = useState("");
 	const [isTyping, setIsTyping] = useState(false);
+	const [selectedModel, setSelectedModel] = useState(HK_MODELS[0].id);
+	const [showModelPicker, setShowModelPicker] = useState(false);
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 	const attentionAreas = CHATBOT_ATTENTION_AREAS[profileId] ?? [];
 
@@ -3642,11 +3652,13 @@ Agent Summary: ${report.agentVerification.summary}`;
 					messages: updatedMessages.map((m) => ({ role: m.role, text: m.text })),
 					profileName,
 					profileContext,
+					model: selectedModel,
 				}),
 			});
 			const data = await res.json();
 			const reply = res.ok ? data.reply : (data.error ?? "Failed to get response");
-			const botMsg: ChatMessage = { id: `bot-${Date.now()}`, role: "assistant", text: reply, timestamp: "Just now" };
+			const modelLabel = HK_MODELS.find(m => m.id === selectedModel)?.label ?? selectedModel;
+			const botMsg: ChatMessage = { id: `bot-${Date.now()}`, role: "assistant", text: reply, timestamp: "Just now", model: modelLabel };
 			setMessages((prev) => [...prev, botMsg]);
 		} catch {
 			const botMsg: ChatMessage = { id: `bot-${Date.now()}`, role: "assistant", text: "Network error — unable to reach the AI service. Please try again.", timestamp: "Just now" };
@@ -3690,6 +3702,7 @@ Agent Summary: ${report.agentVerification.summary}`;
 					messages: [{ role: "user", text: prompt }],
 					profileName,
 					profileContext,
+					model: selectedModel,
 				}),
 			});
 			const data = await res.json();
@@ -3751,7 +3764,7 @@ Agent Summary: ${report.agentVerification.summary}`;
 					<div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setIsOpen(false)} />
 
 					{/* Panel */}
-					<div className="relative z-10 w-full max-w-xl rounded-2xl border border-border bg-card shadow-2xl overflow-hidden flex flex-col" style={{ maxHeight: "min(720px, 85vh)" }}>
+					<div className="relative z-10 w-full max-w-xl rounded-2xl border border-border bg-card shadow-2xl overflow-hidden flex flex-col" style={{ maxHeight: "min(720px, 85vh)" }} onClick={() => showModelPicker && setShowModelPicker(false)}>
 						{/* Header */}
 						<div className="bg-gradient-to-r from-primary/10 to-transparent px-5 py-4 border-b border-border shrink-0">
 							<div className="flex items-center gap-3">
@@ -3762,7 +3775,31 @@ Agent Summary: ${report.agentVerification.summary}`;
 									<div className="font-heading font-semibold text-sm">Compliance Assistant</div>
 									<div className="text-xs text-muted-foreground">{profileName} — AI-Powered Case Analysis</div>
 								</div>
-								<span className="ml-auto text-[9px] font-heading font-bold tracking-wider uppercase px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-600 border border-purple-500/20">AI · Claude Sonnet</span>
+								<div className="ml-auto relative">
+									<button
+										onClick={() => setShowModelPicker(!showModelPicker)}
+										className="flex items-center gap-1.5 text-[9px] font-heading font-bold tracking-wider uppercase px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-600 border border-purple-500/20 hover:bg-purple-500/20 transition-colors"
+									>
+										<CpuIcon className="size-3" />
+										{HK_MODELS.find(m => m.id === selectedModel)?.label ?? "Model"}
+										<ChevronDownIcon className="size-3 opacity-60" />
+									</button>
+									{showModelPicker && (
+										<div className="absolute right-0 top-full mt-1 w-52 rounded-lg border border-border bg-card shadow-lg z-50 py-1">
+											<div className="px-3 py-1.5 text-[9px] font-heading font-bold text-muted-foreground uppercase tracking-widest border-b border-border/50">HK-Accepted Regions</div>
+											{HK_MODELS.map((m) => (
+												<button
+													key={m.id}
+													onClick={() => { setSelectedModel(m.id); setShowModelPicker(false); }}
+													className={`w-full text-left px-3 py-1.5 text-xs flex items-center justify-between hover:bg-muted transition-colors ${selectedModel === m.id ? "text-primary font-semibold" : "text-foreground"}`}
+												>
+													<span>{m.label}</span>
+													<span className="text-[9px] text-muted-foreground">{m.region}</span>
+												</button>
+											))}
+										</div>
+									)}
+								</div>
 								<button onClick={() => setIsOpen(false)} className="ml-2 h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
 									<XIcon className="size-4" />
 								</button>
@@ -3795,7 +3832,10 @@ Agent Summary: ${report.agentVerification.summary}`;
 													: "bg-muted/60 text-foreground rounded-bl-sm"
 											}`}>
 												<p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.text}</p>
-												<p className={`text-[10px] mt-1 ${msg.role === "user" ? "text-primary-foreground/60" : "text-muted-foreground/60"}`}>{msg.timestamp}</p>
+												<div className={`flex items-center gap-2 mt-1 ${msg.role === "user" ? "text-primary-foreground/60" : "text-muted-foreground/60"}`}>
+													<span className="text-[10px]">{msg.timestamp}</span>
+													{msg.model && <span className="text-[9px] font-heading px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-600">{msg.model}</span>}
+												</div>
 											</div>
 										</div>
 									))}
