@@ -99,22 +99,15 @@ import {
 	type DataSourceDef,
 	type CompanyNode,
 	type PepScreeningEntry,
-	type SourceScreenshot,
-	type SourceAuditTrail,
-	type CompanySearchTemplate,
 	type ClientDocument,
 	type CrossReference,
 	type DocumentUploadSlot,
 	type ChatMessage,
 	type ChatReminder,
-	type CaseAttentionArea,
 	type CorroborationScores,
 	type AgentVerification,
-	type CorroborationGrade,
-	type GradeConfig,
 	type FourEyeCheck,
 	type PersonalRelationship,
-	GRADE_CONFIGS,
 	CHATBOT_ATTENTION_AREAS,
 	CHATBOT_REMINDERS,
 	CHATBOT_INITIAL_MESSAGES,
@@ -253,6 +246,24 @@ export default function SowDemo() {
 	);
 }
 
+function corrobToRisk(level: "High" | "Moderate" | "Low"): "Low" | "Medium" | "High" {
+	return level === "High" ? "Low" : level === "Moderate" ? "Medium" : "High";
+}
+
+function CorroborationLevelBadge({ level, size = "sm" }: { level: "High" | "Moderate" | "Low"; size?: "sm" | "lg" }) {
+	const cfg = {
+		High: { color: "text-emerald-700", bg: "bg-emerald-500/10", border: "border-emerald-500/20" },
+		Moderate: { color: "text-amber-700", bg: "bg-amber-500/10", border: "border-amber-500/20" },
+		Low: { color: "text-red-700", bg: "bg-red-500/10", border: "border-red-500/20" },
+	}[level];
+	const sizeClass = size === "lg" ? "text-sm px-3 py-1.5" : "text-xs px-2 py-0.5";
+	return (
+		<span className={`inline-flex items-center font-heading font-bold rounded-lg border ${cfg.bg} ${cfg.border} ${cfg.color} ${sizeClass}`}>
+			{level}
+		</span>
+	);
+}
+
 /* ═══════════════════════════════════════════════════════════════
    Dashboard
    ═══════════════════════════════════════════════════════════════ */
@@ -271,7 +282,7 @@ function Dashboard({ onNewAssessment, onSelectMonitoring }: { onNewAssessment: (
 	const underReview = monitoring.filter((m) => m.status === "Under Review" || m.status === "Flagged").length;
 	const totalAlerts = monitoring.reduce((sum, m) => sum + m.openAlerts, 0);
 	const avgConfidence = Math.round(monitoring.reduce((sum, m) => sum + m.overallConfidence, 0) / monitoring.length);
-	const fullyCorroborated = monitoring.filter((m) => m.corroborationGrade === "A" || m.corroborationGrade === "A+").length;
+	const fullyCorroborated = monitoring.filter((m) => m.overallConfidence >= 80).length;
 
 	return (
 		<div className="space-y-6">
@@ -493,7 +504,7 @@ function PepSanctionsSection({ entries }: { entries: PepScreeningEntry[] }) {
 					<thead className="bg-gradient-to-r from-muted/60 to-muted/30 text-muted-foreground">
 						<tr>
 							<th className="text-left px-4 py-3 font-medium text-xs tracking-wide">Subject</th>
-							<th className="text-center px-4 py-3 font-medium text-xs tracking-wide">Risk</th>
+							<th className="text-center px-4 py-3 font-medium text-xs tracking-wide">Corroboration</th>
 							<th className="text-center px-4 py-3 font-medium text-xs tracking-wide hidden sm:table-cell">PEP</th>
 							<th className="text-center px-4 py-3 font-medium text-xs tracking-wide hidden sm:table-cell">Sanctions</th>
 							<th className="text-center px-4 py-3 font-medium text-xs tracking-wide hidden sm:table-cell">Adverse Media</th>
@@ -508,13 +519,14 @@ function PepSanctionsSection({ entries }: { entries: PepScreeningEntry[] }) {
 								"Review Required": "bg-amber-500/15 text-amber-700 border-amber-500/20",
 								Flagged: "bg-red-500/15 text-red-700 border-red-500/20",
 							};
+							const corrColor = entry.corroborationLevel === "High" ? "text-emerald-700 bg-emerald-500/15 border-emerald-500/20" : entry.corroborationLevel === "Moderate" ? "text-amber-700 bg-amber-500/15 border-amber-500/20" : "text-red-700 bg-red-500/15 border-red-500/20";
 							return (
 								<tr key={i} className="hover:bg-accent/20 transition-colors">
 									<td className="px-4 py-3">
 										<div className="font-medium">{entry.subjectName}</div>
 										{entry.subjectNameCn && <div className="text-xs text-muted-foreground/60">{entry.subjectNameCn}</div>}
 									</td>
-									<td className="px-4 py-3 text-center"><RiskBadge rating={entry.riskRating} /></td>
+									<td className="px-4 py-3 text-center"><span className={`text-xs font-semibold rounded-md border px-1.5 py-0.5 ${corrColor}`}>{entry.corroborationLevel}</span></td>
 									<td className="px-4 py-3 text-center hidden sm:table-cell">
 										<span className={`font-heading font-bold ${entry.pepHits > 0 ? "text-amber-600" : "text-muted-foreground/40"}`}>{entry.pepHits}</span>
 									</td>
@@ -553,7 +565,7 @@ function MonitoringProfile({ entry, onBack }: { entry: HnwMonitoringEntry; onBac
 					<div className="flex items-center gap-3">
 						<h2 className="text-xl font-heading font-semibold tracking-tight">{entry.name}</h2>
 						{entry.nameCn && <span className="text-lg text-muted-foreground font-heading">{entry.nameCn}</span>}
-						<RiskBadge rating={entry.riskRating} />
+						<span className={`text-xs font-semibold rounded-md border px-1.5 py-0.5 ${entry.corroborationLevel === "High" ? "bg-emerald-500/15 text-emerald-700 border-emerald-500/20" : entry.corroborationLevel === "Moderate" ? "bg-amber-500/15 text-amber-700 border-amber-500/20" : "bg-red-500/15 text-red-700 border-red-500/20"}`}>{entry.corroborationLevel} Corroboration</span>
 						<MonitoringStatusBadge status={entry.status} />
 					</div>
 					<p className="text-sm text-muted-foreground mt-0.5">{entry.industry}</p>
@@ -573,8 +585,8 @@ function MonitoringProfile({ entry, onBack }: { entry: HnwMonitoringEntry; onBac
 							<div className="mt-0.5 font-heading font-bold text-lg">{formatUSD(entry.estimatedNetWorthUSD)}</div>
 						</div>
 						<div>
-							<div className="text-[11px] font-heading text-muted-foreground uppercase tracking-widest">Risk Rating</div>
-							<div className={`mt-0.5 font-heading font-bold text-lg ${entry.riskRating === "High" ? "text-red-600" : entry.riskRating === "Medium" ? "text-amber-600" : "text-emerald-600"}`}>{entry.riskRating}</div>
+							<div className="text-[11px] font-heading text-muted-foreground uppercase tracking-widest">Corroboration</div>
+							<div className={`mt-0.5 font-heading font-bold text-lg ${entry.overallConfidence >= 70 ? "text-emerald-600" : entry.overallConfidence >= 40 ? "text-amber-600" : "text-red-600"}`}>{entry.overallConfidence}% confidence</div>
 						</div>
 						<div>
 							<div className="text-[11px] font-heading text-muted-foreground uppercase tracking-widest">Industry</div>
@@ -777,16 +789,17 @@ function PersonSelector({ selectedCase, onSelectCase, onBegin, onBack }: {
 				{HNW_CASES.map((report) => {
 					const p = report.profile;
 					const isSelected = selectedCase?.profile.id === p.id;
-					const riskColors: Record<string, string> = {
-						Low: "bg-emerald-500/10",
-						Medium: "bg-amber-500/10",
-						High: "bg-red-500/10",
+					const corrobColors: Record<string, string> = {
+						High: "bg-emerald-500/10",
+						Moderate: "bg-amber-500/10",
+						Low: "bg-red-500/10",
 					};
-					const riskIconColors: Record<string, string> = {
-						Low: "text-emerald-600",
-						Medium: "text-amber-600",
-						High: "text-red-600",
+					const corrobIconColors: Record<string, string> = {
+						High: "text-emerald-600",
+						Moderate: "text-amber-600",
+						Low: "text-red-600",
 					};
+					const compositeRisk = Math.round((report.corroborationScores.consistency + report.corroborationScores.correctness + report.corroborationScores.completeness) / 3);
 					return (
 						<button
 							key={p.id}
@@ -799,8 +812,8 @@ function PersonSelector({ selectedCase, onSelectCase, onBegin, onBack }: {
 						>
 							<div className="flex items-center justify-between mb-3">
 								<div className="flex items-center gap-3">
-									<div className={`h-11 w-11 rounded-xl flex items-center justify-center ${riskColors[p.riskRating]}`}>
-										<UserIcon className={`size-5 ${riskIconColors[p.riskRating]}`} />
+									<div className={`h-11 w-11 rounded-xl flex items-center justify-center ${corrobColors[p.corroborationLevel]}`}>
+										<UserIcon className={`size-5 ${corrobIconColors[p.corroborationLevel]}`} />
 									</div>
 									<div>
 										<div className="font-heading font-semibold">{p.name}</div>
@@ -808,8 +821,7 @@ function PersonSelector({ selectedCase, onSelectCase, onBegin, onBack }: {
 									</div>
 								</div>
 								<div className="flex items-center gap-2">
-									<GradeBadge grade={report.corroborationGrade} confidence={report.overallConfidence} />
-									<RiskBadge rating={p.riskRating} />
+									<CorroborationLevelBadge level={p.corroborationLevel} />
 									{isSelected && (
 										<div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center shadow-md shadow-primary/30">
 											<CheckIcon className="size-3 text-primary-foreground" />
@@ -829,12 +841,12 @@ function PersonSelector({ selectedCase, onSelectCase, onBegin, onBack }: {
 									<div className="font-heading font-bold text-sm">{formatUSD(p.estimatedNetWorthUSD)}</div>
 								</div>
 								<div className="rounded-lg bg-muted/60 px-2.5 py-1">
-									<div className="text-[11px] text-muted-foreground uppercase tracking-widest">Confidence</div>
+									<div className="text-[11px] text-muted-foreground uppercase tracking-widest">Corroboration</div>
 									<div className="font-heading font-bold text-sm">{report.overallConfidence}%</div>
 								</div>
 								<div className="rounded-lg bg-muted/60 px-2.5 py-1">
 									<div className="text-[11px] text-muted-foreground uppercase tracking-widest">Risk Score</div>
-									<div className="font-heading font-bold text-sm">{p.riskScore}/100</div>
+									<div className="font-heading font-bold text-sm">{compositeRisk}/100</div>
 								</div>
 							</div>
 
@@ -958,9 +970,9 @@ function ReportView({ report, onReset }: { report: HnwReport; onReset: () => voi
 				</div>
 			</div>
 
-			<HnwProfileCard profile={p} grade={report.corroborationGrade} confidence={report.overallConfidence} />
+			<HnwProfileCard profile={p} confidence={report.overallConfidence} />
 			<FourEyeCheckSection check={report.fourEyeCheck} />
-			<CorroborationRiskScore profile={p} scores={report.corroborationScores} grade={report.corroborationGrade} />
+			<CorroborationRiskScore profile={p} scores={report.corroborationScores} />
 			<KeyParameters params={report.keyParameters} />
 			<CareerTimeline phases={report.careerTimeline} />
 			<WealthAccumulationChart phases={report.careerTimeline} />
@@ -1004,14 +1016,14 @@ function ReportView({ report, onReset }: { report: HnwReport; onReset: () => voi
 					</div>
 				</div>
 			</div>
-			<FollowUpActions riskRating={p.riskRating} />
+			<FollowUpActions riskRating={corrobToRisk(p.corroborationLevel)} />
 			<AgentVerifySection verification={report.agentVerification} corroborationScores={report.corroborationScores} />
 
 			{/* Source Detail Modal */}
 			<SourceDetailModal source={selectedSource} onClose={() => setSelectedSource(null)} />
 
 			{/* Compliance Chatbot */}
-			<ComplianceChatbot profileId={p.id} profileName={p.name} riskRating={p.riskRating} report={report} />
+			<ComplianceChatbot profileId={p.id} profileName={p.name} riskRating={corrobToRisk(p.corroborationLevel)} report={report} />
 		</div>
 	);
 }
@@ -1022,7 +1034,7 @@ function ReportView({ report, onReset }: { report: HnwReport; onReset: () => voi
 
 /* ─── HNW Profile Card ─── */
 
-function HnwProfileCard({ profile: p, grade, confidence }: { profile: HnwProfile; grade?: CorroborationGrade; confidence?: number }) {
+function HnwProfileCard({ profile: p, confidence }: { profile: HnwProfile; confidence?: number }) {
 	return (
 		<div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
 			<div className="flex items-start justify-between mb-5">
@@ -1036,8 +1048,7 @@ function HnwProfileCard({ profile: p, grade, confidence }: { profile: HnwProfile
 					</div>
 				</div>
 				<div className="flex items-center gap-2">
-					{grade && <GradeBadge grade={grade} confidence={confidence} size="lg" />}
-					<RiskBadge rating={p.riskRating} size="lg" />
+					<CorroborationLevelBadge level={p.corroborationLevel} size="lg" />
 				</div>
 			</div>
 			<div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
@@ -1048,7 +1059,7 @@ function HnwProfileCard({ profile: p, grade, confidence }: { profile: HnwProfile
 				<InfoField label="Residences" value={p.residences.join(", ")} />
 				<InfoField label="Est. Net Worth" value={formatUSD(p.estimatedNetWorthUSD)} mono />
 				<InfoField label="Net Worth Source" value={p.netWorthSource} />
-				<InfoField label="Risk Score" value={`${p.riskScore}/100`} />
+				<InfoField label="Corroboration" value={`${p.corroborationLevel}${confidence ? ` (${confidence}%)` : ""}`} />
 			</div>
 		</div>
 	);
@@ -1162,8 +1173,8 @@ function FourEyeCheckSection({ check }: { check: FourEyeCheck }) {
 
 /* ─── Risk Score Gauge ─── */
 
-function CorroborationRiskScore({ profile: p, scores, grade }: { profile: HnwProfile; scores: CorroborationScores; grade: CorroborationGrade }) {
-	const score = p.riskScore;
+function CorroborationRiskScore({ profile: p, scores }: { profile: HnwProfile; scores: CorroborationScores }) {
+	const score = Math.round((scores.consistency + scores.correctness + scores.completeness) / 3);
 	const angle = (score / 100) * 180;
 	const color = score >= 60 ? "#ef4444" : score >= 40 ? "#f59e0b" : "#10b981";
 	const riskLabel = score >= 60 ? "High" : score >= 40 ? "Medium" : "Low";
@@ -1185,7 +1196,6 @@ function CorroborationRiskScore({ profile: p, scores, grade }: { profile: HnwPro
 				<div className="flex items-center gap-2">
 					<GaugeIcon className="size-4 text-muted-foreground" />
 					<p className="text-xs font-heading font-semibold text-muted-foreground uppercase tracking-widest">Corroboration Risk Score</p>
-					<GradeBadge grade={grade} size="sm" />
 				</div>
 				<span className="text-[9px] font-heading font-medium text-muted-foreground/70 tracking-wide">MAS Notice 626 §6.18–6.22</span>
 			</div>
@@ -1947,8 +1957,8 @@ function NarrativeSection({ narrative, report }: { narrative: string; report: Hn
 					profileName: p.name,
 					profileSummary: p.profileSummary,
 					netWorth: report.totalEstimatedWealthUSD,
-					riskRating: p.riskRating,
-					riskScore: p.riskScore,
+					riskRating: corrobToRisk(p.corroborationLevel),
+					riskScore: Math.round((report.corroborationScores.consistency + report.corroborationScores.correctness + report.corroborationScores.completeness) / 3),
 					overallConfidence: report.overallConfidence,
 					corroborationScores: report.corroborationScores,
 					careerPhases: report.careerTimeline.map((ph) => ({
@@ -3188,8 +3198,9 @@ function AgentVerifySection({ verification: v, corroborationScores: cs }: { veri
 function DownloadReportButton({ report }: { report: HnwReport }) {
 	const download = () => {
 		const p = report.profile;
-		const riskColor = p.riskScore >= 60 ? "#dc2626" : p.riskScore >= 40 ? "#d97706" : "#16a34a";
-		const riskBg = p.riskScore >= 60 ? "#fef2f2" : p.riskScore >= 40 ? "#fefce8" : "#f0fdf4";
+		const compositeRisk = Math.round((report.corroborationScores.consistency + report.corroborationScores.correctness + report.corroborationScores.completeness) / 3);
+		const riskColor = compositeRisk >= 60 ? "#dc2626" : compositeRisk >= 40 ? "#d97706" : "#16a34a";
+		const riskBg = compositeRisk >= 60 ? "#fef2f2" : compositeRisk >= 40 ? "#fefce8" : "#f0fdf4";
 		const now = new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" });
 		const confColor = (v: number) => v >= 70 ? "#16a34a" : v >= 40 ? "#d97706" : "#dc2626";
 		const statusColor = (s: string) => s === "critical" ? "#dc2626" : s === "warning" ? "#d97706" : "#16a34a";
@@ -3329,9 +3340,10 @@ function DownloadReportButton({ report }: { report: HnwReport }) {
 		}).join("");
 
 		/* ── Section 13: Recommended Actions ── */
-		const actions = p.riskRating === "High"
+		const derivedRisk = corrobToRisk(p.corroborationLevel);
+		const actions = derivedRisk === "High"
 			? [{ label: "Enhanced Due Diligence Review", desc: "Requires senior compliance officer review before onboarding" }, { label: "Verify Crypto Holdings On-chain", desc: "Cross-reference declared token holdings with blockchain explorer data" }, { label: "Set Weekly Monitoring", desc: "Enable weekly screening for price movements, adverse media, and regulatory changes" }]
-			: p.riskRating === "Medium"
+			: derivedRisk === "Medium"
 			? [{ label: "Set Monthly Monitoring", desc: "Enable monthly screening for adverse media and regulatory changes" }, { label: "Schedule Periodic Review", desc: "Set next review date per enhanced monitoring policy" }, { label: "Request Supporting Documents", desc: "Obtain additional documentation for lower-confidence wealth claims" }]
 			: [{ label: "Approve for Onboarding", desc: "All checks passed — eligible for standard onboarding" }, { label: "Set Quarterly Monitoring", desc: "Enable quarterly screening per standard monitoring policy" }];
 		const actionsHtml = actions.map((a) =>
@@ -3372,7 +3384,7 @@ a{color:#0891b2}
 <div style="display:flex;gap:16px;margin-bottom:24px">
 	<div style="flex:1;padding:12px 16px;border-radius:8px;background:${riskBg};border:1px solid ${riskColor}33">
 		<div style="font-size:10px;text-transform:uppercase;color:#6b7280">Risk Rating</div>
-		<div style="font-size:18px;font-weight:700;color:${riskColor};margin-top:2px">${p.riskRating} (${p.riskScore}/100)</div>
+		<div style="font-size:18px;font-weight:700;color:${riskColor};margin-top:2px">${corrobToRisk(p.corroborationLevel)} (${compositeRisk}/100)</div>
 	</div>
 	<div style="flex:1;padding:12px 16px;border-radius:8px;background:#f3f4f6">
 		<div style="font-size:10px;text-transform:uppercase;color:#6b7280">Est. Net Worth</div>
@@ -3595,7 +3607,7 @@ function ComplianceChatbot({ profileId, profileName, riskRating, report }: { pro
 		const riskParams = report.keyParameters.map((kp) => `${kp.label}: ${kp.value} (${kp.status})`).join("\n");
 		return `Name: ${p.name}${p.nameCn ? ` (${p.nameCn})` : ""}
 Net Worth: ${formatUSD(report.totalEstimatedWealthUSD)}
-Risk Rating: ${p.riskRating} (${p.riskScore}/100)
+Risk Rating: ${corrobToRisk(p.corroborationLevel)} (${Math.round((cs.consistency + cs.correctness + cs.completeness) / 3)}/100)
 Overall Confidence: ${report.overallConfidence}%
 Corroboration Scores: Consistency ${cs.consistency}/100, Correctness ${cs.correctness}/100, Completeness ${cs.completeness}/100
 Nationality: ${p.nationality} | Residences: ${p.residences.join(", ")}
@@ -3976,16 +3988,6 @@ Agent Summary: ${report.agentVerification.summary}`;
    Shared UI Components
    ═══════════════════════════════════════════════════════════════ */
 
-function RiskBadge({ rating, size = "sm" }: { rating: "Low" | "Medium" | "High"; size?: "sm" | "lg" }) {
-	const colors: Record<string, string> = {
-		Low: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/20",
-		Medium: "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/20",
-		High: "bg-red-500/15 text-red-700 dark:text-red-400 border-red-500/20",
-	};
-	const sizeClass = size === "lg" ? "text-xs px-3 py-1" : "text-xs px-1.5 py-0.5";
-	return <span className={`font-semibold rounded-md border ${colors[rating]} ${sizeClass}`}>{rating} Risk</span>;
-}
-
 function CorroborationScore({ confidence }: { confidence: number }) {
 	const tone =
 		confidence >= 80
@@ -4005,17 +4007,6 @@ function CorroborationScore({ confidence }: { confidence: number }) {
 				<div className={`h-full ${tone.bar}`} style={{ width: `${confidence}%` }} />
 			</div>
 		</div>
-	);
-}
-
-function GradeBadge({ grade, confidence, size = "sm" }: { grade: CorroborationGrade; confidence?: number; size?: "sm" | "lg" }) {
-	const cfg = GRADE_CONFIGS.find(g => g.grade === grade) ?? GRADE_CONFIGS[GRADE_CONFIGS.length - 1];
-	const sizeClass = size === "lg" ? "text-sm px-3 py-1.5 gap-2" : "text-xs px-2 py-0.5 gap-1.5";
-	return (
-		<span className={`inline-flex items-center font-heading font-bold rounded-lg border ${cfg.bgColor} ${cfg.borderColor} ${cfg.color} ${sizeClass}`}>
-			<span className={size === "lg" ? "text-base" : "text-xs"}>{grade}</span>
-			{confidence !== undefined && <span className="font-normal opacity-70 text-[10px]">{confidence}%</span>}
-		</span>
 	);
 }
 

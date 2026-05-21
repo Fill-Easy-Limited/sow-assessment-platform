@@ -121,32 +121,7 @@ export const CATEGORY_COLORS: Record<WealthCategory, string> = {
 // Constant saving rate applied to real estate rental income across all profiles.
 const REAL_ESTATE_SAVING_RATE = 80;
 
-// ── Composite Risk Rating (A+ to E) ──────────────────────────────
-
-export type CorroborationGrade = "A+" | "A" | "B" | "C" | "D" | "E";
-
-export interface GradeConfig {
-	grade: CorroborationGrade;
-	label: string;
-	color: string;
-	bgColor: string;
-	borderColor: string;
-	hexColor: string;
-	minConfidence: number;
-}
-
-export const GRADE_CONFIGS: GradeConfig[] = [
-	{ grade: "A+", label: "Fully Corroborated",      color: "text-emerald-800 dark:text-emerald-300", bgColor: "bg-emerald-600/15", borderColor: "border-emerald-600/30", hexColor: "#065f46", minConfidence: 90 },
-	{ grade: "A",  label: "Highly Corroborated",      color: "text-emerald-700 dark:text-emerald-400", bgColor: "bg-emerald-500/10", borderColor: "border-emerald-500/25", hexColor: "#047857", minConfidence: 80 },
-	{ grade: "B",  label: "Well Corroborated",         color: "text-blue-700 dark:text-blue-400",       bgColor: "bg-blue-500/10",    borderColor: "border-blue-500/25",    hexColor: "#1d4ed8", minConfidence: 70 },
-	{ grade: "C",  label: "Moderately Corroborated",   color: "text-yellow-700 dark:text-yellow-400",   bgColor: "bg-yellow-500/10",  borderColor: "border-yellow-500/25",  hexColor: "#a16207", minConfidence: 60 },
-	{ grade: "D",  label: "Weak Corroboration",        color: "text-orange-700 dark:text-orange-400",   bgColor: "bg-orange-500/10",  borderColor: "border-orange-500/25",  hexColor: "#c2410c", minConfidence: 50 },
-	{ grade: "E",  label: "Poor / Not Corroborated",   color: "text-red-700 dark:text-red-400",         bgColor: "bg-red-500/10",     borderColor: "border-red-500/25",     hexColor: "#b91c1c", minConfidence: 0 },
-];
-
-export function getCorroborationGrade(overallConfidence: number): GradeConfig {
-	return GRADE_CONFIGS.find(g => overallConfidence >= g.minConfidence) ?? GRADE_CONFIGS[GRADE_CONFIGS.length - 1];
-}
+// ── Corroboration Level helpers ──────────────────────────────────
 
 export interface CategoryBreakdown {
 	category: WealthCategory;
@@ -181,8 +156,7 @@ export interface HnwProfile {
 	primaryIndustry: string;
 	estimatedNetWorthUSD: number;
 	netWorthSource: string;
-	riskRating: "Low" | "Medium" | "High";
-	riskScore: number;
+	corroborationLevel: "High" | "Moderate" | "Low";
 	profileSummary: string;
 }
 
@@ -214,7 +188,7 @@ export interface CompanyNode {
 export interface PepScreeningEntry {
 	subjectName: string;
 	subjectNameCn?: string;
-	riskRating: "Low" | "Medium" | "High";
+	corroborationLevel: "High" | "Moderate" | "Low";
 	lastScreened: string;
 	listsChecked: string[];
 	pepHits: number;
@@ -258,7 +232,6 @@ export interface HnwReport {
 	uploadSlots: DocumentUploadSlot[];
 	corroborationScores: CorroborationScores;
 	agentVerification: AgentVerification;
-	corroborationGrade: CorroborationGrade;
 	fourEyeCheck: FourEyeCheck;
 	personalRelationships: PersonalRelationship[];
 	crossLLMValidation?: CrossLLMValidation;
@@ -292,8 +265,7 @@ export interface HnwMonitoringEntry {
 	nameCn?: string;
 	industry: string;
 	estimatedNetWorthUSD: number;
-	riskRating: "Low" | "Medium" | "High";
-	corroborationGrade: CorroborationGrade;
+	corroborationLevel: "High" | "Moderate" | "Low";
 	overallConfidence: number;
 	lastScreened: string;
 	openAlerts: number;
@@ -1329,7 +1301,7 @@ const YAT_SIU_PARAMS: KeyParameter[] = [
 
 export const PEP_SCREENING: PepScreeningEntry[] = [
 	{
-		subjectName: "Jack Ma (Ma Yun)", subjectNameCn: "马云", riskRating: "Medium",
+		subjectName: "Jack Ma (Ma Yun)", subjectNameCn: "马云", corroborationLevel: "Moderate",
 		lastScreened: "2026-05-17",
 		listsChecked: ["OFAC SDN", "EU Consolidated", "UN Security Council", "PBOC", "HK SFC", "World-Check PEP", "Dow Jones Watchlist"],
 		pepHits: 1,
@@ -1340,7 +1312,7 @@ export const PEP_SCREENING: PepScreeningEntry[] = [
 		overallStatus: "Review Required",
 	},
 	{
-		subjectName: "Yat Siu", subjectNameCn: "蕭逸", riskRating: "High",
+		subjectName: "Yat Siu", subjectNameCn: "蕭逸", corroborationLevel: "Low",
 		lastScreened: "2026-05-17",
 		listsChecked: ["OFAC SDN", "EU Consolidated", "UN Security Council", "HKMA", "ASIC", "World-Check PEP", "Dow Jones Watchlist"],
 		pepHits: 0,
@@ -1350,7 +1322,7 @@ export const PEP_SCREENING: PepScreeningEntry[] = [
 		overallStatus: "Review Required",
 	},
 	{
-		subjectName: "Donald Trump", riskRating: "High",
+		subjectName: "Donald Trump", corroborationLevel: "Low",
 		lastScreened: "2026-05-19",
 		listsChecked: ["OFAC SDN", "EU Consolidated", "UN Security Council", "FinCEN", "FEC", "OGE", "World-Check PEP", "Dow Jones Watchlist"],
 		pepHits: 1,
@@ -1361,7 +1333,7 @@ export const PEP_SCREENING: PepScreeningEntry[] = [
 		overallStatus: "Flagged",
 	},
 	{
-		subjectName: "James Chen Wei", subjectNameCn: "陈伟", riskRating: "Low",
+		subjectName: "James Chen Wei", subjectNameCn: "陈伟", corroborationLevel: "High",
 		lastScreened: "2026-05-19",
 		listsChecked: ["OFAC SDN", "EU Consolidated", "UN Security Council", "MAS", "SFC", "World-Check PEP", "Dow Jones Watchlist"],
 		pepHits: 0,
@@ -1370,7 +1342,7 @@ export const PEP_SCREENING: PepScreeningEntry[] = [
 		overallStatus: "Clear",
 	},
 	{
-		subjectName: "Elon Musk", riskRating: "Medium",
+		subjectName: "Elon Musk", corroborationLevel: "Moderate",
 		lastScreened: "2026-05-15",
 		listsChecked: ["OFAC SDN", "EU Consolidated", "UN Security Council", "SEC", "World-Check PEP", "Dow Jones Watchlist"],
 		pepHits: 1,
@@ -1381,7 +1353,7 @@ export const PEP_SCREENING: PepScreeningEntry[] = [
 		overallStatus: "Flagged",
 	},
 	{
-		subjectName: "Changpeng Zhao (CZ)", subjectNameCn: "赵长鹏", riskRating: "High",
+		subjectName: "Changpeng Zhao (CZ)", subjectNameCn: "赵长鹏", corroborationLevel: "Low",
 		lastScreened: "2026-05-16",
 		listsChecked: ["OFAC SDN", "EU Consolidated", "UN Security Council", "DOJ", "FinCEN", "World-Check PEP", "Dow Jones Watchlist"],
 		pepHits: 0,
@@ -1411,15 +1383,15 @@ However, substantial risks persist. [SAND](https://www.coingecko.com/en/coins/th
 // ── Monitoring Table ────────────────────────────────────────────
 
 export const HNW_MONITORING: HnwMonitoringEntry[] = [
-	{ id: "m1", name: "Jack Ma", nameCn: "马云", industry: "E-Commerce / Fintech", estimatedNetWorthUSD: 25_500_000_000, riskRating: "Medium", corroborationGrade: "C", overallConfidence: 62, lastScreened: "2026-05-17", openAlerts: 2, status: "Under Review", screeningFrequency: "Monthly" },
-	{ id: "m2", name: "Yat Siu", nameCn: "蕭逸", industry: "Blockchain Gaming / Web3", estimatedNetWorthUSD: 2_400_000_000, riskRating: "High", corroborationGrade: "E", overallConfidence: 45, lastScreened: "2026-05-17", openAlerts: 3, status: "Active", screeningFrequency: "Weekly" },
-	{ id: "m8", name: "Donald Trump", industry: "Real Estate / Media / Politics", estimatedNetWorthUSD: 6_500_000_000, riskRating: "High", corroborationGrade: "D", overallConfidence: 52, lastScreened: "2026-05-19", openAlerts: 4, status: "Flagged", screeningFrequency: "Weekly" },
-	{ id: "m9", name: "James Chen Wei", nameCn: "陈伟", industry: "Private Equity / Family Office", estimatedNetWorthUSD: 380_000_000, riskRating: "Low", corroborationGrade: "A", overallConfidence: 88, lastScreened: "2026-05-19", openAlerts: 0, status: "Active", screeningFrequency: "Quarterly" },
-	{ id: "m3", name: "Elon Musk", industry: "EV / Space / AI", estimatedNetWorthUSD: 240_000_000_000, riskRating: "Medium", corroborationGrade: "D", overallConfidence: 55, lastScreened: "2026-05-15", openAlerts: 5, status: "Flagged", screeningFrequency: "Weekly" },
-	{ id: "m4", name: "Changpeng Zhao", nameCn: "赵长鹏", industry: "Crypto Exchanges", estimatedNetWorthUSD: 33_000_000_000, riskRating: "High", corroborationGrade: "E", overallConfidence: 38, lastScreened: "2026-05-16", openAlerts: 4, status: "Flagged", screeningFrequency: "Weekly" },
-	{ id: "m5", name: "Masayoshi Son", nameCn: "孙正义", industry: "Venture Capital / Telecom", estimatedNetWorthUSD: 10_300_000_000, riskRating: "Low", corroborationGrade: "B", overallConfidence: 72, lastScreened: "2026-05-14", openAlerts: 0, status: "Active", screeningFrequency: "Monthly" },
-	{ id: "m6", name: "Li Ka-shing", nameCn: "李嘉诚", industry: "Real Estate / Conglomerate", estimatedNetWorthUSD: 35_000_000_000, riskRating: "Low", corroborationGrade: "B", overallConfidence: 78, lastScreened: "2026-05-12", openAlerts: 1, status: "Active", screeningFrequency: "Quarterly" },
-	{ id: "m7", name: "Vitalik Buterin", industry: "Blockchain / Ethereum", estimatedNetWorthUSD: 1_500_000_000, riskRating: "Medium", corroborationGrade: "E", overallConfidence: 42, lastScreened: "2026-05-16", openAlerts: 1, status: "Active", screeningFrequency: "Monthly" },
+	{ id: "m1", name: "Jack Ma", nameCn: "马云", industry: "E-Commerce / Fintech", estimatedNetWorthUSD: 25_500_000_000, corroborationLevel: "Moderate", overallConfidence: 62, lastScreened: "2026-05-17", openAlerts: 2, status: "Under Review", screeningFrequency: "Monthly" },
+	{ id: "m2", name: "Yat Siu", nameCn: "蕭逸", industry: "Blockchain Gaming / Web3", estimatedNetWorthUSD: 2_400_000_000, corroborationLevel: "Low", overallConfidence: 45, lastScreened: "2026-05-17", openAlerts: 3, status: "Active", screeningFrequency: "Weekly" },
+	{ id: "m8", name: "Donald Trump", industry: "Real Estate / Media / Politics", estimatedNetWorthUSD: 6_500_000_000, corroborationLevel: "Low", overallConfidence: 52, lastScreened: "2026-05-19", openAlerts: 4, status: "Flagged", screeningFrequency: "Weekly" },
+	{ id: "m9", name: "James Chen Wei", nameCn: "陈伟", industry: "Private Equity / Family Office", estimatedNetWorthUSD: 380_000_000, corroborationLevel: "High", overallConfidence: 88, lastScreened: "2026-05-19", openAlerts: 0, status: "Active", screeningFrequency: "Quarterly" },
+	{ id: "m3", name: "Elon Musk", industry: "EV / Space / AI", estimatedNetWorthUSD: 240_000_000_000, corroborationLevel: "Moderate", overallConfidence: 55, lastScreened: "2026-05-15", openAlerts: 5, status: "Flagged", screeningFrequency: "Weekly" },
+	{ id: "m4", name: "Changpeng Zhao", nameCn: "赵长鹏", industry: "Crypto Exchanges", estimatedNetWorthUSD: 33_000_000_000, corroborationLevel: "Low", overallConfidence: 38, lastScreened: "2026-05-16", openAlerts: 4, status: "Flagged", screeningFrequency: "Weekly" },
+	{ id: "m5", name: "Masayoshi Son", nameCn: "孙正义", industry: "Venture Capital / Telecom", estimatedNetWorthUSD: 10_300_000_000, corroborationLevel: "High", overallConfidence: 72, lastScreened: "2026-05-14", openAlerts: 0, status: "Active", screeningFrequency: "Monthly" },
+	{ id: "m6", name: "Li Ka-shing", nameCn: "李嘉诚", industry: "Real Estate / Conglomerate", estimatedNetWorthUSD: 35_000_000_000, corroborationLevel: "High", overallConfidence: 78, lastScreened: "2026-05-12", openAlerts: 1, status: "Active", screeningFrequency: "Quarterly" },
+	{ id: "m7", name: "Vitalik Buterin", industry: "Blockchain / Ethereum", estimatedNetWorthUSD: 1_500_000_000, corroborationLevel: "Moderate", overallConfidence: 42, lastScreened: "2026-05-16", openAlerts: 1, status: "Active", screeningFrequency: "Monthly" },
 ];
 
 // ── Notifications ───────────────────────────────────────────────
@@ -1428,7 +1400,7 @@ export const HNW_NOTIFICATIONS: HnwNotification[] = [
 	{ id: "n9", type: "alert", title: "PEP status — active head of state — Donald Trump", detail: "Active PEP classification: sitting U.S. President. Mandatory enhanced due diligence and senior management approval required before onboarding.", time: "1 hour ago", subjectName: "Donald Trump", read: false },
 	{ id: "n10", type: "alert", title: "OGE financial disclosure update — Donald Trump", detail: "New Office of Government Ethics public financial disclosure filed. Updated DJT/TMTG holdings and real estate valuations available.", time: "6 hours ago", subjectName: "Donald Trump", read: false },
 	{ id: "n11", type: "alert", title: "DJT stock volatility — Donald Trump", detail: "Trump Media & Technology Group (DJT) shares swung 18% in 48 hours. Mark-to-market wealth estimate requires update.", time: "1 day ago", subjectName: "Donald Trump", read: false },
-	{ id: "n12", type: "completed", title: "Assessment complete — James Chen Wei", detail: "Full SOW assessment completed with Grade A corroboration. All documents verified. Four-eye check approved by Michael Wong.", time: "2 hours ago", subjectName: "James Chen Wei", read: false },
+	{ id: "n12", type: "completed", title: "Assessment complete — James Chen Wei", detail: "Full SOW assessment completed with high corroboration (88%). All documents verified. Four-eye check approved by Michael Wong.", time: "2 hours ago", subjectName: "James Chen Wei", read: false },
 	{ id: "n1", type: "alert", title: "Adverse media hit — Jack Ma", detail: "Bloomberg reports on Ant Group regulatory developments. New PBOC disclosure requirements affecting valuation estimates.", time: "3 hours ago", subjectName: "Jack Ma", read: false },
 	{ id: "n2", type: "alert", title: "SAND token price alert — Yat Siu", detail: "SAND dropped 12% in 24h to $0.28. Portfolio mark-to-market valuation update required.", time: "5 hours ago", subjectName: "Yat Siu", read: false },
 	{ id: "n3", type: "update", title: "SEC filing update — Alibaba Group", detail: "Alibaba 20-F annual report filed. Updated share structure and beneficial ownership data available.", time: "1 day ago", subjectName: "Jack Ma", read: true },
@@ -1715,7 +1687,7 @@ const CHEN_WEI_CAREER: CareerPhase[] = [
 			], subtotalUSD: 8_000_000, avgConfidence: 80 },
 		],
 		phaseWealthUSD: 380_000_000, cumulativeWealthUSD: 380_000_000,
-		keyEvents: ["2020: Conservative positioning protects portfolio during COVID-19 downturn", "2022: Increased fixed income allocation during rate hiking cycle", "2024: Net worth reaches $380M per Forbes Singapore Rich List", "2025: MAS compliance review — satisfactory rating", "2026: Full SOW assessment completed — Grade A corroboration"],
+		keyEvents: ["2020: Conservative positioning protects portfolio during COVID-19 downturn", "2022: Increased fixed income allocation during rate hiking cycle", "2024: Net worth reaches $380M per Forbes Singapore Rich List", "2025: MAS compliance review — satisfactory rating", "2026: Full SOW assessment completed — high corroboration (88%)"],
 	},
 ];
 
@@ -1833,9 +1805,8 @@ const CHEN_WEI_REPORT: HnwReport = {
 		primaryIndustry: "Private Equity / Family Office",
 		estimatedNetWorthUSD: 380_000_000,
 		netWorthSource: "Forbes Singapore Rich List 2025",
-		riskRating: "Low",
-		riskScore: 22,
-		profileSummary: "Singaporean citizen with straightforward wealth trajectory from Goldman Sachs to private equity to family office management. Net worth of $380M is well-documented through MAS, ACRA, IRAS, and SLA records. No PEP exposure, no sanctions hits, no adverse media. Conservative portfolio with no crypto or speculative assets. Grade A corroboration.",
+		corroborationLevel: "High",
+		profileSummary: "Singaporean citizen with straightforward wealth trajectory from Goldman Sachs to private equity to family office management. Net worth of $380M is well-documented through MAS, ACRA, IRAS, and SLA records. No PEP exposure, no sanctions hits, no adverse media. Conservative portfolio with no crypto or speculative assets. High corroboration.",
 	},
 	careerTimeline: CHEN_WEI_CAREER,
 	totalEstimatedWealthUSD: 380_000_000,
@@ -1878,13 +1849,12 @@ const CHEN_WEI_REPORT: HnwReport = {
 			"Standard PEP/sanctions re-screening per MAS Notice 626 requirements",
 		],
 	},
-	corroborationGrade: "A",
 	fourEyeCheck: {
 		analyst: { name: "Sarah Chen", role: "Senior Compliance Analyst", timestamp: "2026-05-19T10:00:00Z" },
 		reviewer: { name: "Michael Wong", role: "Head of Financial Crime", timestamp: "2026-05-19T14:30:00Z" },
 		status: "approved",
 		signOffHistory: [
-			{ action: "Drafted", by: "Sarah Chen", at: "2026-05-19T10:00:00Z", comment: "Clean profile — all sources verified, Grade A corroboration" },
+			{ action: "Drafted", by: "Sarah Chen", at: "2026-05-19T10:00:00Z", comment: "Clean profile — all sources verified, high corroboration (88%)" },
 			{ action: "Reviewed", by: "Michael Wong", at: "2026-05-19T12:00:00Z", comment: "Concur with assessment — straightforward wealth trajectory" },
 			{ action: "Approved", by: "Michael Wong", at: "2026-05-19T14:30:00Z", comment: "Approved for onboarding — standard quarterly monitoring" },
 		],
@@ -1911,8 +1881,7 @@ const JACK_MA_REPORT: HnwReport = {
 		primaryIndustry: "E-Commerce / Fintech",
 		estimatedNetWorthUSD: 25_500_000_000,
 		netWorthSource: "Forbes Real-Time Billionaires Index",
-		riskRating: "Medium",
-		riskScore: 48,
+		corroborationLevel: "Moderate",
 		profileSummary: "Founder of Alibaba Group and co-founder of Ant Group. One of China's most prominent entrepreneurs. Wealth primarily derived from Alibaba equity crystallized through the 2014 NYSE IPO. Subject to enhanced monitoring due to regulatory exposure and PEP near-match status.",
 	},
 	careerTimeline: JACK_MA_CAREER,
@@ -1959,7 +1928,6 @@ const JACK_MA_REPORT: HnwReport = {
 			"Schedule quarterly re-screening given PEP near-match status and regulatory exposure",
 		],
 	},
-	corroborationGrade: "C",
 	fourEyeCheck: {
 		analyst: { name: "Sarah Chen", role: "Senior Compliance Analyst", timestamp: "2026-05-17T14:30:00Z" },
 		reviewer: { name: "Michael Wong", role: "Head of Financial Crime", timestamp: "2026-05-18T09:15:00Z" },
@@ -1991,8 +1959,7 @@ const YAT_SIU_REPORT: HnwReport = {
 		primaryIndustry: "Blockchain Gaming / Web3",
 		estimatedNetWorthUSD: 2_400_000_000,
 		netWorthSource: "Forbes estimate + on-chain analysis",
-		riskRating: "High",
-		riskScore: 72,
+		corroborationLevel: "Low",
 		profileSummary: "Co-founder and chairman of Animoca Brands, a leading blockchain gaming and Web3 investment company. Wealth heavily concentrated in crypto assets and private company equity with extreme volatility. ASX-delisted in 2020. Active in Hong Kong's virtual asset regulatory framework.",
 	},
 	careerTimeline: YAT_SIU_CAREER,
@@ -2041,13 +2008,12 @@ const YAT_SIU_REPORT: HnwReport = {
 			"Engage ASX/ASIC for complete delisting correspondence to resolve competing narratives",
 		],
 	},
-	corroborationGrade: "E",
 	fourEyeCheck: {
 		analyst: { name: "Kevin Lam", role: "Compliance Analyst", timestamp: "2026-05-17T10:00:00Z" },
 		reviewer: null,
 		status: "drafted",
 		signOffHistory: [
-			{ action: "Drafted", by: "Kevin Lam", at: "2026-05-17T10:00:00Z", comment: "High risk — crypto volatility requires daily revaluation" },
+			{ action: "Drafted", by: "Kevin Lam", at: "2026-05-17T10:00:00Z", comment: "Low corroboration — crypto volatility requires daily revaluation" },
 		],
 	},
 	personalRelationships: [
@@ -2374,7 +2340,7 @@ const TRUMP_NARRATIVE = `Donald Trump's wealth profile presents one of the most 
 
 The career trajectory shows wealth originating from Fred Trump's Brooklyn/Queens real estate empire, with significant capital transferred through family structures. The Trump Organization expanded into Manhattan commercial real estate per [NYC Finance](https://a836-pts-access.nyc.gov/) property records, Atlantic City casinos (resulting in six corporate bankruptcies between 1991-2014), and global brand licensing. NBC's The Apprentice (2004-2015) generated an estimated $427M and transformed the Trump name into a global licensing brand worth $400M+ in cumulative fees. However, brand licensing income, casino-era earnings, and Trump Organization distributions all carry moderate confidence due to the complexity of the 500+ LLC corporate structure and contested financial statements.
 
-As the 47th President of the United States, Trump carries the highest PEP classification — mandatory enhanced due diligence and senior management approval are required. Key risk factors include: active PEP status, six corporate bankruptcies, the $454M NY civil fraud judgment, multiple criminal indictments (2023-2024), extreme DJT stock volatility, unregulated $TRUMP meme coin exposure, and incomplete asset divestiture questions. The corroboration grade of D reflects weak confidence across volatile and politically entangled asset classes.`;
+As the 47th President of the United States, Trump carries the highest PEP classification — mandatory enhanced due diligence and senior management approval are required. Key risk factors include: active PEP status, six corporate bankruptcies, the $454M NY civil fraud judgment, multiple criminal indictments (2023-2024), extreme DJT stock volatility, unregulated $TRUMP meme coin exposure, and incomplete asset divestiture questions. Low corroboration (~52%) reflects weak confidence across volatile and politically entangled asset classes.`;
 
 // ── Donald Trump: Client Documents ─────────────────────────────
 
@@ -2415,8 +2381,7 @@ const TRUMP_REPORT: HnwReport = {
 		primaryIndustry: "Real Estate / Media / Politics",
 		estimatedNetWorthUSD: 6_500_000_000,
 		netWorthSource: "Forbes / Bloomberg (highly volatile — DJT + $TRUMP meme coin)",
-		riskRating: "High",
-		riskScore: 75,
+		corroborationLevel: "Low",
 		profileSummary: "47th President of the United States. Wealth derived from Trump Organization real estate, DJT/TMTG stock (~59%), brand licensing, and $TRUMP meme coin. Active PEP — highest classification. Six corporate bankruptcies. $454M NY civil fraud judgment under appeal. Extreme wealth volatility due to DJT stock and crypto exposure.",
 	},
 	careerTimeline: TRUMP_CAREER,
@@ -2454,7 +2419,7 @@ const TRUMP_REPORT: HnwReport = {
 			{ id: "ck-dt-9", category: "consistency", label: "Casino bankruptcy pattern", status: "pass", detail: "Six corporate bankruptcies (1991-2014) are well-documented in federal court records. All were corporate Chapter 11 filings, not personal bankruptcy. Pattern consistent with aggressive leveraging strategy." },
 			{ id: "ck-dt-10", category: "correctness", label: "Brand licensing income verification", status: "warn", detail: "OGE discloses income in broad ranges, not exact figures. Forbes estimates $400M+ cumulative licensing fees but some global projects have removed the Trump name post-2016. Current licensing revenue unclear." },
 		],
-		summary: "Donald Trump's wealth profile receives a D corroboration grade reflecting fundamental challenges: (1) active PEP status as sitting President requiring highest-level EDD, (2) NY AG finding of systematic asset overstatement, (3) extreme volatility in DJT stock and $TRUMP meme coin, (4) 500+ LLC structure with limited transparency, and (5) multiple ongoing criminal proceedings with unquantified financial impact. The OGE and SEC filings provide some anchor points, but self-reported valuations are unreliable per court findings. Senior management approval is mandatory before any onboarding decision.",
+		summary: "Donald Trump's wealth profile receives low corroboration (~52%) reflecting fundamental challenges: (1) active PEP status as sitting President requiring highest-level EDD, (2) NY AG finding of systematic asset overstatement, (3) extreme volatility in DJT stock and $TRUMP meme coin, (4) 500+ LLC structure with limited transparency, and (5) multiple ongoing criminal proceedings with unquantified financial impact. The OGE and SEC filings provide some anchor points, but self-reported valuations are unreliable per court findings. Senior management approval is mandatory before any onboarding decision.",
 		recommendations: [
 			"MANDATORY: Obtain senior management approval — active PEP (head of state) requires board-level sign-off per MAS Notice 626",
 			"Commission independent real estate appraisals — NY AG judgment invalidates self-reported values as reference points",
@@ -2465,13 +2430,12 @@ const TRUMP_REPORT: HnwReport = {
 			"Verify beneficial ownership chain for CIC Digital LLC and Fight Fight Fight LLC ($TRUMP token holders)",
 		],
 	},
-	corroborationGrade: "D",
 	fourEyeCheck: {
 		analyst: { name: "Kevin Lam", role: "Compliance Analyst", timestamp: "2026-05-19T10:00:00Z" },
 		reviewer: null,
 		status: "drafted",
 		signOffHistory: [
-			{ action: "Drafted", by: "Kevin Lam", at: "2026-05-19T10:00:00Z", comment: "High risk PEP — requires senior management review before reviewer assignment" },
+			{ action: "Drafted", by: "Kevin Lam", at: "2026-05-19T10:00:00Z", comment: "Low corroboration PEP — requires senior management review before reviewer assignment" },
 		],
 	},
 	personalRelationships: [
@@ -2600,7 +2564,7 @@ export const CHATBOT_INITIAL_MESSAGES: Record<string, ChatMessage[]> = {
 		{ id: "dt-c2", role: "assistant", text: "🔴 CRITICAL: Active PEP — Donald Trump is the sitting President of the United States. This is the highest-level PEP classification. Mandatory enhanced due diligence and senior management approval required before any engagement.", timestamp: "Just now" },
 		{ id: "dt-c3", role: "assistant", text: "🔴 CRITICAL: The NY AG civil fraud judgment found systematic inflation of asset values on financial statements. Self-reported property valuations cannot be relied upon. Independent appraisals are mandatory for any wealth assessment.", timestamp: "Just now" },
 		{ id: "dt-c4", role: "assistant", text: "🔴 CRITICAL: DJT stock constitutes ~50% of estimated net worth but trades as a meme stock with extreme volatility ($12-$79 range). Daily mark-to-market revaluation is required.", timestamp: "Just now" },
-		{ id: "dt-c5", role: "assistant", text: "🟡 WARNING: 500+ LLC structure creates significant opacity. Tax returns have never been voluntarily released. OGE disclosures use ranges not exact values. Overall corroboration grade is D (~52% confidence).", timestamp: "Just now" },
+		{ id: "dt-c5", role: "assistant", text: "🟡 WARNING: 500+ LLC structure creates significant opacity. Tax returns have never been voluntarily released. OGE disclosures use ranges not exact values. Overall corroboration is low (~52% confidence).", timestamp: "Just now" },
 		{ id: "dt-c6", role: "assistant", text: "I've pre-set 6 follow-up reminders for this case. The first priority is escalating to senior management for PEP approval. Would you like me to highlight any specific risk area?", timestamp: "Just now" },
 	],
 	"hnw-james-chen": [
@@ -2608,6 +2572,6 @@ export const CHATBOT_INITIAL_MESSAGES: Record<string, ChatMessage[]> = {
 		{ id: "jc-c2", role: "assistant", text: "VERIFIED: All wealth sources fully corroborated. Career trajectory from Goldman Sachs MD ($18M compensation, verified via GS HR + IRAS) to Meridian Capital Partners co-founder ($85M in PE carry, verified via MAS CMS licence + ACRA + SGX) to family office establishment.", timestamp: "Just now" },
 		{ id: "jc-c3", role: "assistant", text: "VERIFIED: Current portfolio of $380M (SGD 510M) managed via Chen Wei Family Office Pte. Ltd. (ACRA: UEN 201012345G). Blue-chip equities, fixed income, PE fund-of-funds, and prime Singapore real estate — all confirmed through DBS Private Banking custody, SGX market data, and Fill Easy SLA property records.", timestamp: "Just now" },
 		{ id: "jc-c4", role: "assistant", text: "VERIFIED: Two Singapore properties confirmed via Fill Easy API — Sentosa Cove bungalow (S$28M current) and Nassim Road GCB (S$55M current). Both cross-referenced against URA transaction data. All 8 verification checks passed with zero flags.", timestamp: "Just now" },
-		{ id: "jc-c5", role: "assistant", text: "Overall corroboration grade: A (~88% confidence). Four-eye check approved by Michael Wong. No follow-up items required — standard quarterly monitoring cycle applies. Would you like to review any section in detail?", timestamp: "Just now" },
+		{ id: "jc-c5", role: "assistant", text: "Overall corroboration: high (~88% confidence). Four-eye check approved by Michael Wong. No follow-up items required — standard quarterly monitoring cycle applies. Would you like to review any section in detail?", timestamp: "Just now" },
 	],
 };
