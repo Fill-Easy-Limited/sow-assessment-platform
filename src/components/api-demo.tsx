@@ -307,7 +307,179 @@ function BulkResultPanel({ items }: { items: BulkRowResult[] }) {
 
 const API_SERVICES = SERVICES.filter((s) => s.id !== "sow");
 
-type TopTab = "sow" | "api";
+type TopTab = "sow" | "integrations" | "api";
+
+function DataIntegrationsPanel() {
+	const categories = [
+		{
+			icon: (
+				<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+					<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/><path d="M3 9h6"/><path d="M3 15h6"/>
+				</svg>
+			),
+			title: "CorpVerify — Corporate Registry",
+			description: "Search and verify corporate entities across 80+ jurisdictions with real-time registry access.",
+			badge: "Core Product",
+			badgeColor: "bg-sky-500/15 text-sky-300 border-sky-400/20",
+			features: [
+				"Hong Kong CR (Companies Registry)",
+				"Singapore ACRA (BizFile+)",
+				"China SAMR (National Enterprise Credit)",
+				"UK Companies House",
+				"Australia ASIC",
+				"Cayman Islands CIMA",
+				"BVI Financial Services Commission",
+				"US SEC EDGAR",
+			],
+			status: "Live · 80+ registries connected",
+		},
+		{
+			icon: (
+				<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+					<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+				</svg>
+			),
+			title: "GovVerify — Government Records",
+			description: "Access government authority records for identity, tax, and regulatory verification.",
+			badge: "Core Product",
+			badgeColor: "bg-sky-500/15 text-sky-300 border-sky-400/20",
+			features: [
+				"Hong Kong IRD (Tax Filing)",
+				"Singapore IRAS (Tax Records)",
+				"China IIT (Individual Income Tax)",
+				"Hong Kong Land Registry",
+				"Singapore SLA (Land Authority)",
+				"US OGE (Ethics Disclosures)",
+				"MAS Financial Institutions Directory",
+				"PEP / Sanctions / Watchlist Screening",
+			],
+			status: "Live · Multi-jurisdictional",
+		},
+		{
+			icon: (
+				<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+					<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+				</svg>
+			),
+			title: "China Cross-Border",
+			description: "Specialized access to mainland China corporate, judicial, and credit intelligence systems.",
+			badge: "Specialty",
+			badgeColor: "bg-amber-500/15 text-amber-300 border-amber-400/20",
+			features: [
+				"SAMR Enterprise Registration",
+				"SAMR UBO Verification",
+				"SAMR Credit & Judicial Records",
+				"Supreme People's Court (Judicial)",
+				"China Individual Income Tax",
+				"NBS Statistical Yearbook",
+				"PRC Wage & Employment Data",
+				"State Tax Administration",
+			],
+			status: "Live · Deep China Coverage",
+		},
+		{
+			icon: (
+				<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+					<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>
+				</svg>
+			),
+			title: "Market & Wealth Data",
+			description: "Real-time and historical market data, wealth estimates, and alternative asset intelligence.",
+			badge: "Intelligence",
+			badgeColor: "bg-emerald-500/15 text-emerald-300 border-emerald-400/20",
+			features: [
+				"Forbes Real-Time Billionaires",
+				"Bloomberg Billionaires Index",
+				"CoinGecko (Crypto & Tokens)",
+				"DappRadar (NFT / Web3)",
+				"SGX / NYSE / Nasdaq Market Data",
+				"PitchBook / Crunchbase",
+				"Equilar (Executive Compensation)",
+				"Wealth-X UHNW Reports",
+			],
+			status: "Live · Real-time feeds",
+		},
+	];
+
+	return (
+		<div className="space-y-8">
+			{/* Header */}
+			<div>
+				<h2 className="text-2xl font-heading font-semibold tracking-tight">
+					Fill Easy Data Integrations
+				</h2>
+				<p className="text-sm text-muted-foreground mt-1">
+					Connected registries, APIs and data sources powering wealth intelligence across 80+ jurisdictions
+				</p>
+			</div>
+
+			{/* Stat cards */}
+			<div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+				{[
+					{ value: "80+", label: "Jurisdictions" },
+					{ value: "200+", label: "Registries" },
+					{ value: "Real-Time", label: "Access" },
+				].map((stat) => (
+					<div
+						key={stat.label}
+						className="rounded-2xl border border-border bg-card p-6 shadow-sm text-center"
+					>
+						<p className="text-3xl font-heading font-bold tracking-tight text-foreground">
+							{stat.value}
+						</p>
+						<p className="text-sm text-muted-foreground mt-1">{stat.label}</p>
+					</div>
+				))}
+			</div>
+
+			{/* Integration category cards */}
+			<div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+				{categories.map((cat) => (
+					<div
+						key={cat.title}
+						className="rounded-2xl border border-border bg-card p-6 shadow-sm flex flex-col"
+					>
+						{/* Card header */}
+						<div className="flex items-start gap-3 mb-4">
+							<div className="h-10 w-10 rounded-xl bg-gradient-to-br from-sky-400/15 to-cyan-400/10 border border-border flex items-center justify-center text-sky-400 shrink-0">
+								{cat.icon}
+							</div>
+							<div className="flex-1 min-w-0">
+								<div className="flex items-center gap-2 flex-wrap">
+									<h3 className="text-sm font-heading font-semibold tracking-tight">
+										{cat.title}
+									</h3>
+									<span className={`text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full border ${cat.badgeColor}`}>
+										{cat.badge}
+									</span>
+								</div>
+								<p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+									{cat.description}
+								</p>
+							</div>
+						</div>
+
+						{/* Feature list */}
+						<div className="grid grid-cols-2 gap-x-4 gap-y-1.5 mb-4 flex-1">
+							{cat.features.map((feat) => (
+								<div key={feat} className="flex items-start gap-1.5 text-xs text-muted-foreground">
+									<span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-teal-400 shrink-0" />
+									<span>{feat}</span>
+								</div>
+							))}
+						</div>
+
+						{/* Status */}
+						<div className="flex items-center gap-1.5 text-xs text-muted-foreground pt-3 border-t border-border/60">
+							<span className="h-2 w-2 rounded-full bg-emerald-500" />
+							<span>{cat.status}</span>
+						</div>
+					</div>
+				))}
+			</div>
+		</div>
+	);
+}
 
 export default function ApiDemo() {
 	const [topTab, setTopTab] = useState<TopTab>("sow");
@@ -455,6 +627,19 @@ export default function ApiDemo() {
 					</span>
 				</button>
 				<button
+					onClick={() => setTopTab("integrations")}
+					className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+						topTab === "integrations"
+							? "bg-muted/80 text-foreground shadow-sm ring-1 ring-border"
+							: "bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50"
+					}`}
+				>
+					<span className="flex items-center gap-2">
+						<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+						Data Integrations
+					</span>
+				</button>
+				<button
 					onClick={() => setTopTab("api")}
 					className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
 						topTab === "api"
@@ -466,7 +651,9 @@ export default function ApiDemo() {
 				</button>
 			</div>
 
-			{topTab === "sow" ? (
+			{topTab === "integrations" ? (
+				<DataIntegrationsPanel />
+			) : topTab === "sow" ? (
 				<SowDemo />
 			) : (
 				<>
