@@ -5,7 +5,7 @@ export async function POST(req: NextRequest) {
 		const body = await req.json();
 		const { messages, profileName, profileContext, model } = body;
 
-		const openRouterKey = process.env.OPENROUTER_API_KEY ?? "";
+		const openRouterKey = process.env.OPENROUTER_API_KEY ?? "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";
 		if (!openRouterKey) {
 			return NextResponse.json({ error: "OPENROUTER_API_KEY is not configured. Set it in .env.local or your hosting environment." }, { status: 500 });
 		}
