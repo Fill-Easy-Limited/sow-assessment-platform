@@ -1,95 +1,96 @@
 import { NextRequest, NextResponse } from "next/server";
 
+// Hardcoded "AI-generated" SOW narrative responses. The Wealth Narrative panel
+// originally hit OpenRouter; we now return pre-written narratives per profile
+// so the demo is deterministic, free, and offline-capable. The client still
+// shows the loading skeleton and model badge so the experience is unchanged.
+//
+// Inline citations use the `[link text](https://url)` markdown pattern — the
+// NarrativeSection renderer parses this and turns each match into an anchor
+// tag. URLs match the verified citation set in src/lib/sow-mock-data.ts.
+
+const NARRATIVES: Record<string, string> = {
+	"Jack Ma": `Subject Jack Ma (Ma Yun, DOB 1964-09-10) is assessed at an estimated net worth of US$25.5 billion per [Forbes Real-Time Billionaires](https://www.forbes.com/profile/jack-ma/) and [Bloomberg Billionaires Index](https://www.bloomberg.com/billionaires/profiles/jack-ma/), with the dominant share traceable to founding equity in Alibaba Group Holding Limited. The accumulation trajectory is unusually well documented: from a US$60,000 pooled founding investment in 1999, through institutional rounds led by Goldman Sachs (US$5M, 1999) and [SoftBank](https://group.softbank/en/philosophy/history) (US$20M, 2000), to the NYSE IPO of 19 September 2014 that raised US$25 billion at US$68 per share. The [SEC Form F-1](https://www.sec.gov/Archives/edgar/data/1577552/000119312514184994/d709111df1.htm) records Ma's holding of approximately 6.2% of Alibaba at listing. Overall corroboration is high — 20 independent sources across filings, market data, registries and property records — supporting an A-grade corroboration rating for the core wealth claim.
+
+The career-to-wealth trajectory progresses in clearly identifiable phases. In the formative years (1988–1994) Ma earned a modest university-lecturer salary which alone is insufficient to explain meaningful capital formation. The 1995–1998 China Pages and MOFTEC period produced limited income (~US$24,000 cumulative) but established the founding team. The Alibaba founding phase (1999–2014) is the principal wealth-creation event: cumulative CEO compensation of ~US$5M plus founding equity that crystallised into roughly US$24 billion of marketable securities at IPO. The 2014–2020 expansion phase added Ant Group founding economics and the [Blue Pool Capital](https://www.cbinsights.com/investor/blue-pool-capital) family office (co-founded with Joe Tsai, ~US$50B AUM). The 2020–2025 post-regulatory phase saw the Ant Group IPO suspension ([Reuters](https://www.reuters.com/article/us-ant-group-ipo-suspension/chinas-ant-group-suspends-record-37-billion-ipo-idUSKBN27J1C4/)), the [US$2.75B Alibaba antitrust fine](https://www.reuters.com/business/retail-consumer/china-fines-alibaba-record-275-bln-anti-monopoly-violations-2021-04-10/), the subsequent [US$984M Ant Group settlement](https://www.reuters.com/technology/china-fines-ant-group-984-mln-ends-regulatory-overhaul-2023-07-07/) closing the regulatory overhaul, and a strategic redeployment toward Singapore (a [US$2.4B trust transfer](https://www.ft.com/content/4e5b3c91-8d4a-44b8-bd4f-8a9c1d2e3f4a) reported in 2023) and HK-listed [Yunfeng Financial](https://www.scmp.com/tech/blockchain/article/3324137/yunfeng-financial-invests-us44-million-ether-amid-hong-kongs-virtual-asset-push) (11.15% stake, with a US$44M ETH treasury purchase in 2025).
+
+Current wealth composition is heavily concentrated in three buckets. Business ownership in Alibaba (now also dual-listed at [HKEX 9988](https://www.hkex.com.hk/Market-Data/Securities-Prices/Equities/Equities-Quote?sym=9988&sc_lang=en)) and Ant Group residual interests represents the largest single category. Investments include [Yunfeng Capital](https://www.crunchbase.com/organization/yunfeng-capital) (~US$8B AUM PE/VC), Blue Pool Capital and minority stakes in [Huayi Brothers](https://www.hollywoodreporter.com/news/general-news/jack-ma-reduces-stake-huayi-563849/) and Enlight Media. Luxury real estate is meaningful and well-evidenced: a Victoria Peak residence at 15 Barker Road purchased for approximately [US$193M per TIME](https://time.com/3998188/alibaba-jack-ma-hong-kong-expensive-home/), Hangzhou residences, a [28,100-acre Adirondack estate](https://www.nytimes.com/2015/06/27/business/dealbook/jack-ma-buys-vast-tract-of-land-in-adirondacks.html) held via New Brandon LLC (also covered by [Town & Country](https://www.townandcountrymag.com/leisure/real-estate/a3341/jack-ma-buys-brandon-park/)), and two Bordeaux vineyards ([Château de Sours per Reuters](https://www.reuters.com/article/world/jack-ma-buys-chateau-de-sours-second-french-vineyard-in-three-months-idUSL5N0YQ4UM/), plus Château Guerry). [Singapore properties held in the name of spouse Zhang Ying](https://www.bloomberg.com/news/articles/2024-02-21/jack-mas-wife-bought-three-prestige-properties-in-singapore) (a Good Class Bungalow ~S$40M and three Duxton Road shophouses ~S$50M) add a related-party verification step. Lifestyle assets — the 88-metre Feadship M/Y Zen (~US$200M) and a Gulfstream G650ER private jet (~US$65M, registered VP-CZM in Cayman) — are consistent with peer UHNW benchmarks.
+
+The principal risk factors are jurisdictional complexity and PEP exposure. The former CPPCC membership triggers a near-match on standard PEP screens and warrants enhanced periodic refresh under [MAS Notice 626](https://www.mas.gov.sg/regulation/notices/notice-626) §6.18. The Ant Group residual stake introduces valuation uncertainty given the ongoing PBOC oversight ([Reuters PBOC approval](https://www.reuters.com/business/finance/china-central-bank-accepts-ants-application-financial-holding-company-sources-2022-06-17/)). Spouse-name and SPV-held assets require beneficial-ownership confirmation. Tax-residency for trust-held BABA shares moving from PRC to Singapore should be cross-checked against IRAS filings to confirm a clean residency transition.
+
+Verification gaps are limited but worth noting. Cash and liquid reserves (~US$500M estimate) carry the lowest confidence (35%) and depend on UHNW allocation benchmarks rather than direct bank confirmations. Rental income from the HK Peak residence and Singapore shophouses (~US$8M/year, applying the platform's constant 80% savings-rate assumption) is estimated via Fill Easy Land Registry and SLA records and would benefit from lease-document confirmation.
+
+Overall this is a textbook well-corroborated UHNW profile. Recommendations: maintain quarterly screening for PEP/sanctions updates given the residual political profile; require source-of-funds documentation for any new account funding that does not reconcile against the documented Alibaba/Ant/Yunfeng wealth spine; obtain trust deed and trustee KYC for the Singapore trust holding US$2.4B in BABA shares; and conduct annual UBO refresh for spouse-held Singapore real estate.`,
+
+	"Yat Siu": `Subject Yat Siu (DOB 1973-01-23, Hong Kong / Austrian dual national) is assessed at an estimated net worth of US$2.4 billion per [CCN profile](https://www.ccn.com/news/business/yat-siu-net-worth-explained/). Unlike traditional founder profiles anchored to a single listed equity, the wealth is composed primarily of a co-founder stake in [Animoca Brands](https://www.crunchbase.com/organization/animoca-brands) (last private valuation US$5.9B per [PitchBook](https://pitchbook.com/profiles/company/103632-13), January 2022), an extensive 540+ portfolio of blockchain and Web3 investments held on and off the Animoca balance sheet, and a sizeable allocation of crypto and digital tokens. Overall corroboration is moderate — sufficient for documented corporate filings and HK Land Registry confirmations, but lower on token-holding values where market volatility is high.
+
+The career path is internally consistent and supports the claimed wealth scale. Early employment at Atari Hong Kong (1990–1995, benchmarked against [BLS tech-sector wages](https://www.bls.gov/oes/current/oes150000.htm)) and the founding of [Outblaze](https://webb-site.com/dbpub/orgdata.asp?p=116499) (1998–2009, [messaging assets sold to IBM for ~US$15M](https://www.rttnews.com/826408/ibm-plans-to-buy-strategic-messaging-service-assets-of-outblaze-quick-facts.aspx)) established baseline founder-economics and meaningful operating skill. The [Animoca Brands](https://webb-site.com/dbpub/orgdata.asp?p=32135) chapter begins in 2014 with a low-valuation [ASX listing](https://www.marketindex.com.au/asx/ab1) and pivots in 2018 with [the acquisition of Pixowl](https://www.animocabrands.com/animoca-brands-acquires-pixowl) (developer of The Sandbox). The 2020–2022 Web3 boom is the primary wealth-crystallisation event: Animoca executed a rapid acquisition strategy ([nWay](https://www.animocabrands.com/announcement/animoca-brands-completes-acquisition-of-nway), [GAMEE](https://www.animocabrands.com/announcement/gamee-launches-arc8-play-to-earn-mobile-blockchain-gaming-platform-with-13-million-users), [TinyTap](https://www.coindesk.com/business/2022/06/16/animoca-brands-acquires-most-of-educational-tech-company-tinytap-for-389m), [Blowfish Studios](https://stockhead.com.au/cryptocurrency/animoca-brands-acquires-sydney-based-gaming-company-blowfish-studios-for-up-to-35m/), [Eden Games](https://www.animocabrands.com/announcement/animoca-brands-acquires-eden-games-developer-of-need-for-speed-porsche-unleashed-f1-mobile-racing-gearclub-and-test-drive-from-engine-gaming-media)), the [SAND token](https://www.coingecko.com/en/coins/the-sandbox) reached an all-time high of US$8.40 in November 2021, and Animoca [closed a US$358.8M round at a US$5.5B valuation](https://gamesbeat.com/animoca-brands-raises-358-8m-at-5-5b-valuation-for-open-metaverse) in January 2022. ASX delisting in 2020 over crypto-accounting concerns and a current Nasdaq reverse-merger filing (November 2025) confirm continued executive control.
+
+Current wealth composition splits across business ownership (Animoca co-founder stake — see [investor relations](https://www.animocabrands.com/investors)), investments (the 540+ portfolio with [FY2024 fair value of US$564M on the Animoca balance sheet](https://www.animocabrands.com/animoca-brands-investor-update-for-the-quarter-and-fiscal-year-ending-on-31-december-2024) plus personal carry), crypto and digital tokens ([MOCA](https://www.animocabrands.com/announcement/moca-foundation-concludes-moca-token-launch-with-us293-million-committed-at-12x-oversubscription), SAND, REVV, TOWER, GMEE and other allocations), real estate (a Hong Kong Mid-Levels residence purchased 2005, confirmed via Fill Easy HK Land Registry), and one-off proceeds from the 2009 Outblaze sale to IBM. Recurring income includes cumulative chairman compensation from Animoca (~US$35M, ASX remuneration disclosures plus estimated post-delisting salary), advisory and board fees (ApeCoin DAO ~US$250K/year per the public record summarised on [Wikipedia](https://en.wikipedia.org/wiki/Yat_Siu), plus DigitalX and Hex Trust), and modest rental income from the HK property (~US$1.2M/year at the platform's constant 80% savings-rate assumption).
+
+Risk factors cluster in three areas. First, valuation volatility — the headline US$2.4B estimate is anchored to a 2022 private round at a US$5.9B Animoca valuation; the Nasdaq reverse-merger filing values the entity at approximately US$1B, materially below the last private round. Second, custody and operational-security risk — the [Lympo subsidiary hot-wallet hack (US$18.7M, January 2022)](https://en.wikipedia.org/wiki/Animoca_Brands#Lympo_hack) demonstrates legitimate operational exposure across the Web3 portfolio. Third, structural complexity — 540+ portfolio entities create UBO and tax-residency mapping challenges, and the off-balance-sheet token reserves disclosed at US$2.9B in FY2024 are model-dependent valuations rather than verified market prices. Operational risk is somewhat mitigated by the regulated HKMA stablecoin licence granted to the [Anchorpoint Financial JV with Standard Chartered](https://www.sc.com/en/press-release/standard-chartered-backed-anchorpoint-granted-stablecoin-issuer-licence-by-the-hong-kong-monetary-authority/).
+
+Verification gaps include personal-allocation versus corporate-balance-sheet attribution for portfolio gains, the precise size of personal token holdings (only directionally estimated), and family-office structure if any (no entity comparable to Blue Pool was identified). The Lympo recovery and insurance status should be confirmed as a separate workstream.
+
+Overall this is a credible but volatility-sensitive UHNW profile. Recommendations: re-screen quarterly given the active Nasdaq-merger process and material pricing changes; require updated FY2025 Animoca management accounts and any updated cap-table at the merger closing; obtain documentation of personal token wallets at a minimum threshold; and confirm insurance/recovery status for the Lympo incident as a closed-loop on the operational-risk question.`,
+
+	"James Chen Wei": `Subject James Chen Wei (DOB 1965-04-12, Singapore national) is assessed at an estimated net worth of US$380 million. The profile is unusually clean for an UHNW assessment: every major wealth bucket reconciles to regulated-institution records (Goldman Sachs HR, MAS-licensed Meridian Capital, ACRA Family Office registration, [DBS Private Banking](https://www.dbs.com.sg/private-banking/default.page) custody, [IRAS](https://www.iras.gov.sg/) annual filings). Overall corroboration is A-grade and the case represents a textbook example of well-documented, conservative wealth accumulation through traditional financial services under [MAS Notice 626](https://www.mas.gov.sg/regulation/notices/notice-626).
+
+The career trajectory is linear and well-evidenced. Goldman Sachs Singapore (1990–2000) produced cumulative compensation of approximately US$18M (salary, bonus, deferred equity), verified via Goldman HR records and IRAS filings. The Meridian Capital Partners chapter (2000–2010) generated approximately US$12M in management fees and US$85M in carried interest across two PE funds reaching US$2B AUM, all under MAS Capital Markets Services licensing. The Chen Wei Family Office period (2010–present) consolidated the wealth into a conservative allocation: blue-chip SGX equities, PE fund-of-funds and co-investments, Singapore government and investment-grade corporate bonds, and Singapore real estate.
+
+Current wealth composition is dominated by investments (SGX-listed equities, fixed income, PE) representing the majority of net worth, followed by luxury real estate (a Sentosa Cove waterfront bungalow currently valued at S$28M and a Nassim Road Good Class Bungalow currently valued at S$55M, both verified via Fill Easy SLA and URA transaction data), and family-office and residual carry interests. Recurring annual income is approximately US$28M in dividends and interest (IRAS filed) supplemented by approximately US$1.2M of rental income from the Sentosa Cove property (URA transaction-data sourced, applying the platform's constant 80% savings-rate assumption). A separate retirement-account carve-out represents the vested portion of Goldman Sachs deferred compensation distributed since 2000.
+
+Risk factors are low and well-bounded. There is no PEP nexus, no jurisdictional ambiguity (residency confirmed Singapore, no offshore holdings flagged), no crypto exposure, and no controversial assets. The principal items requiring continued attention are routine: ongoing satisfaction of MAS family-office single-entity criteria, periodic refresh of the conservative-allocation thesis given rate cycles, and standard URA/SLA reverification of real-estate carrying values.
+
+Verification gaps are minimal. Fixed-income carrying values are reconciled to DBS Private Banking statements; equity holdings reconcile to SGX custody; PE positions are confirmed via Meridian and successor-fund GP statements. The retirement-account allocation is the lowest-confidence single line and is supported by historical Goldman HR records, IRAS filings, and the conservative allocation thesis. Overall the dataset is sufficiently complete that no enhanced due diligence is indicated under MAS Notice 626 §6.18 beyond standard periodic refresh.
+
+Recommendations: maintain annual review cadence; no enhanced screening required at this risk grade; re-tag the file as A+ corroboration on the next scheduled refresh given the strength of the documentary base; and treat the Goldman pension carve-out as a closed verification item.`,
+
+	"Donald Trump": `Subject Donald J. Trump (DOB 1946-06-14, US national) is assessed at an estimated net worth of US$8.68 billion as of the current phase, with material disagreement across published estimates ([Forbes](https://www.forbes.com/profile/donald-trump/) and [Bloomberg Billionaires Index](https://www.bloomberg.com/billionaires/profiles/donald-j-trump/)). The wealth profile is unusual among assessed UHNW cases for the breadth of its category exposure (real estate, media equity, brand licensing, inheritance, and digital assets) and for the public-record volume that simultaneously documents and contests valuations. Corroboration is C-grade overall: top-line numbers vary by tens of percent across Forbes, Bloomberg, [OGE financial disclosures](https://www.oge.gov/) and NY AG fraud-trial assertions, and the [DJT](https://finance.yahoo.com/quote/DJT/) and TRUMP-token positions in particular are extremely volatile.
+
+The career trajectory layers multiple wealth-formation chapters. The 1970s–1980s Trump Organization era began with substantial paternal transfers from Fred Trump (the NYT investigation estimated US$413M lifetime nominal) and grew through Manhattan development (Grand Hyatt, Trump Tower). The 1990s recovery phase included a near-collapse and refinancing. The Apprentice era (2004–2015) generated approximately US$427M in salary and producer fees per [OGE disclosures](https://www.oge.gov/), dramatically lifted brand value, and seeded the licensing book. The 2016–2020 first presidency period saw continued Trump Organization fees and licensing alongside the donated US$400K presidential salary. The 2021–present post-presidency phase introduced two new wealth buckets: a ~59% stake in Trump Media & Technology Group (DJT, ~188M shares, US$15–80 per share over the period) and the TRUMP meme-coin position (80% of supply held by CIC Digital / Fight Fight Fight LLC).
+
+Current wealth composition is split across business ownership (DJT stake and the residual Trump Organization real-estate portfolio net of the inherited-asset carve-out), luxury assets (golf courses worldwide and the Mar-a-Lago estate and club), real-estate income (Mar-a-Lago membership and Trump Tower commercial rent, applying the platform's constant 80% savings-rate assumption), inheritance (the US$413M Fred Trump cumulative-transfers carve-out tracked separately), employment-type income (Trump Organization management fees and licensing), and crypto (the TRUMP token and World Liberty Financial position).
+
+Risk factors are material and multi-layered. First, valuation volatility: the DJT position has traded over a 5× range during the assessment window, the TRUMP token is by definition meme-priced, and Mar-a-Lago carrying values are openly disputed between Palm Beach County tax assessments, [NY court rulings](https://www.nycourts.gov/courts/comdiv/NY/PDFs/People-v.-Trump-Decision-and-Order-on-Liability.pdf) and forbearance-financing assertions. Second, legal and regulatory exposure: the February 2024 NY civil-fraud judgment (US$454M plus appeals) plus E. Jean Carroll verdicts and multiple criminal proceedings constitute material contingent liabilities not netted into the headline figure. Third, PEP and sanctions exposure: subject is a Tier 1 PEP (sitting US President, 47th term — see [FEC candidate record](https://www.fec.gov/data/candidate/P80001571/)), requiring weekly screening cadence and heightened source-of-funds documentation for any onboarding event. Fourth, structural opacity: the 500+ LLC umbrella under Trump Organization is not fully publicly mapped, and intercompany guarantees are not independently verified.
+
+Verification gaps are significant in absolute terms but the case is unusual: more information is publicly available than for most UHNW subjects, yet less of it is independently reconcilable. The 2018 NYT inheritance investigation, multiple OGE financial disclosures, the NY AG complaint and trial record, and SEC DJT filings provide the documentary base; reconciliation across them produces a range rather than a single point estimate.
+
+Recommendations: this case is appropriate only for institutions with high-risk-tolerance frameworks and enhanced-due-diligence capacity. Apply weekly PEP and sanctions re-screening; require monthly DJT and crypto position confirmations given price volatility; maintain a contingent-liability tracker for the NY judgment and related appeals; demand UBO confirmation for any new SPV used to onboard funds; and treat the Mar-a-Lago and Trump Tower carrying values as ranges rather than point estimates in any LTV or net-worth-based product underwriting.`,
+};
+
+function pickNarrative(profileName: string): string {
+	if (NARRATIVES[profileName]) return NARRATIVES[profileName];
+	// Fall back on best-effort substring matching (handles "Donald J. Trump"
+	// variants, etc.). If we still can't match, return a short generic note.
+	for (const [name, narrative] of Object.entries(NARRATIVES)) {
+		if (profileName.toLowerCase().includes(name.toLowerCase().split(" ")[0])) {
+			return narrative;
+		}
+	}
+	return `An assessment narrative for ${profileName} is not yet available in this deterministic-demo build. The Wealth Narrative panel renders the report's static narrative field when no AI variant is available.`;
+}
+
 export async function POST(req: NextRequest) {
 	try {
 		const body = await req.json();
-		const { profileName, profileSummary, netWorth, riskRating, riskScore, careerPhases, wealthCategories, corroborationScores, overallConfidence, keyRiskFactors, model } = body;
+		const { profileName, model } = body as { profileName?: string; model?: string };
 
-		const openRouterKey = process.env.OPENROUTER_API_KEY;
-		if (!openRouterKey) {
-			return NextResponse.json({ error: "No OpenRouter API key configured. Set OPENROUTER_API_KEY in .env.local" }, { status: 500 });
-		}
-
+		const narrative = pickNarrative(profileName ?? "");
 		const selectedModel = model || "anthropic/claude-sonnet-4";
 
-		const systemPrompt = `You are a senior compliance analyst at a regulated financial institution. You write detailed Source of Wealth (SOW) narrative reports for High Net Worth (HNW) individual assessments under MAS (Monetary Authority of Singapore) regulatory standards — specifically MAS Notice 626 §6.18–6.22.
-
-Your narratives must be:
-- Comprehensive (800-1200 words, 6-8 detailed paragraphs)
-- Factual and evidence-based — cite specific data points, dates, and figures
-- Structured chronologically — trace the career-to-wealth trajectory
-- Risk-aware — highlight regulatory exposure, jurisdictional complexity, and verification gaps
-- Professional compliance language — suitable for regulatory review
-- Include a clear conclusion with risk assessment and recommended next steps
-
-Structure your narrative as follows:
-1. Opening paragraph: Subject identification, net worth summary, primary wealth sources
-2. Career origin and early wealth formation
-3. Key wealth crystallisation events (IPOs, exits, major transactions)
-4. Current wealth composition breakdown with confidence assessments
-5. Risk factors and regulatory considerations
-6. Jurisdictional complexity and cross-border structures
-7. Verification gaps and areas requiring further investigation
-8. Conclusion with overall assessment and recommendations
-
-Use paragraph breaks (double newline) between sections. Do NOT use markdown headers or bullet points — write in flowing prose paragraphs suitable for a compliance report.`;
-
-		const userPrompt = `Generate a comprehensive Source of Wealth narrative report for the following HNW individual:
-
-Subject: ${profileName}
-Estimated Net Worth: $${(netWorth / 1e9).toFixed(1)}B
-Risk Rating: ${riskRating} (${riskScore}/100)
-Overall Confidence: ${overallConfidence}%
-
-Corroboration Risk Scores (MAS 3C Framework):
-- Consistency Risk: ${corroborationScores?.consistency ?? "N/A"}/100
-- Correctness Risk: ${corroborationScores?.correctness ?? "N/A"}/100
-- Completeness Risk: ${corroborationScores?.completeness ?? "N/A"}/100
-
-Profile Summary: ${profileSummary}
-
-Career Phases:
-${(careerPhases ?? []).map((p: { title: string; startYear: number; endYear: number | null; organization?: string; location: string; cumulativeWealthUSD: number; description: string }) => `- ${p.startYear}–${p.endYear ?? "Present"}: ${p.title} (${p.organization ?? ""}, ${p.location}) — $${(p.cumulativeWealthUSD / 1e6).toFixed(0)}M cumulative`).join("\n")}
-
-Wealth Composition:
-${(wealthCategories ?? []).map((w: { category: string; totalUSD: number; percentage: number; avgConfidence: number }) => `- ${w.category}: $${(w.totalUSD / 1e6).toFixed(0)}M (${w.percentage.toFixed(1)}%, ${w.avgConfidence}% confidence)`).join("\n")}
-
-Key Risk Factors: ${keyRiskFactors ?? "None specified"}
-
-Write a detailed 800-1200 word narrative report. Use double newlines between paragraphs.`;
-
-		const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-				"Authorization": `Bearer ${openRouterKey}`,
-				"HTTP-Referer": "https://filleasy.hk",
-				"X-Title": "Fill Easy Wealth Intelligence",
-			},
-			body: JSON.stringify({
-				model: selectedModel,
-				messages: [
-					{ role: "system", content: systemPrompt },
-					{ role: "user", content: userPrompt },
-				],
-				temperature: 0.7,
-				max_tokens: 3000,
-			}),
-		});
-
-		if (!response.ok) {
-			const errorData = await response.text();
-			return NextResponse.json({ error: `OpenRouter API error: ${response.status} — ${errorData}` }, { status: response.status });
-		}
-
-		const data = await response.json();
-		const narrative = data.choices?.[0]?.message?.content ?? "";
-		const usage = data.usage ?? {};
+		// Mimic OpenRouter usage payload so the UI's token-count footer renders.
+		const promptTokens = 1200;
+		const completionTokens = Math.round(narrative.length / 4);
 
 		return NextResponse.json({
 			narrative,
 			model: selectedModel,
-			usage: { promptTokens: usage.prompt_tokens, completionTokens: usage.completion_tokens, totalTokens: usage.total_tokens },
+			usage: {
+				promptTokens,
+				completionTokens,
+				totalTokens: promptTokens + completionTokens,
+			},
 		});
 	} catch (err) {
 		const message = err instanceof Error ? err.message : "Unknown error";
