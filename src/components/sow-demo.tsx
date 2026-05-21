@@ -115,7 +115,6 @@ import {
 	type FourEyeCheck,
 	type PersonalRelationship,
 	GRADE_CONFIGS,
-	getCorroborationGrade,
 	CHATBOT_ATTENTION_AREAS,
 	CHATBOT_REMINDERS,
 	CHATBOT_INITIAL_MESSAGES,
@@ -270,10 +269,9 @@ function Dashboard({ onNewAssessment, onSelectMonitoring }: { onNewAssessment: (
 	const monitoring = HNW_MONITORING;
 	const profilesMonitored = monitoring.length;
 	const underReview = monitoring.filter((m) => m.status === "Under Review" || m.status === "Flagged").length;
-	const highRisk = monitoring.filter((m) => m.riskRating === "High").length;
 	const totalAlerts = monitoring.reduce((sum, m) => sum + m.openAlerts, 0);
 	const avgConfidence = Math.round(monitoring.reduce((sum, m) => sum + m.overallConfidence, 0) / monitoring.length);
-	const avgGrade = getCorroborationGrade(avgConfidence);
+	const fullyCorroborated = monitoring.filter((m) => m.corroborationGrade === "A" || m.corroborationGrade === "A+").length;
 
 	return (
 		<div className="space-y-6">
@@ -292,7 +290,7 @@ function Dashboard({ onNewAssessment, onSelectMonitoring }: { onNewAssessment: (
 			<div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
 				<StatCard label="Profiles Monitored" value={profilesMonitored} icon={UserIcon} />
 				<StatCard label="Under Review" value={underReview} icon={EyeIcon} color="amber" />
-				<StatCard label="High Risk" value={highRisk} icon={ShieldAlertIcon} color="red" />
+				<StatCard label="Avg. Corroboration" value={avgConfidence} suffix="/100" icon={ShieldCheckIcon} color="emerald" />
 				<StatCard label="Open Alerts" value={totalAlerts} icon={BellRingIcon} color="red" />
 			</div>
 
@@ -304,10 +302,9 @@ function Dashboard({ onNewAssessment, onSelectMonitoring }: { onNewAssessment: (
 				</div>
 				<div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
 					<div>
-						<div className="text-[11px] font-heading text-muted-foreground uppercase tracking-widest">Avg. Grade</div>
-						<div className="mt-0.5 flex items-center gap-2">
-							<GradeBadge grade={avgGrade.grade} confidence={avgConfidence} />
-						</div>
+						<div className="text-[11px] font-heading text-muted-foreground uppercase tracking-widest">Plausibility Analysis</div>
+						<div className="mt-0.5 font-heading font-semibold">Multi-source cross-check</div>
+						<div className="mt-1 text-[10px] text-primary/70 font-medium">{fullyCorroborated} of {profilesMonitored} fully corroborated</div>
 					</div>
 					<div>
 						<div className="text-[11px] font-heading text-muted-foreground uppercase tracking-widest">Profiles Verified</div>
@@ -360,7 +357,7 @@ function Dashboard({ onNewAssessment, onSelectMonitoring }: { onNewAssessment: (
 
 /* ─── Stat Card ─── */
 
-function StatCard({ label, value, icon: Icon, color }: { label: string; value: number; icon: typeof UserIcon; color?: string }) {
+function StatCard({ label, value, icon: Icon, color, suffix }: { label: string; value: number; icon: typeof UserIcon; color?: string; suffix?: string }) {
 	const colorMap: Record<string, string> = {
 		emerald: "text-emerald-600 bg-emerald-500/10",
 		amber: "text-amber-600 bg-amber-500/10",
@@ -375,7 +372,10 @@ function StatCard({ label, value, icon: Icon, color }: { label: string; value: n
 					<Icon className="size-4" />
 				</div>
 			</div>
-			<div className="text-3xl font-heading font-bold tabular-nums tracking-tight">{value}</div>
+			<div className="text-3xl font-heading font-bold tabular-nums tracking-tight">
+				{value}
+				{suffix && <span className="text-base font-semibold text-muted-foreground ml-0.5">{suffix}</span>}
+			</div>
 		</div>
 	);
 }
@@ -407,8 +407,7 @@ function HnwMonitoringTable({ entries, onSelect }: { entries: HnwMonitoringEntry
 							<th className="text-left px-4 py-3 font-medium text-xs tracking-wide">Name</th>
 							<th className="text-left px-4 py-3 font-medium text-xs tracking-wide hidden sm:table-cell">Industry</th>
 							<th className="text-right px-4 py-3 font-medium text-xs tracking-wide hidden sm:table-cell">Net Worth</th>
-							<th className="text-center px-4 py-3 font-medium text-xs tracking-wide">Risk</th>
-							<th className="text-center px-4 py-3 font-medium text-xs tracking-wide">Grade</th>
+							<th className="text-center px-4 py-3 font-medium text-xs tracking-wide">Corroboration</th>
 							<th className="text-center px-4 py-3 font-medium text-xs tracking-wide hidden sm:table-cell">Last Screened</th>
 							<th className="text-center px-4 py-3 font-medium text-xs tracking-wide">Alerts</th>
 							<th className="text-center px-4 py-3 font-medium text-xs tracking-wide hidden sm:table-cell">Status</th>
@@ -426,10 +425,7 @@ function HnwMonitoringTable({ entries, onSelect }: { entries: HnwMonitoringEntry
 									<span className="font-mono text-xs font-medium">{formatUSD(entry.estimatedNetWorthUSD)}</span>
 								</td>
 								<td className="px-4 py-3 text-center">
-									<RiskBadge rating={entry.riskRating} />
-								</td>
-								<td className="px-4 py-3 text-center">
-									<GradeBadge grade={entry.corroborationGrade} confidence={entry.overallConfidence} />
+									<CorroborationScore confidence={entry.overallConfidence} />
 								</td>
 								<td className="px-4 py-3 text-center hidden sm:table-cell">
 									<span className="text-xs text-muted-foreground">{entry.lastScreened}</span>
@@ -1318,7 +1314,7 @@ function CareerTimeline({ phases }: { phases: CareerPhase[] }) {
 /* ─── Wealth Accumulation Chart (stacked bar) ─── */
 
 function WealthAccumulationChart({ phases }: { phases: CareerPhase[] }) {
-	const categories: WealthCategory[] = ["income", "companies", "investments", "alternatives", "crypto"];
+	const categories: WealthCategory[] = ["income", "companies", "investments", "realEstate", "inheritance", "assetSales", "alternatives", "crypto", "other"];
 	const maxWealth = Math.max(...phases.map((p) => p.cumulativeWealthUSD), 1);
 
 	const svgWidth = 700;
@@ -1371,7 +1367,7 @@ function WealthAccumulationChart({ phases }: { phases: CareerPhase[] }) {
 						let yOffset = 0;
 
 						// Get category totals from the last phase's wealth perspective (cumulative)
-						const catTotals: Record<WealthCategory, number> = { income: 0, companies: 0, investments: 0, alternatives: 0, crypto: 0 };
+						const catTotals: Record<WealthCategory, number> = { income: 0, companies: 0, investments: 0, realEstate: 0, inheritance: 0, assetSales: 0, alternatives: 0, crypto: 0, other: 0 };
 						for (const cat of phase.categories) {
 							catTotals[cat.category] += cat.subtotalUSD;
 						}
@@ -1939,6 +1935,9 @@ function NarrativeSection({ narrative, report }: { narrative: string; report: Hn
 	const generateNarrative = async () => {
 		setGenerating(true);
 		setError(null);
+		// Ensure the loading state is visible for at least 600ms even if the
+		// model responds (or fails) instantly — gives the skeleton room to breathe.
+		const minDelay = new Promise<void>((resolve) => setTimeout(resolve, 600));
 		try {
 			const p = report.profile;
 			const res = await fetch("/api/generate-narrative", {
@@ -1975,6 +1974,7 @@ function NarrativeSection({ narrative, report }: { narrative: string; report: Hn
 		} catch (err) {
 			setError(err instanceof Error ? err.message : "Network error");
 		} finally {
+			await minDelay;
 			setGenerating(false);
 		}
 	};
@@ -2026,17 +2026,33 @@ function NarrativeSection({ narrative, report }: { narrative: string; report: Hn
 			)}
 
 			<div className="space-y-3">
-				{(expanded ? paragraphs : preview).map((para, i) => (
-					<p key={i} className="text-sm text-muted-foreground leading-relaxed">
-						{para.split(/(\[[^\]]+\]\([^)]+\))/).map((segment, j) => {
-							const linkMatch = segment.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
-							if (linkMatch) {
-								return <a key={j} href={linkMatch[2]} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">{linkMatch[1]}</a>;
-							}
-							return <span key={j}>{segment}</span>;
-						})}
-					</p>
-				))}
+				{generating ? (
+					<div className="space-y-3" aria-busy="true" aria-live="polite">
+						<div className="flex items-center gap-2 text-xs text-purple-700/80">
+							<LoaderIcon className="size-3 animate-spin" />
+							<span className="font-heading font-medium">Drafting narrative with {MODELS.find((m) => m.id === selectedModel)?.label ?? "AI"}…</span>
+						</div>
+						{[0, 1, 2].map((row) => (
+							<div key={row} className="space-y-1.5">
+								<div className="h-2.5 rounded bg-muted animate-pulse" style={{ width: "96%" }} />
+								<div className="h-2.5 rounded bg-muted animate-pulse" style={{ width: "88%", animationDelay: "80ms" }} />
+								<div className="h-2.5 rounded bg-muted animate-pulse" style={{ width: "72%", animationDelay: "160ms" }} />
+							</div>
+						))}
+					</div>
+				) : (
+					(expanded ? paragraphs : preview).map((para, i) => (
+						<p key={i} className="text-sm text-muted-foreground leading-relaxed">
+							{para.split(/(\[[^\]]+\]\([^)]+\))/).map((segment, j) => {
+								const linkMatch = segment.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+								if (linkMatch) {
+									return <a key={j} href={linkMatch[2]} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">{linkMatch[1]}</a>;
+								}
+								return <span key={j}>{segment}</span>;
+							})}
+						</p>
+					))
+				)}
 			</div>
 			{paragraphs.length > 2 && (
 				<button onClick={() => setExpanded(!expanded)} className="mt-3 text-xs text-primary font-heading font-medium flex items-center gap-1 hover:underline">
@@ -3636,46 +3652,54 @@ Agent Summary: ${report.agentVerification.summary}`;
 		setReminders((prev) => prev.filter((r) => r.id !== id));
 	};
 
-	/* ─── Auto-draft email for reminders ─── */
-	const [draftingId, setDraftingId] = useState<string | null>(null);
-	const [emailDrafts, setEmailDrafts] = useState<Record<string, string>>({});
-	const [expandedDraft, setExpandedDraft] = useState<string | null>(null);
-	const [copiedId, setCopiedId] = useState<string | null>(null);
+	/* ─── Batch email draft for all outstanding reminders ─── */
+	const [batchDraft, setBatchDraft] = useState<string | null>(null);
+	const [batchDrafting, setBatchDrafting] = useState(false);
+	const [batchExpanded, setBatchExpanded] = useState(false);
+	const [batchCopied, setBatchCopied] = useState(false);
 
-	const handleDraftEmail = async (reminder: ChatReminder) => {
-		if (draftingId) return;
-		setDraftingId(reminder.id);
-		setExpandedDraft(reminder.id);
+	const handleDraftBatchEmail = async () => {
+		if (batchDrafting) return;
+		const outstanding = reminders.filter((r) => !r.completed);
+		if (outstanding.length === 0) return;
+		setBatchDrafting(true);
+		setBatchExpanded(true);
+		// Make the loading state visible even if the API responds instantly.
+		const minDelay = new Promise<void>((resolve) => setTimeout(resolve, 600));
+		const itemsBlock = outstanding
+			.map((r, i) => `${i + 1}. [${r.priority.toUpperCase()} · due ${r.dueDate}] ${r.label}`)
+			.join("\n");
+		const prompt = `Draft a single professional follow-up email covering ALL of the following outstanding compliance action items for the HNW assessment of ${profileName}:\n\n${itemsBlock}\n\nWrite ONE consolidated email that a compliance officer would send to the relevant case-team distribution list. Requirements:\n- Begin with a single line "Subject: ..." that names the subject and indicates this is a consolidated outstanding-items request.\n- Include a brief opening paragraph framing the request (1-2 sentences).\n- List every action item as a numbered line, each with its priority tag (HIGH/MEDIUM/LOW), due date, and a one-sentence ask.\n- Group items by priority where it improves readability, but keep a single email body.\n- Close with a short paragraph requesting acknowledgement and confirming the earliest due date as the consolidated deadline for an initial response.\n- Sign off as "Compliance Team, [Institution Name]".\n- Plain text only. No markdown, no bold, no headers, no bullet characters beyond "-" or numbered list lines. Total length 180-320 words.`;
 		try {
 			const res = await fetch("/api/compliance-chat", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
-					messages: [{ role: "user", text: `Draft a professional follow-up email for this compliance action item:\n\nAction: ${reminder.label}\nDue Date: ${reminder.dueDate}\nPriority: ${reminder.priority}\nSubject: ${profileName}\n\nWrite a concise, professional email that a compliance officer would send to the relevant party (client, regulator, or internal team) requesting the information or action described. Include:\n- Professional subject line (on its own line prefixed with "Subject: ")\n- Appropriate salutation\n- Clear request referencing the HNW assessment for ${profileName}\n- Specific deadline (${reminder.dueDate})\n- Professional sign-off as "Compliance Team, [Institution Name]"\n\nKeep it under 200 words. Do not use markdown formatting.` }],
+					messages: [{ role: "user", text: prompt }],
 					profileName,
 					profileContext,
 				}),
 			});
 			const data = await res.json();
 			if (res.ok && data.reply) {
-				setEmailDrafts((prev) => ({ ...prev, [reminder.id]: data.reply }));
+				setBatchDraft(data.reply);
 			} else {
-				setEmailDrafts((prev) => ({ ...prev, [reminder.id]: `Error: ${data.error ?? "Failed to generate email draft"}` }));
+				setBatchDraft(`Error: ${data.error ?? "Failed to generate batch email"}`);
 			}
 		} catch {
-			setEmailDrafts((prev) => ({ ...prev, [reminder.id]: "Network error — unable to reach the AI service." }));
+			setBatchDraft("Network error — unable to reach the AI service.");
 		} finally {
-			setDraftingId(null);
+			await minDelay;
+			setBatchDrafting(false);
 		}
 	};
 
-	const copyDraft = async (id: string) => {
-		const draft = emailDrafts[id];
-		if (!draft) return;
+	const copyBatchDraft = async () => {
+		if (!batchDraft) return;
 		try {
-			await navigator.clipboard.writeText(draft);
-			setCopiedId(id);
-			setTimeout(() => setCopiedId(null), 2000);
+			await navigator.clipboard.writeText(batchDraft);
+			setBatchCopied(true);
+			setTimeout(() => setBatchCopied(false), 2000);
 		} catch { /* clipboard not available */ }
 	};
 
@@ -3797,8 +3821,77 @@ Agent Summary: ${report.agentVerification.summary}`;
 								</div>
 							)}
 
-							{activeTab === "reminders" && (
-								<div className="p-4 space-y-2">
+							{activeTab === "reminders" && (() => {
+								const outstanding = reminders.filter((r) => !r.completed);
+								const outstandingOverdue = outstanding.filter((r) => new Date(r.dueDate) < new Date()).length;
+								return (
+								<div className="p-4 space-y-3">
+									{/* Batch email banner */}
+									{outstanding.length > 0 && (
+										<div className="rounded-xl border border-primary/25 bg-gradient-to-br from-primary/10 to-primary/[0.03] overflow-hidden">
+											<div className="flex items-center gap-3 px-3 py-2.5">
+												<div className="h-8 w-8 rounded-lg bg-primary/15 flex items-center justify-center shrink-0">
+													<MailIcon className="size-4 text-primary" />
+												</div>
+												<div className="flex-1 min-w-0">
+													<p className="text-sm font-heading font-semibold leading-tight">Batch email — {outstanding.length} outstanding {outstanding.length === 1 ? "item" : "items"}</p>
+													<p className="text-[11px] text-muted-foreground mt-0.5">
+														Draft one consolidated message covering every open action item for {profileName}.
+														{outstandingOverdue > 0 && <span className="text-red-600 font-medium"> {outstandingOverdue} overdue.</span>}
+													</p>
+												</div>
+												<button
+													onClick={() => batchDraft && !batchDrafting ? setBatchExpanded(!batchExpanded) : handleDraftBatchEmail()}
+													disabled={batchDrafting}
+													className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-60 shrink-0"
+												>
+													{batchDrafting ? (
+														<><LoaderIcon className="size-3 animate-spin" />Drafting…</>
+													) : batchDraft ? (
+														<><MailIcon className="size-3" />{batchExpanded ? "Hide" : "View"} draft</>
+													) : (
+														<><SparklesIcon className="size-3" />Draft batch email</>
+													)}
+												</button>
+											</div>
+											{/* Expanded batch draft */}
+											{batchExpanded && (batchDrafting || batchDraft) && (
+												<div className="mx-3 mb-3 rounded-lg bg-muted/40 border border-border/60 overflow-hidden">
+													<div className="flex items-center justify-between px-3 py-1.5 bg-muted/60 border-b border-border/40">
+														<span className="text-[10px] font-heading font-semibold uppercase tracking-wider text-muted-foreground">
+															AI batch email · {outstanding.length} items
+														</span>
+														{batchDraft && !batchDrafting && (
+															<div className="flex items-center gap-2">
+																<button
+																	onClick={() => handleDraftBatchEmail()}
+																	className="flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded text-muted-foreground hover:text-foreground transition-colors"
+																>
+																	<RotateCwIcon className="size-3" />Regenerate
+																</button>
+																<button
+																	onClick={copyBatchDraft}
+																	className="flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded text-muted-foreground hover:text-foreground transition-colors"
+																>
+																	{batchCopied ? <><CheckCheck className="size-3 text-emerald-500" />Copied</> : <><CopyIcon className="size-3" />Copy</>}
+																</button>
+															</div>
+														)}
+													</div>
+													{batchDrafting ? (
+														<div className="px-3 py-3 space-y-1.5" aria-busy="true" aria-live="polite">
+															{[0, 1, 2, 3, 4].map((row) => (
+																<div key={row} className="h-2 rounded bg-muted animate-pulse" style={{ width: `${95 - row * 12}%`, animationDelay: `${row * 60}ms` }} />
+															))}
+														</div>
+													) : (
+														<pre className="px-3 py-2 text-xs leading-relaxed whitespace-pre-wrap font-sans text-foreground/90 max-h-56 overflow-y-auto">{batchDraft}</pre>
+													)}
+												</div>
+											)}
+										</div>
+									)}
+
 									{reminders.map((reminder) => {
 										const isOverdue = !reminder.completed && new Date(reminder.dueDate) < new Date();
 										return (
@@ -3820,42 +3913,12 @@ Agent Summary: ${report.agentVerification.summary}`;
 															<CalendarIcon className="size-3" />{reminder.dueDate}
 														</span>
 														{isOverdue && <span className="text-[10px] font-bold text-red-600 bg-red-500/10 px-1.5 py-0.5 rounded border border-red-500/20 animate-pulse">OVERDUE</span>}
-														{!reminder.completed && (
-															<button
-																onClick={() => emailDrafts[reminder.id] ? setExpandedDraft(expandedDraft === reminder.id ? null : reminder.id) : handleDraftEmail(reminder)}
-																disabled={draftingId === reminder.id}
-																className="ml-auto flex items-center gap-1 text-xs px-2 py-0.5 rounded-md border border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 transition-colors disabled:opacity-50"
-															>
-																{draftingId === reminder.id ? (
-																	<><LoaderIcon className="size-3 animate-spin" />Drafting...</>
-																) : emailDrafts[reminder.id] ? (
-																	<><MailIcon className="size-3" />{expandedDraft === reminder.id ? "Hide Email" : "View Email"}</>
-																) : (
-																	<><MailIcon className="size-3" />Draft Email</>
-																)}
-															</button>
-														)}
 													</div>
 												</div>
 												<button onClick={() => deleteReminder(reminder.id)} className="text-muted-foreground/40 hover:text-red-500 transition-colors p-1">
 													<Trash2Icon className="size-3.5" />
 												</button>
 											</div>
-											{/* Expanded email draft */}
-											{expandedDraft === reminder.id && emailDrafts[reminder.id] && (
-												<div className="mx-3 mb-3 rounded-lg bg-muted/40 border border-border/60 overflow-hidden">
-													<div className="flex items-center justify-between px-3 py-1.5 bg-muted/60 border-b border-border/40">
-														<span className="text-[10px] font-heading font-semibold uppercase tracking-wider text-muted-foreground">AI-Generated Email Draft</span>
-														<button
-															onClick={() => copyDraft(reminder.id)}
-															className="flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded text-muted-foreground hover:text-foreground transition-colors"
-														>
-															{copiedId === reminder.id ? <><CheckCheck className="size-3 text-emerald-500" />Copied</> : <><CopyIcon className="size-3" />Copy</>}
-														</button>
-													</div>
-													<pre className="px-3 py-2 text-xs leading-relaxed whitespace-pre-wrap font-sans text-foreground/90 max-h-48 overflow-y-auto">{emailDrafts[reminder.id]}</pre>
-												</div>
-											)}
 										</div>
 									);
 									})}
@@ -3863,7 +3926,8 @@ Agent Summary: ${report.agentVerification.summary}`;
 										<div className="text-center py-8 text-sm text-muted-foreground">No reminders set for this case.</div>
 									)}
 								</div>
-							)}
+								);
+							})()}
 						</div>
 
 						{/* Input (only for chat tab) */}
@@ -3920,6 +3984,28 @@ function RiskBadge({ rating, size = "sm" }: { rating: "Low" | "Medium" | "High";
 	};
 	const sizeClass = size === "lg" ? "text-xs px-3 py-1" : "text-xs px-1.5 py-0.5";
 	return <span className={`font-semibold rounded-md border ${colors[rating]} ${sizeClass}`}>{rating} Risk</span>;
+}
+
+function CorroborationScore({ confidence }: { confidence: number }) {
+	const tone =
+		confidence >= 80
+			? { text: "text-emerald-700", bar: "bg-emerald-500", track: "bg-emerald-500/15" }
+			: confidence >= 60
+				? { text: "text-blue-700", bar: "bg-blue-500", track: "bg-blue-500/15" }
+				: confidence >= 50
+					? { text: "text-amber-700", bar: "bg-amber-500", track: "bg-amber-500/15" }
+					: { text: "text-orange-700", bar: "bg-orange-500", track: "bg-orange-500/15" };
+	return (
+		<div className="inline-flex flex-col items-center gap-1 min-w-[88px]">
+			<span className={`font-heading font-bold text-sm tabular-nums ${tone.text}`}>
+				{confidence}
+				<span className="font-normal text-[10px] text-muted-foreground ml-0.5">/100</span>
+			</span>
+			<div className={`h-1.5 w-20 rounded-full overflow-hidden ${tone.track}`}>
+				<div className={`h-full ${tone.bar}`} style={{ width: `${confidence}%` }} />
+			</div>
+		</div>
+	);
 }
 
 function GradeBadge({ grade, confidence, size = "sm" }: { grade: CorroborationGrade; confidence?: number; size?: "sm" | "lg" }) {

@@ -11,9 +11,9 @@ export async function POST(req: NextRequest) {
 		const body = await req.json();
 		const { profileName, profileContext, models } = body;
 
-		const openRouterKey = process.env.OPENROUTER_API_KEY;
+		const openRouterKey = process.env.OPENROUTER_API_KEY ?? "";
 		if (!openRouterKey) {
-			return NextResponse.json({ error: "No OpenRouter API key configured. Set OPENROUTER_API_KEY in .env.local" }, { status: 500 });
+			return NextResponse.json({ error: "OPENROUTER_API_KEY is not configured. Set it in .env.local or your hosting environment." }, { status: 500 });
 		}
 
 		const selectedModels = (models as string[] | undefined)?.length

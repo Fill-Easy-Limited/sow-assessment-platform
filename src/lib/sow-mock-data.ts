@@ -83,23 +83,43 @@ export interface WealthClaim {
 	sources: SourceCitation[];
 }
 
-export type WealthCategory = "income" | "companies" | "investments" | "alternatives" | "crypto";
+export type WealthCategory =
+	| "income"
+	| "companies"
+	| "investments"
+	| "realEstate"
+	| "inheritance"
+	| "assetSales"
+	| "alternatives"
+	| "crypto"
+	| "other";
 
 export const CATEGORY_LABELS: Record<WealthCategory, string> = {
-	income: "Income",
-	companies: "Companies & Equity",
+	income: "Employment Income",
+	companies: "Business Ownership",
 	investments: "Investments",
-	alternatives: "Alternative Assets",
+	realEstate: "Real Estate",
+	inheritance: "Inheritance & Gifts",
+	assetSales: "Asset Sales",
+	alternatives: "Luxury Assets",
 	crypto: "Crypto & Digital Assets",
+	other: "Other",
 };
 
 export const CATEGORY_COLORS: Record<WealthCategory, string> = {
 	income: "#0891b2",
 	companies: "#0d9488",
 	investments: "#6366f1",
+	realEstate: "#16a34a",
+	inheritance: "#dc2626",
+	assetSales: "#7c3aed",
 	alternatives: "#d97706",
 	crypto: "#9333ea",
+	other: "#64748b",
 };
+
+// Constant saving rate applied to real estate rental income across all profiles.
+const REAL_ESTATE_SAVING_RATE = 80;
 
 // ── Composite Risk Rating (A+ to E) ──────────────────────────────
 
@@ -333,15 +353,15 @@ const SRC_MA: Record<string, SourceCitation> = {
 		...srcMeta("bloomberg.com", "Bloomberg Billionaires Index | Jack Ma", "Bloomberg Billionaires Index profile showing Jack Ma's net worth breakdown by asset class. Detailed wealth composition chart with Alibaba stake and other holdings.", "#1e1e1e"),
 	},
 	scmpAnt: {
-		id: "s5", label: "SCMP: Ant Group $150B valuation before IPO halt", url: "https://www.scmp.com/tech/big-tech/article/3108728/", date: "2020-11-03", type: "news",
+		id: "s5", label: "SCMP: Ant Group $150B valuation before IPO halt", url: "https://www.scmp.com/tech/big-tech", date: "2020-11-03", type: "news",
 		...srcMeta("scmp.com", "Ant Group's record $37 billion IPO halted | SCMP", "South China Morning Post article dated November 3, 2020. Headline about Ant Group's $37B dual IPO suspension in Shanghai and Hong Kong. Previous $150B valuation figure referenced.", "#ffca05"),
 	},
 	reutersAnt: {
-		id: "s6", label: "Reuters: Ant Group IPO suspended by regulators", url: "https://www.reuters.com/business/finance/ant-group-ipo-suspension-2020-11-03/", date: "2020-11-03", type: "news",
+		id: "s6", label: "Reuters: Ant Group IPO suspended by regulators", url: "https://www.reuters.com/article/us-ant-group-ipo-suspension/chinas-ant-group-suspends-record-37-billion-ipo-idUSKBN27J1C4/", date: "2020-11-03", type: "news",
 		...srcMeta("reuters.com", "Ant Group IPO suspended by Shanghai exchange | Reuters", "Reuters exclusive reporting on Chinese regulators halting Ant Group's record IPO. Article details regulatory interview with Jack Ma and other executives two days prior.", "#ff8000"),
 	},
 	wsj2023: {
-		id: "s7", label: "WSJ: Ma cedes control of Ant Group", url: "https://www.wsj.com/articles/jack-ma-to-cede-control-of-ant-group-11673023404", date: "2023-01-07", type: "news",
+		id: "s7", label: "WSJ: Ma cedes control of Ant Group", url: "https://www.wsj.com/articles/jack-ma-to-cede-control-of-ant-group-11673059435", date: "2023-01-07", type: "news",
 		...srcMeta("wsj.com", "Jack Ma to Cede Control of Ant Group | WSJ", "Wall Street Journal article reporting Jack Ma's decision to relinquish control of Ant Group following Beijing's regulatory crackdown. Restructuring details and new governance structure outlined.", "#0274b6"),
 	},
 	ftTrust: {
@@ -349,11 +369,11 @@ const SRC_MA: Record<string, SourceCitation> = {
 		...srcMeta("ft.com", "Jack Ma transfers $2.4bn in Alibaba shares to Singapore trust | FT", "Financial Times article detailing Jack Ma's transfer of approximately $2.4B worth of Alibaba shares to a family trust structure based in Singapore.", "#fff1e5"),
 	},
 	samr: {
-		id: "s9", label: "Fill Easy API: SAMR — Alibaba Group Registration", url: "https://www.filleasy.hk/", type: "registry",
-		...srcMeta("filleasy.hk", "Fill Easy | China SAMR — Alibaba Group Holding Limited", "Fill Easy China Cross-Border API query result for SAMR National Enterprise Credit Information System. Alibaba Group Holding Limited — Unified Social Credit Code, legal representative 马云, registered capital, business scope, and credit standing returned.", "#0066aa"),
+		id: "s9", label: "SEC EDGAR: Alibaba Group Holding Limited — Form F-1 (2014)", url: "https://www.sec.gov/Archives/edgar/data/1577552/000119312514184994/d709111df1.htm", type: "registry",
+		...srcMeta("sec.gov", "Form F-1 | Alibaba Group Holding Limited | SEC EDGAR", "SEC EDGAR registration statement for Alibaba Group Holding Limited filed in connection with the 2014 NYSE listing — includes financial statements, share structure, and Variable Interest Entity disclosures.", "#003366"),
 		companySearchTemplate: {
 			registryName: "SAMR National Enterprise Credit Information System (via Fill Easy API)",
-			registryUrl: "https://www.filleasy.hk/",
+			registryUrl: "/sample-docs/cn-company-search-financials.pdf",
 			searchFields: [
 				{ label: "Company Name (企业名称)", value: "阿里巴巴集团控股有限公司" },
 				{ label: "Unified Social Credit Code", value: "91330100799999776H" },
@@ -364,7 +384,7 @@ const SRC_MA: Record<string, SourceCitation> = {
 		},
 	},
 	yahooAcq: {
-		id: "s10", label: "Yahoo acquires 40% of Alibaba for $1B", url: "https://www.nytimes.com/2005/08/11/technology/yahoo-alibaba.html", date: "2005-08-11", type: "news",
+		id: "s10", label: "Yahoo acquires 40% of Alibaba for $1B", url: "https://www.nytimes.com/2005/08/11/technology/yahoo-and-alibaba-in-a-deal-that-reshapes-chinas-internet.html", date: "2005-08-11", type: "news",
 		...srcMeta("nytimes.com", "Yahoo to Buy 40% of Alibaba | NYT", "New York Times article from August 2005 reporting Yahoo's acquisition of 40% stake in Alibaba for $1 billion plus the contribution of Yahoo China operations.", "#000000"),
 	},
 	softbank: {
@@ -380,52 +400,52 @@ const SRC_MA: Record<string, SourceCitation> = {
 		...srcMeta("crunchbase.com", "Yunfeng Capital | Crunchbase", "Crunchbase organization profile for Yunfeng Capital showing PE/VC fund co-founded by Jack Ma. Assets under management approximately $8 billion. Investment portfolio and fund history listed.", "#0288d1"),
 	},
 	jmFound: {
-		id: "s14", label: "Jack Ma Foundation annual report", url: "https://www.jackmafoundation.org/", date: "2023-01-01", type: "public-record",
+		id: "s14", label: "Jack Ma Foundation annual report", url: "https://en.wikipedia.org/wiki/Jack_Ma_Foundation", date: "2023-01-01", type: "public-record",
 		...srcMeta("jackmafoundation.org", "Jack Ma Foundation | Annual Report 2023", "Jack Ma Foundation website showing annual report with program spending on education, entrepreneurship, and environmental initiatives across Africa and rural China.", "#1b5e20"),
 	},
 	babaPrice: {
-		id: "s15", label: "NYSE BABA historical share price", url: "https://finance.yahoo.com/quote/BABA/history/", type: "market-data",
+		id: "s15", label: "NYSE BABA historical share price", url: "https://finance.yahoo.com/quote/BABA/", type: "market-data",
 		...srcMeta("finance.yahoo.com", "BABA Historical Data | Yahoo Finance", "Yahoo Finance historical price chart for Alibaba Group (BABA). Shows IPO at $68 (Sep 2014), peak ~$317 (Oct 2020), decline to ~$73 (2022), partial recovery to ~$85-100 range.", "#410093"),
 	},
 	antRestructure: {
-		id: "s16", label: "PBOC: Ant Group restructuring approval", url: "http://www.pbc.gov.cn/en/", date: "2023-07-07", type: "public-record",
-		...srcMeta("pbc.gov.cn", "People's Bank of China | Ant Group Rectification", "PBOC official notice regarding Ant Group financial holding company restructuring completion. Regulatory approval for new corporate governance and capital requirements compliance.", "#8b0000"),
+		id: "s16", label: "Reuters: PBOC accepts Ant Group financial holding company application", url: "https://www.reuters.com/business/finance/china-central-bank-accepts-ants-application-financial-holding-company-sources-2022-06-17/", date: "2023-07-07", type: "public-record",
+		...srcMeta("reuters.com", "China central bank accepts Ant's application for financial holding company | Reuters", "Reuters report dated June 17, 2022 covering the People's Bank of China's acceptance of Ant Group's financial holding company application, a milestone in the post-suspension regulatory restructuring.", "#fa6400"),
 	},
 	// Government authority & estimate sources (replacing inline estimates)
 	chinaSalaryStats: {
-		id: "s17", label: "China Statistical Yearbook — Education Sector Wages (1988-1995)", url: "http://www.stats.gov.cn/english/Statisticaldata/AnnualData/", type: "public-record",
+		id: "s17", label: "China Statistical Yearbook — Education Sector Wages (1988-1995)", url: "https://www.stats.gov.cn/english/", type: "public-record",
 		...srcMeta("stats.gov.cn", "National Bureau of Statistics of China | Annual Data", "China NBS annual data tables showing education sector average wages by province. Zhejiang Province teacher salaries for 1988-1995 period ranging from ¥100-300/month.", "#003399"),
 	},
 	prcWageData: {
-		id: "s18", label: "NBS Average Wages by Sector (late 1990s)", url: "http://www.stats.gov.cn/english/Statisticaldata/", type: "public-record",
+		id: "s18", label: "NBS Average Wages by Sector (late 1990s)", url: "https://www.stats.gov.cn/english/", type: "public-record",
 		...srcMeta("stats.gov.cn", "NBS | Urban Average Wages by Industry", "National Bureau of Statistics wage tables showing private sector and government employee compensation norms in China during the late 1990s internet boom period.", "#003399"),
 	},
 	equilarComp: {
-		id: "s19", label: "Equilar: Chinese Tech CEO Compensation Study", url: "https://www.equilar.com/reports/chinese-tech-executive-compensation", date: "2013-01-01", type: "estimate",
-		...srcMeta("equilar.com", "Equilar | Executive Compensation Benchmarking", "Equilar executive compensation benchmarking report for Chinese technology companies. Median CEO total compensation for major Chinese tech firms in $2-8M range during 2005-2014.", "#1a237e"),
+		id: "s19", label: "Alibaba IR: Executive Compensation (20-F filings)", url: "https://www.alibabagroup.com/en-US/ir-financial-reports", date: "2013-01-01", type: "public-record",
+		...srcMeta("alibabagroup.com", "Alibaba Group | Investor Relations — Financial Reports", "Alibaba Group investor relations page listing annual reports and 20-F filings. Executive compensation disclosures for the chairman and named executive officers, including base salary, bonus, and share-based awards.", "#ff6a00"),
 	},
 	sharespostPreIPO: {
-		id: "s20", label: "SharesPost: Pre-IPO Alibaba Secondary Trading Data", url: "https://sharespost.com/company/alibaba-group/", date: "2013-06-01", type: "market-data",
-		...srcMeta("sharespost.com", "SharesPost | Alibaba Pre-IPO Trading Activity", "SharesPost secondary market platform showing pre-IPO block trading activity for Alibaba Group shares. Implied valuation of $75-100B based on 2013 secondary trades.", "#2e7d32"),
+		id: "s20", label: "Forge Global (formerly SharesPost): Alibaba pre-IPO secondary trading", url: "https://forgeglobal.com/company/alibaba-group/", date: "2013-06-01", type: "market-data",
+		...srcMeta("forgeglobal.com", "Alibaba Group | Forge Global Private Markets", "Forge Global private-market profile for Alibaba Group, successor to SharesPost's secondary marketplace. Shows pre-IPO secondary transactions and reference pricing data for restricted founder/employee shares.", "#0a1f44"),
 	},
 	scmpProperty: {
-		id: "s21", label: "SCMP: Jack Ma's property portfolio investigation", url: "https://www.scmp.com/business/article/3175321/jack-ma-property-hong-kong-peak-mansion", type: "news",
-		...srcMeta("scmp.com", "Jack Ma's Property Portfolio: From Hangzhou to Hong Kong | SCMP", "South China Morning Post investigation into Jack Ma's known property holdings including a HK$1.5B Victoria Peak mansion, Hangzhou luxury residences, and reported properties overseas.", "#ffca05"),
+		id: "s21", label: "TIME: Jack Ma is the buyer behind Hong Kong's most expensive home", url: "https://time.com/3998188/alibaba-jack-ma-hong-kong-expensive-home/", date: "2015-04-09", type: "news",
+		...srcMeta("time.com", "Jack Ma Identified as Buyer of Hong Kong's $193 Million Home | TIME", "TIME report identifying Jack Ma as the buyer of a Victoria Peak residence (15 Barker Road) for approximately US$193M — at the time a record price for residential property in Hong Kong.", "#e90606"),
 	},
 	alibabaBio: {
 		id: "s22", label: "Duncan Clark — 'Alibaba: The House That Jack Ma Built' (2016)", url: "https://www.harpercollins.com/products/alibaba-duncan-clark", date: "2016-04-12", type: "news",
 		...srcMeta("harpercollins.com", "Alibaba: The House That Jack Ma Built | HarperCollins", "Authoritative biography by Duncan Clark documenting Jack Ma's early ventures including China Pages, Hangzhou Telecom partnership, loss of control, and lessons learned.", "#333333"),
 	},
 	wealthXReport: {
-		id: "s23", label: "Wealth-X: UHNW Lifestyle Asset Benchmarks 2024", url: "https://www.wealthx.com/report/world-ultra-wealth-report/", date: "2024-01-01", type: "estimate",
+		id: "s23", label: "Wealth-X: UHNW Lifestyle Asset Benchmarks 2024", url: "https://wealthx.com/reports/world-ultra-wealth-report-2019/", date: "2024-01-01", type: "estimate",
 		...srcMeta("wealthx.com", "Wealth-X | World Ultra Wealth Report 2024", "Wealth-X annual report benchmarking UHNW lifestyle assets. Average UHNW individual holds 5-10% of net worth in art, wine, yachts, and luxury goods.", "#1b5e20"),
 	},
 	hkLandReg: {
-		id: "s24", label: "Fill Easy API: HK Land Registry — Victoria Peak Property Record", url: "https://www.filleasy.hk/", type: "registry",
+		id: "s24", label: "Fill Easy API: HK Land Registry — Victoria Peak Property Record", url: "/sample-docs/hk-land-registry.pdf", type: "registry",
 		...srcMeta("filleasy.hk", "Fill Easy | HK Land Registry — Property Search — The Peak", "Fill Easy API property search result for Hong Kong Land Registry. Victoria Peak residence at 15 Barker Road. Transaction price HK$1.5 billion. Registered owner details, lot number, and memorial records returned via API.", "#0066aa"),
 		companySearchTemplate: {
 			registryName: "Hong Kong Land Registry (via Fill Easy API)",
-			registryUrl: "https://www.filleasy.hk/",
+			registryUrl: "/sample-docs/hk-land-registry.pdf",
 			searchFields: [
 				{ label: "Property Address", value: "15 Barker Road, The Peak, Hong Kong" },
 				{ label: "Lot Number", value: "IL 8847" },
@@ -436,11 +456,11 @@ const SRC_MA: Record<string, SourceCitation> = {
 		},
 	},
 	acraRegistry: {
-		id: "s25", label: "Fill Easy API: Singapore ACRA — Ma Family Trust Pte. Ltd.", url: "https://www.filleasy.hk/", type: "registry",
+		id: "s25", label: "Fill Easy API: Singapore ACRA — Ma Family Trust Pte. Ltd.", url: "/sample-docs/hk-company-search.pdf", type: "registry",
 		...srcMeta("filleasy.hk", "Fill Easy | CorpVerify — Singapore ACRA BizFile+", "Fill Easy CorpVerify API query result for Singapore ACRA BizFile+. Entity: Ma Family Trust Pte. Ltd. UEN: 202312345A. Registration date, registered address, directors, secretary, and filing status returned.", "#0066aa"),
 		companySearchTemplate: {
 			registryName: "Singapore ACRA — BizFile+ (via Fill Easy CorpVerify)",
-			registryUrl: "https://www.filleasy.hk/",
+			registryUrl: "/sample-docs/hk-company-search.pdf",
 			searchFields: [
 				{ label: "Entity Name", value: "Ma Family Trust Pte. Ltd." },
 				{ label: "UEN", value: "202312345A" },
@@ -455,15 +475,15 @@ const SRC_MA: Record<string, SourceCitation> = {
 		...srcMeta("sec.gov", "SEC EDGAR | 20-F Annual Report | Alibaba Group", "SEC EDGAR filing showing Alibaba Group 20-F annual report. Updated beneficial ownership table showing Ma Yun holding ~4.5% of ordinary shares. Director compensation disclosed.", "#003366"),
 	},
 	chinaIIT: {
-		id: "s27", label: "China Individual Income Tax — Zhejiang Provincial Filing", url: "http://www.chinatax.gov.cn/eng/", type: "public-record",
-		...srcMeta("chinatax.gov.cn", "State Taxation Administration | IIT Filing Records", "China State Taxation Administration portal confirming individual income tax filing records for Zhejiang Province taxpayers. IIT rates and brackets for high-income earners referenced.", "#cc0000"),
+		id: "s27", label: "PwC China: Tax Publications (IIT and corporate tax guides)", url: "https://www.pwccn.com/en/services/tax/publications.html", type: "public-record",
+		...srcMeta("pwccn.com", "Tax Publications | PwC China", "PwC China publications hub covering individual income tax (IIT) and corporate tax guides referenced as a public-record substitute for direct Chinese tax authority filings.", "#d04a02"),
 	},
 	filleasyAlibabaHK: {
-		id: "s28", label: "Fill Easy API: HK CR — Alibaba Group (HK) Ltd", url: "https://www.filleasy.hk/", type: "registry",
-		...srcMeta("filleasy.hk", "Fill Easy | HK Companies Registry — Alibaba Group (HK) Limited", "Fill Easy CorpVerify API search result for Alibaba Group (HK) Limited. CR No. 1359598. Incorporation date, registered office, directors, annual return filings. Hong Kong subsidiary of Alibaba Group Holdings.", "#0066aa"),
+		id: "s28", label: "HKEX: Alibaba Group Holding Limited (9988.HK) equity quote", url: "https://www.hkex.com.hk/Market-Data/Securities-Prices/Equities/Equities-Quote?sym=9988&sc_lang=en", type: "registry",
+		...srcMeta("hkex.com.hk", "Alibaba Group Holding Limited (9988) | HKEX Equities Quote", "Hong Kong Exchanges and Clearing real-time equities quote for Alibaba Group Holding Limited (HKEX: 9988). Provides last trade, market cap, turnover, and announcement history.", "#0033a0"),
 		companySearchTemplate: {
 			registryName: "Hong Kong Companies Registry (via Fill Easy CorpVerify)",
-			registryUrl: "https://www.filleasy.hk/",
+			registryUrl: "/sample-docs/hk-company-search.pdf",
 			searchFields: [
 				{ label: "Company Name", value: "Alibaba Group (HK) Limited" },
 				{ label: "CR No.", value: "1359598" },
@@ -474,29 +494,29 @@ const SRC_MA: Record<string, SourceCitation> = {
 		},
 	},
 	filleasySAMRCredit: {
-		id: "s29", label: "Fill Easy API: SAMR Credit Standing — Alibaba Group", url: "https://www.filleasy.hk/", type: "registry",
-		...srcMeta("filleasy.hk", "Fill Easy | SAMR Credit Standing & Judicial Records — Alibaba", "Fill Easy China Cross-Border API returning SAMR credit standing and judicial records for Alibaba Group. Credit status: Normal. Judicial records: $2.8B antitrust fine (2021, resolved). No serious violations on record. UBO chain verified.", "#0066aa"),
+		id: "s29", label: "Reuters: China fines Alibaba record US$2.75B for anti-monopoly violations", url: "https://www.reuters.com/business/retail-consumer/china-fines-alibaba-record-275-bln-anti-monopoly-violations-2021-04-10/", type: "registry",
+		...srcMeta("reuters.com", "China fines Alibaba record $2.75 bln for anti-monopoly violations | Reuters", "Reuters report on China's State Administration for Market Regulation imposing a record US$2.75B antitrust fine on Alibaba in April 2021. Penalty equivalent to 4% of 2019 domestic sales.", "#fa6400"),
 	},
 	filleasySAMRJudicial: {
-		id: "s30", label: "Fill Easy API: SAMR Judicial Records — Ant Group", url: "https://www.filleasy.hk/", type: "registry",
-		...srcMeta("filleasy.hk", "Fill Easy | SAMR Judicial & Litigation — Ant Group Co., Ltd.", "Fill Easy China Cross-Border API returning judicial and litigation records for Ant Group Co., Ltd. Regulatory orders from PBOC: financial holding company restructuring (2021-2023). Administrative actions resolved. Current status: compliant.", "#0066aa"),
+		id: "s30", label: "Reuters: China fines Ant Group US$984M, ends regulatory overhaul", url: "https://www.reuters.com/technology/china-fines-ant-group-984-mln-ends-regulatory-overhaul-2023-07-07/", type: "registry",
+		...srcMeta("reuters.com", "China fines Ant Group $984 mln, ends regulatory overhaul | Reuters", "Reuters report on the People's Bank of China announcement closing the multi-year Ant Group regulatory overhaul with a US$984M fine — marking the end of the restructuring phase that began with the 2020 IPO suspension.", "#fa6400"),
 	},
 	chateauDeSours: {
-		id: "s31", label: "SCMP: Jack Ma acquires Château de Sours vineyard in Bordeaux", url: "https://www.scmp.com/lifestyle/food-drink/article/1858015/jack-ma-buys-bordeaux-vineyard", type: "news",
-		...srcMeta("scmp.com", "Jack Ma Buys Second Bordeaux Vineyard | SCMP", "South China Morning Post article reporting Jack Ma's acquisition of Château de Sours, a 54-hectare Bordeaux property in the Entre-Deux-Mers appellation. This is Ma's second French vineyard purchase, following Château Guerry.", "#ffca05"),
+		id: "s31", label: "Reuters: Jack Ma acquires Château de Sours — second French vineyard", url: "https://www.reuters.com/article/world/jack-ma-buys-chateau-de-sours-second-french-vineyard-in-three-months-idUSL5N0YQ4UM/", date: "2015-09-23", type: "news",
+		...srcMeta("reuters.com", "Jack Ma buys Chateau de Sours, his second French vineyard | Reuters", "Reuters report on Jack Ma's acquisition of Château de Sours, a 54-hectare Bordeaux property in the Entre-Deux-Mers appellation — his second French vineyard purchase after Château Guerry.", "#fa6400"),
 	},
 	frenchPropertyRegistry: {
 		id: "s32", label: "Service de Publicité Foncière: Château de Sours deed", url: "https://www.impots.gouv.fr/", type: "registry",
 		...srcMeta("impots.gouv.fr", "SPF | Publicité Foncière — Château de Sours, Bordeaux", "French land registry (Service de Publicité Foncière) records for Château de Sours, Saint-Quentin-de-Baron, Gironde. Property transfer registered. 54 hectares of vines and château.", "#002395"),
 	},
 	filleasySAMRUBO: {
-		id: "s33", label: "Fill Easy API: SAMR UBO — Yunfeng Capital", url: "https://www.filleasy.hk/", type: "registry",
-		...srcMeta("filleasy.hk", "Fill Easy | SAMR UBO & Shareholder Structure — Yunfeng Capital", "Fill Easy China Cross-Border API returning UBO and shareholder structure for Yunfeng Capital Management. Ultimate beneficial owners identified. MA Yun listed as co-founder and significant shareholder. Registered capital and business scope confirmed.", "#0066aa"),
+		id: "s33", label: "Crunchbase: Yunfeng Capital — investor profile and UBO chain", url: "https://www.crunchbase.com/organization/yunfeng-capital", type: "registry",
+		...srcMeta("crunchbase.com", "Yunfeng Capital | Crunchbase", "Crunchbase organisation profile for Yunfeng Capital — co-founded by Jack Ma. AUM approximately US$8B with disclosed investments. Provides a referenceable UBO chain via aggregated public filings.", "#0288d1"),
 	},
 	// ── Additional sources (exhaustive wealth research) ──
 	brandonPark: {
-		id: "s34", label: "CNBC: Jack Ma buys 28,100-acre Adirondack estate for $23M", url: "https://www.cnbc.com/2015/06/26/jack-ma-buys-28100-acre-property-in-adirondacks.html", date: "2015-06-26", type: "news",
-		...srcMeta("cnbc.com", "Jack Ma Buys 28,100-Acre Property in Adirondacks | CNBC", "CNBC article reporting Alibaba founder Jack Ma purchased Brandon Park, a 28,100-acre estate in the Adirondacks, for approximately $23 million via entity New Brandon LLC. Property includes 9 miles of St. Regis River.", "#005594"),
+		id: "s34", label: "NYT: Jack Ma buys vast tract of land in the Adirondacks", url: "https://www.nytimes.com/2015/06/27/business/dealbook/jack-ma-buys-vast-tract-of-land-in-adirondacks.html", date: "2015-06-27", type: "news",
+		...srcMeta("nytimes.com", "Jack Ma Buys Vast Tract of Land in the Adirondacks | The New York Times", "New York Times report on Alibaba founder Jack Ma's purchase of Brandon Park, a 28,100-acre estate in the Adirondacks, for approximately $23 million via New Brandon LLC. Property includes ~9 miles of the St. Regis River.", "#000000"),
 	},
 	superyachtZen: {
 		id: "s35", label: "SuperYachtFan: M/Y Zen — 88m Feadship owned by Jack Ma", url: "https://www.superyachtfan.com/yacht/zen/", date: "2021-01-01", type: "news",
@@ -523,16 +543,16 @@ const SRC_MA: Record<string, SourceCitation> = {
 		...srcMeta("bloomberg.com", "Jack Ma's Wife Bought Three Prestige Properties in Singapore | Bloomberg", "Bloomberg report: Zhang Ying (Ma's wife, Singapore citizen) purchased 3 shophouses at 70-72 Duxton Road for S$45-50M ($33-37M) in 2024. Also owns Good Class Bungalow in Victoria Park area (~S$40M, 2019).", "#1e1e1e"),
 	},
 	yunfengFinancial: {
-		id: "s41", label: "SCMP: Yunfeng Financial (HK-listed) buys 10,000 ETH", url: "https://www.scmp.com/tech/blockchain/article/3324137/", date: "2025-09-01", type: "news",
+		id: "s41", label: "SCMP: Yunfeng Financial (HK-listed) buys 10,000 ETH", url: "https://www.scmp.com/tech/blockchain/article/3324137/yunfeng-financial-invests-us44-million-ether-amid-hong-kongs-virtual-asset-push", date: "2025-09-01", type: "news",
 		...srcMeta("scmp.com", "Jack Ma-backed Yunfeng Dives Into Crypto | SCMP", "SCMP reporting Yunfeng Financial Group (HK-listed), in which Ma holds 11.15%, purchased 10,000 ETH ($44M) as strategic reserve. Expanding into crypto/Web3, RWA tokenization, and AI.", "#ffca05"),
 	},
 	universityDonation: {
-		id: "s42", label: "Newcastle Herald: Ma donates AU$26.4M to University of Newcastle", url: "https://www.newcastleherald.com.au/story/4445929/", date: "2017-02-01", type: "news",
+		id: "s42", label: "Newcastle Herald: Ma donates AU$26.4M to University of Newcastle", url: "https://www.newcastleherald.com.au/story/4445929/friendship-leads-to-26m-uni-donation-video/", date: "2017-02-01", type: "news",
 		...srcMeta("newcastleherald.com.au", "Friendship Leads to $26M Uni Donation | Newcastle Herald", "Newcastle Herald reporting Jack Ma's AU$26.4M donation to University of Newcastle Australia — largest gift in university history. Established Ma & Morley Scholarship Program (90 scholarships/year).", "#003399"),
 	},
 	nyLandRecords: {
-		id: "s43", label: "Franklin County Records: New Brandon LLC — Brandon Park deed", url: "https://www.franklincony.org/", type: "registry",
-		...srcMeta("franklincony.org", "Franklin County NY | Real Property Records — New Brandon LLC", "Franklin County NY property records for New Brandon LLC. 28,100-acre Brandon Park estate. Transfer recorded May 2015. Purchase entity linked to Jack Ma through corporate filings.", "#336633"),
+		id: "s43", label: "Town & Country: Jack Ma's purchase of Brandon Park (Adirondacks)", url: "https://www.townandcountrymag.com/leisure/real-estate/a3341/jack-ma-buys-brandon-park/", type: "registry",
+		...srcMeta("townandcountrymag.com", "Jack Ma Buys 28,000-Acre Adirondacks Estate | Town & Country", "Town & Country feature on Jack Ma's acquisition of Brandon Park, the 28,100-acre Adirondacks estate purchased via New Brandon LLC for approximately US$23M.", "#000000"),
 	},
 };
 
@@ -646,8 +666,10 @@ const JACK_MA_CAREER: CareerPhase[] = [
 			{ category: "income", claims: [
 				{ id: "jm6-15", description: "Accumulated Alibaba (BABA) dividend income since 2014 IPO — ~4.5% stake, regular quarterly dividends totaling ~$745M over 10 years (SEC 20-F filings)", estimatedValueUSD: 745_000_000, confidence: 55, savingRate: 95, sources: [SRC_MA.sec20F, SRC_MA.babaPrice, SRC_MA.forbes2024] },
 				{ id: "jm6-16", description: "Cash reserves, bank deposits and liquid assets — estimated from Blue Pool Capital AUM benchmarks and Wealth-X UHNW cash allocation models", estimatedValueUSD: 500_000_000, confidence: 35, savingRate: 100, sources: [SRC_MA.bluePoolCapital, SRC_MA.wealthXReport] },
-				{ id: "jm6-17", description: "Estimated rental income from HK Victoria Peak mansion and Singapore properties (partial commercial use, Fill Easy Land Registry + SLA records)", estimatedValueUSD: 8_000_000, confidence: 45, savingRate: 85, sources: [SRC_MA.hkLandReg, SRC_MA.sgProperties] },
-			], subtotalUSD: 1_253_000_000, avgConfidence: 45 },
+			], subtotalUSD: 1_245_000_000, avgConfidence: 45 },
+			{ category: "realEstate", claims: [
+				{ id: "jm6-17", description: "Estimated rental income from HK Victoria Peak mansion and Singapore properties (partial commercial use, Fill Easy Land Registry + SLA records)", estimatedValueUSD: 8_000_000, confidence: 45, savingRate: REAL_ESTATE_SAVING_RATE, sources: [SRC_MA.hkLandReg, SRC_MA.sgProperties] },
+			], subtotalUSD: 8_000_000, avgConfidence: 45 },
 		],
 		phaseWealthUSD: 25_500_000_000, cumulativeWealthUSD: 25_500_000_000,
 		keyEvents: ["2023-04: $2.4B Alibaba shares transferred to Singapore trust", "2023-06: Alibaba splits into 6 business groups", "2024: Wife Zhang Ying acquires S$50M Singapore shophouses", "2024: Focus on agriculture technology and education", "2025: Yunfeng Financial buys 10,000 ETH ($44M)"],
@@ -662,15 +684,15 @@ const SRC_SIU: Record<string, SourceCitation> = {
 		...srcMeta("rttnews.com", "IBM Plans To Buy Strategic Messaging Service Assets Of Outblaze | RTTNews", "RTTNews reporting IBM's January 15, 2009 announcement to acquire strategic messaging service assets of Outblaze Ltd., a Hong Kong-based provider of online messaging and collaboration services. Deal value estimated at $10-20 million.", "#0530ad"),
 	},
 	asxListing: {
-		id: "y2", label: "ASX: Animoca Brands IPO listing", url: "https://www.asx.com.au/markets/company/AB1", date: "2015-01-01", type: "market-data",
+		id: "y2", label: "ASX: Animoca Brands IPO listing", url: "https://www.marketindex.com.au/asx/ab1", date: "2015-01-01", type: "market-data",
 		...srcMeta("asx.com.au", "ASX | Animoca Brands Corporation Limited (AB1)", "Australian Securities Exchange company page for Animoca Brands (ticker: AB1). Historical listing data showing IPO date, initial market capitalization, and trading history from 2015.", "#002244"),
 	},
 	asxDelist: {
-		id: "y3", label: "ASX: Animoca Brands delisted over crypto accounting", url: "https://www.asx.com.au/markets/company/AB1", date: "2020-03-25", type: "registry",
+		id: "y3", label: "ASX: Animoca Brands delisted over crypto accounting", url: "https://www.marketindex.com.au/asx/ab1", date: "2020-03-25", type: "registry",
 		...srcMeta("asx.com.au", "ASX Notice | Animoca Brands Delisting (March 2020)", "ASX compliance notice dated March 25, 2020 regarding removal of Animoca Brands from official list. Delisting due to non-compliance with listing rules related to cryptocurrency asset accounting.", "#002244"),
 		companySearchTemplate: {
 			registryName: "Australian Securities Exchange (ASX)",
-			registryUrl: "https://www2.asx.com.au/markets/trade-our-cash-market/directory",
+			registryUrl: "https://www.asx.com.au/markets/trade-our-cash-market/directory",
 			searchFields: [
 				{ label: "Company Name", value: "Animoca Brands Corporation Limited" },
 				{ label: "ASX Code", value: "AB1" },
@@ -681,8 +703,8 @@ const SRC_SIU: Record<string, SourceCitation> = {
 		},
 	},
 	tcAnimoca: {
-		id: "y4", label: "VentureBeat: Animoca raises $358.8M at $5.5B valuation", url: "https://venturebeat.com/games/animoca-brands-raises-358-8m-at-5-5b-valuation-for-open-metaverse/", date: "2022-01-18", type: "news",
-		...srcMeta("venturebeat.com", "Animoca Brands raises $358.8M at $5.5B valuation for open metaverse | VentureBeat", "VentureBeat article dated January 18, 2022. Reports Animoca Brands completing $358.8 million funding round at $5.5 billion valuation. Investors include Liberty City Ventures, Soros Fund Management.", "#0a9c00"),
+		id: "y4", label: "GamesBeat: Animoca raises $358.8M at $5.5B valuation", url: "https://gamesbeat.com/animoca-brands-raises-358-8m-at-5-5b-valuation-for-open-metaverse", date: "2022-01-18", type: "news",
+		...srcMeta("gamesbeat.com", "Animoca Brands raises $358.8M at $5.5B valuation for open metaverse | GamesBeat", "GamesBeat report on Animoca Brands closing a US$358.8M funding round at a US$5.5B valuation in January 2022. Round participants reported to include Liberty City Ventures and Soros Fund Management.", "#d62929"),
 	},
 	coinGecko: {
 		id: "y5", label: "CoinGecko: SAND token historical price data", url: "https://www.coingecko.com/en/coins/the-sandbox", type: "market-data",
@@ -709,11 +731,11 @@ const SRC_SIU: Record<string, SourceCitation> = {
 		...srcMeta("dappradar.com", "DappRadar | NFT Market Valuations & Portfolio Tracker", "DappRadar NFT analytics dashboard showing market-wide valuation data. Portfolio tracker with floor prices for major collections including Bored Apes, LAND plots, and blue-chip NFTs.", "#5c3dfa"),
 	},
 	hkCompanies: {
-		id: "y8", label: "Fill Easy API: HK CR — Outblaze Limited", url: "https://www.filleasy.hk/", type: "registry",
-		...srcMeta("filleasy.hk", "Fill Easy | HK Companies Registry — Outblaze Limited", "Fill Easy CorpVerify API search result for Outblaze Limited via HK Companies Registry. Company number 0651683, incorporation date, registered office address, directors (SIU Yat), and annual return filings returned.", "#0066aa"),
+		id: "y8", label: "Webb-Site Who's Who: Outblaze Limited (HK CR records)", url: "https://webb-site.com/dbpub/orgdata.asp?p=116499", type: "registry",
+		...srcMeta("webb-site.com", "Outblaze Limited | Webb-site Who's Who", "Webb-site Who's Who organisation profile for Outblaze Limited, sourced from HK Companies Registry filings — directors, officers, and historical filings.", "#1a4a8a"),
 		companySearchTemplate: {
 			registryName: "Hong Kong Companies Registry (via Fill Easy CorpVerify)",
-			registryUrl: "https://www.filleasy.hk/",
+			registryUrl: "/sample-docs/hk-company-search.pdf",
 			searchFields: [
 				{ label: "Company Name", value: "Outblaze Limited" },
 				{ label: "Company Number", value: "0651683" },
@@ -750,19 +772,19 @@ const SRC_SIU: Record<string, SourceCitation> = {
 	},
 	// Government authority & estimate sources (replacing inline estimates)
 	blsWages: {
-		id: "y15", label: "BLS / Statistics Austria: Tech Sector Wages (1990s)", url: "https://www.bls.gov/oes/", type: "public-record",
+		id: "y15", label: "BLS / Statistics Austria: Tech Sector Wages (1990s)", url: "https://www.bls.gov/oes/current/oes150000.htm", type: "public-record",
 		...srcMeta("bls.gov", "Bureau of Labor Statistics | Occupational Employment & Wages", "BLS occupational employment statistics showing computer/tech sector wages in the early 1990s. Entry-level software engineer salaries ranged $28-45K/year.", "#003399"),
 	},
 	hkCensusStats: {
-		id: "y16", label: "HK Census & Statistics: IT Sector Earnings Survey", url: "https://www.censtatd.gov.hk/", type: "public-record",
+		id: "y16", label: "HK Census & Statistics: IT Sector Earnings Survey", url: "https://www.censtatd.gov.hk/en/scode210.html", type: "public-record",
 		...srcMeta("censtatd.gov.hk", "C&SD | Earnings & Hours Statistics — IT Sector", "Hong Kong Census and Statistics Department survey data on earnings in the IT sector. Median CEO/MD compensation in HK tech companies during 2000-2010.", "#003366"),
 	},
 	hkLandRegistry: {
-		id: "y17", label: "Fill Easy API: HK Land Registry — Mid-Levels Property", url: "https://www.filleasy.hk/", type: "registry",
+		id: "y17", label: "Fill Easy API: HK Land Registry — Mid-Levels Property", url: "/sample-docs/hk-land-registry.pdf", type: "registry",
 		...srcMeta("filleasy.hk", "Fill Easy | HK Land Registry — Property Search — Mid-Levels", "Fill Easy API property search result for Hong Kong Land Registry. Mid-Levels residential property. Owner: SIU Yat. Purchase date 2005. Historical transaction prices and ownership memorials returned via API.", "#0066aa"),
 		companySearchTemplate: {
 			registryName: "Hong Kong Land Registry (via Fill Easy API)",
-			registryUrl: "https://www.filleasy.hk/",
+			registryUrl: "/sample-docs/hk-land-registry.pdf",
 			searchFields: [
 				{ label: "Owner Name", value: "SIU Yat" },
 				{ label: "Property Address", value: "Mid-Levels, Hong Kong Island" },
@@ -773,7 +795,7 @@ const SRC_SIU: Record<string, SourceCitation> = {
 		},
 	},
 	asxHistorical: {
-		id: "y18", label: "ASX Historical Market Cap: Animoca (AB1)", url: "https://www.asx.com.au/markets/company/AB1", type: "market-data",
+		id: "y18", label: "ASX Historical Market Cap: Animoca (AB1)", url: "https://www.marketindex.com.au/asx/ab1", type: "market-data",
 		...srcMeta("asx.com.au", "ASX | AB1 Historical Market Data", "Australian Securities Exchange historical market data for Animoca Brands (AB1). Market capitalization history from listing to delisting, daily trading volumes.", "#002244"),
 	},
 	asxAnnualReport: {
@@ -781,7 +803,7 @@ const SRC_SIU: Record<string, SourceCitation> = {
 		...srcMeta("animocabrands.com", "Animoca Brands | Annual Report FY2019 — Remuneration", "Animoca Brands annual report filed with ASX showing executive remuneration section. Chairman and director compensation as required by ASX listing rules.", "#ff6b35"),
 	},
 	pitchbook: {
-		id: "y20", label: "PitchBook: Animoca Brands Private Secondary Market", url: "https://pitchbook.com/profiles/animoca-brands", type: "estimate",
+		id: "y20", label: "PitchBook: Animoca Brands Private Secondary Market", url: "https://pitchbook.com/profiles/company/103632-13", type: "estimate",
 		...srcMeta("pitchbook.com", "PitchBook | Animoca Brands Profile", "PitchBook private company profile for Animoca Brands showing funding history, post-money valuations, secondary market trading data, and implied discount from last round.", "#0066cc"),
 	},
 	hkRVD: {
@@ -789,11 +811,11 @@ const SRC_SIU: Record<string, SourceCitation> = {
 		...srcMeta("rvd.gov.hk", "RVD | Private Domestic — Price Indices", "HK Rating and Valuation Department property price index showing residential price movements. Mid-Levels area index tracked.", "#003366"),
 	},
 	filleasyHKCR: {
-		id: "y22", label: "Fill Easy API: HK Companies Registry — Animoca Brands Ltd", url: "https://www.filleasy.hk/", type: "registry",
-		...srcMeta("filleasy.hk", "Fill Easy | HK Companies Registry — Animoca Brands Limited", "Fill Easy API search result for HK Companies Registry. Returns CR No., incorporation date, registered office, directors (SIU Yat listed), secretary, and annual return filings.", "#0066aa"),
+		id: "y22", label: "Webb-Site Who's Who: Animoca Brands Limited (HK CR records)", url: "https://webb-site.com/dbpub/orgdata.asp?p=32135", type: "registry",
+		...srcMeta("webb-site.com", "Animoca Brands Limited | Webb-site Who's Who", "Webb-site Who's Who organisation profile for Animoca Brands Limited, sourced from HK Companies Registry filings — directors (including SIU Yat), officers, and historical filings.", "#1a4a8a"),
 		companySearchTemplate: {
 			registryName: "Hong Kong Companies Registry (via Fill Easy API)",
-			registryUrl: "https://www.filleasy.hk/",
+			registryUrl: "/sample-docs/hk-company-search.pdf",
 			searchFields: [
 				{ label: "Company Name", value: "Animoca Brands Limited" },
 				{ label: "CR No.", value: "2283149" },
@@ -805,19 +827,19 @@ const SRC_SIU: Record<string, SourceCitation> = {
 		},
 	},
 	filleasyOutblaze: {
-		id: "y23", label: "Fill Easy API: HK Companies Registry — Outblaze Limited", url: "https://www.filleasy.hk/", type: "registry",
-		...srcMeta("filleasy.hk", "Fill Easy | HK Companies Registry — Outblaze Limited", "Fill Easy API response for Outblaze Limited. Confirmed incorporation 1998, director SIU Yat, registered office in Wan Chai. Annual return filings from 1998-2012.", "#0066aa"),
+		id: "y23", label: "Webb-Site Who's Who: Outblaze Limited (HK CR records)", url: "https://webb-site.com/dbpub/orgdata.asp?p=116499", type: "registry",
+		...srcMeta("webb-site.com", "Outblaze Limited | Webb-site Who's Who", "Webb-site Who's Who organisation profile for Outblaze Limited, sourced from HK Companies Registry filings — Yat Siu listed as director, incorporation date, and historical filings.", "#1a4a8a"),
 	},
 	hkIRD: {
-		id: "y24", label: "HK Inland Revenue Dept: Profits Tax Filing Confirmation", url: "https://www.ird.gov.hk/eng/", type: "public-record",
+		id: "y24", label: "HK Inland Revenue Dept: Profits Tax Filing Confirmation", url: "https://www.ird.gov.hk/eng/tax/bus_pft.htm", type: "public-record",
 		...srcMeta("ird.gov.hk", "IRD | eTAX — Filing Status Confirmation", "Hong Kong Inland Revenue Department eTAX portal showing profits tax filing confirmation for Outblaze Limited and salaries tax filing status for individual taxpayer.", "#003366"),
 	},
 	asicRegistry: {
-		id: "y25", label: "Fill Easy API: ASIC — Animoca Brands Corporation Ltd", url: "https://www.filleasy.hk/", type: "registry",
-		...srcMeta("filleasy.hk", "Fill Easy | CorpVerify — ASIC Company Search — Animoca Brands", "Fill Easy CorpVerify API search result for Australian Securities & Investments Commission. Animoca Brands Corporation Limited (ACN 122 921 813). Registered in Victoria. Directors, secretary, registered office, and annual return history returned.", "#0066aa"),
+		id: "y25", label: "MarketIndex: Animoca Brands (AB1) — Australian listing record", url: "https://www.marketindex.com.au/asx/ab1", type: "registry",
+		...srcMeta("marketindex.com.au", "Animoca Brands (AB1) | Market Index", "Market Index page for Animoca Brands (former ASX ticker AB1) — captures Australian listing history, register of directors, and delisting record. Substitute for direct ASIC company-register access.", "#1976d2"),
 		companySearchTemplate: {
 			registryName: "Australian Securities & Investments Commission (via Fill Easy CorpVerify)",
-			registryUrl: "https://www.filleasy.hk/",
+			registryUrl: "/sample-docs/hk-company-search.pdf",
 			searchFields: [
 				{ label: "Company Name", value: "Animoca Brands Corporation Limited" },
 				{ label: "ACN", value: "122 921 813" },
@@ -834,12 +856,12 @@ const SRC_SIU: Record<string, SourceCitation> = {
 		...srcMeta("coindesk.com", "Animoca Brands Acquires TinyTap for $38.9M | CoinDesk", "CoinDesk reporting Animoca Brands acquisition of 80.45% stake in TinyTap (ed-tech platform) for US$38.875M (cash + shares). TinyTap later raised $8.5M at $100M valuation.", "#0a9c00"),
 	},
 	mocaToken: {
-		id: "y27", label: "Animoca: MOCA token launch — $29.3M raised", url: "https://www.animocabrands.com/moca-foundation-concludes-moca-token-launch-with-usd29300000-committed", date: "2024-05-03", type: "market-data",
+		id: "y27", label: "Animoca: MOCA token launch — $29.3M raised", url: "https://www.animocabrands.com/announcement/moca-foundation-concludes-moca-token-launch-with-us293-million-committed-at-12x-oversubscription", date: "2024-05-03", type: "market-data",
 		...srcMeta("animocabrands.com", "MOCA Foundation Concludes MOCA Token Launch with US$29.3M Committed | Animoca Brands", "Animoca Brands press release: MOCA token sale concluded May 3, 2024 with $29.3M raised at 12x oversubscription. 126.98M MOCA tokens (1.5% supply) at $0.03938 each. Nearly 17,000 KYC-ed users from 123 countries.", "#ff6b35"),
 	},
 	apeCoinDAO: {
-		id: "y28", label: "CoinDesk: ApeCoin DAO Council compensation — $250K/yr", url: "https://www.coindesk.com/business/2023/06/21/animoca-brands-yat-siu-defends-apecoin-dao-council-compensation/", date: "2023-06-21", type: "news",
-		...srcMeta("coindesk.com", "Animoca Brands' Yat Siu Defends ApeCoin DAO Council Compensation | CoinDesk", "CoinDesk article: ApeCoin DAO Special Council member compensation disclosed at $20,833/month (~$250K/year). Yat Siu served on council and defended payout. Community controversy in June 2023.", "#0a9c00"),
+		id: "y28", label: "Wikipedia: Yat Siu — ApeCoin DAO compensation context", url: "https://en.wikipedia.org/wiki/Yat_Siu", date: "2023-06-21", type: "news",
+		...srcMeta("en.wikipedia.org", "Yat Siu — Wikipedia", "Wikipedia biographical entry for Yat Siu (Animoca Brands co-founder & executive chairman). Covers Animoca history, Web3 advocacy, and the 2023 ApeCoin DAO Special Council compensation episode.", "#000000"),
 	},
 	nasdaqMerger: {
 		id: "y29", label: "Bloomberg: Animoca plans Nasdaq listing via reverse merger", url: "https://www.bloomberg.com/news/articles/2025-11-03/animoca-brands-plans-nasdaq-listing-through-reverse-merger", date: "2025-11-03", type: "news",
@@ -854,24 +876,24 @@ const SRC_SIU: Record<string, SourceCitation> = {
 		...srcMeta("animocabrands.com", "Animoca Brands Investor Update — FY2024 | Animoca Brands", "Animoca Brands FY2024 financials: total assets $4.3B, cash + stablecoins $293M, digital assets $538M, minority investments $564M (540+ companies), off-balance sheet token reserves $2.9B.", "#ff6b35"),
 	},
 	nwayAcq: {
-		id: "y32", label: "Animoca: Acquires nWay for $7.69M (Dec 2019)", url: "https://www.animocabrands.com/animocabrands-acquire-nway", date: "2019-12-01", type: "news",
+		id: "y32", label: "Animoca: Acquires nWay for $7.69M (Dec 2019)", url: "https://www.animocabrands.com/announcement/animoca-brands-completes-acquisition-of-nway", date: "2019-12-01", type: "news",
 		...srcMeta("animocabrands.com", "Animoca Brands Acquires nWay | Press Release", "Animoca press release: Acquisition of nWay Inc. (SF-based fighting game studio) for US$7.69M. Power Rangers: Legacy Wars (60M+ downloads). Prior funding: $20M over 3 rounds.", "#ff6b35"),
 	},
 	edenGamesAcq: {
-		id: "y33", label: "Animoca: Acquires Eden Games for ~$15.3M", url: "https://www.animocabrands.com/animoca-brands-acquires-eden-games", date: "2022-04-11", type: "news",
+		id: "y33", label: "Animoca: Acquires Eden Games for ~$15.3M", url: "https://www.animocabrands.com/announcement/animoca-brands-acquires-eden-games-developer-of-need-for-speed-porsche-unleashed-f1-mobile-racing-gearclub-and-test-drive-from-engine-gaming-media", date: "2022-04-11", type: "news",
 		...srcMeta("animocabrands.com", "Animoca Brands Acquires Eden Games | Press Release", "Animoca press release: Acquisition of Eden Games from Engine Gaming (Nasdaq: GAME) for ~$15.3-16M. Racing studio behind Need for Speed: Porsche, F1 Mobile Racing, Gear.Club.", "#ff6b35"),
 	},
 	blowfishAcq: {
-		id: "y34", label: "Animoca: Acquires Blowfish Studios for up to A$35M", url: "https://stockhead.com.au/cryptocurrency/animoca-brands-acquires-sydney-based-gaming-company-blowfish-studios/", date: "2021-07-30", type: "news",
+		id: "y34", label: "Animoca: Acquires Blowfish Studios for up to A$35M", url: "https://stockhead.com.au/cryptocurrency/animoca-brands-acquires-sydney-based-gaming-company-blowfish-studios-for-up-to-35m/", date: "2021-07-30", type: "news",
 		...srcMeta("stockhead.com.au", "Animoca Acquires Blowfish Studios for up to $35M | Stockhead", "Stockhead reporting: Animoca acquired Sydney-based Blowfish Studios. A$9M upfront (A$4M cash + A$5M shares) plus up to A$26M in earnouts. Total potential: A$35M (~US$25.8M).", "#003d7a"),
 	},
 	gameeAcq: {
-		id: "y35", label: "Animoca: Acquires GAMEE for $4.5M (Jul 2020)", url: "https://www.animocabrands.com/gamee-launches-arc8-play-to-earn-mobile-blockchain-gaming-platform-with-1300000-users", date: "2020-07-01", type: "news",
+		id: "y35", label: "Animoca: Acquires GAMEE for $4.5M (Jul 2020)", url: "https://www.animocabrands.com/announcement/gamee-launches-arc8-play-to-earn-mobile-blockchain-gaming-platform-with-13-million-users", date: "2020-07-01", type: "news",
 		...srcMeta("animocabrands.com", "GAMEE / Arc8 Platform — 1.3M Users | Animoca Brands", "Animoca Brands press release: GAMEE acquired for US$4.5M in July 2020. Arc8 play-to-earn platform launched October 2021 with 1.3M registered users. GMEE token (3.18B supply).", "#ff6b35"),
 	},
 	lympoHack: {
-		id: "y36", label: "CoinDesk: Animoca subsidiary Lympo hacked — $18.7M stolen", url: "https://www.coindesk.com/markets/2022/01/10/animoca-subsidiary-lympo-suffers-187m-hot-wallet-hack/", date: "2022-01-10", type: "news",
-		...srcMeta("coindesk.com", "Animoca Subsidiary Lympo Suffers $18.7M Hot Wallet Hack | CoinDesk", "CoinDesk: Animoca subsidiary Lympo's hot wallet hacked January 10, 2022. 165.2M LMT tokens stolen worth $18.7M. LMT price crashed 92% in 12 hours. Lympo was acquired for $2.88M.", "#0a9c00"),
+		id: "y36", label: "Wikipedia: Animoca Brands — Lympo hot-wallet hack (2022)", url: "https://en.wikipedia.org/wiki/Animoca_Brands#Lympo_hack", date: "2022-01-10", type: "news",
+		...srcMeta("en.wikipedia.org", "Animoca Brands — Lympo hack | Wikipedia", "Wikipedia section covering the January 2022 hot-wallet exploit at Animoca subsidiary Lympo: ~165M LMT tokens drained (~US$18.7M), LMT token price collapse, and subsequent acquisition value.", "#000000"),
 	},
 };
 
@@ -1000,10 +1022,14 @@ const YAT_SIU_CAREER: CareerPhase[] = [
 			], subtotalUSD: 30_000_000, avgConfidence: 55 },
 			{ category: "income", claims: [
 				{ id: "ys6-14", description: "Accumulated CEO/Chairman compensation from Animoca Brands (2014-present, ASX remuneration disclosures + estimated post-delisting salary)", estimatedValueUSD: 35_000_000, confidence: 45, sources: [SRC_SIU.asxAnnualReport, SRC_SIU.animocaFinancials] },
-				{ id: "ys6-15", description: "Historical Outblaze IBM sale proceeds and reinvested earnings (~$15M acquisition, founder share estimated at 60-70%)", estimatedValueUSD: 28_000_000, confidence: 60, sources: [SRC_SIU.ibmAcq, SRC_SIU.hkIRD] },
 				{ id: "ys6-11", description: "Advisory/board compensation — ApeCoin DAO (~$250K/yr), DigitalX, Hex Trust, speaking fees, and consulting", estimatedValueUSD: 2_000_000, confidence: 75, sources: [SRC_SIU.apeCoinDAO] },
-				{ id: "ys6-re", description: "Rental income from Hong Kong residential properties (Fill Easy HK Land Registry confirmed)", estimatedValueUSD: 1_200_000, confidence: 80, savingRate: 90, sources: [SRC_SIU.hkLandRegistry] },
-			], subtotalUSD: 66_200_000, avgConfidence: 65 },
+			], subtotalUSD: 37_000_000, avgConfidence: 60 },
+			{ category: "realEstate", claims: [
+				{ id: "ys6-re", description: "Rental income from Hong Kong residential properties (Fill Easy HK Land Registry confirmed)", estimatedValueUSD: 1_200_000, confidence: 80, savingRate: REAL_ESTATE_SAVING_RATE, sources: [SRC_SIU.hkLandRegistry] },
+			], subtotalUSD: 1_200_000, avgConfidence: 80 },
+			{ category: "assetSales", claims: [
+				{ id: "ys6-15", description: "Outblaze messaging-assets sale to IBM (2009) — founder share of ~$15M acquisition, estimated 60–70% net proceeds reinvested via personal vehicles", estimatedValueUSD: 28_000_000, confidence: 60, savingRate: REAL_ESTATE_SAVING_RATE, sources: [SRC_SIU.ibmAcq, SRC_SIU.hkIRD] },
+			], subtotalUSD: 28_000_000, avgConfidence: 60 },
 		],
 		phaseWealthUSD: 2_400_000_000, cumulativeWealthUSD: 2_400_000_000,
 		keyEvents: ["2023: SAND drops below $0.50", "2023-06: HK launches virtual asset regulatory framework", "2024-07: MOCA token launches ($29.3M raised)", "2024-12: X/Twitter account hacked (phishing)", "2025-02: Anchorpoint Financial JV gets HKMA stablecoin license", "2025-11: Files Nasdaq reverse merger with Currenc Group"],
@@ -1017,8 +1043,12 @@ function aggregateWealth(timeline: CareerPhase[]): { category: WealthCategory; t
 		income: { sum: 0, confSum: 0, count: 0 },
 		companies: { sum: 0, confSum: 0, count: 0 },
 		investments: { sum: 0, confSum: 0, count: 0 },
+		realEstate: { sum: 0, confSum: 0, count: 0 },
+		inheritance: { sum: 0, confSum: 0, count: 0 },
+		assetSales: { sum: 0, confSum: 0, count: 0 },
 		alternatives: { sum: 0, confSum: 0, count: 0 },
 		crypto: { sum: 0, confSum: 0, count: 0 },
+		other: { sum: 0, confSum: 0, count: 0 },
 	};
 	// Use only the last phase for current breakdown
 	const lastPhase = timeline[timeline.length - 1];
@@ -1505,11 +1535,11 @@ const SRC_CHEN: Record<string, SourceCitation> = {
 		...srcMeta("mas.gov.sg", "MAS | Financial Institutions Directory — Meridian Capital Partners Pte. Ltd.", "MAS Financial Institutions Directory record for Meridian Capital Partners Pte. Ltd. Capital Markets Services licence holder. CMS licence number CMS100••••. Fund management category. Licence active from 2000.", "#003366"),
 	},
 	acraRegistry: {
-		id: "cw2", label: "Fill Easy API: Singapore ACRA — Meridian Capital Partners Pte. Ltd.", url: "https://www.filleasy.hk/", type: "registry",
+		id: "cw2", label: "Fill Easy API: Singapore ACRA — Meridian Capital Partners Pte. Ltd.", url: "/sample-docs/hk-company-search.pdf", type: "registry",
 		...srcMeta("filleasy.hk", "Fill Easy | CorpVerify — Singapore ACRA BizFile+ — Meridian Capital Partners", "Fill Easy CorpVerify API query result for Singapore ACRA BizFile+. Entity: Meridian Capital Partners Pte. Ltd. UEN: 200012345D. Incorporated 2000-06-01. Directors: CHEN Wei, DAVID Tan. Registered at 1 Raffles Place. Filing status current.", "#0066aa"),
 		companySearchTemplate: {
 			registryName: "Singapore ACRA — BizFile+ (via Fill Easy CorpVerify)",
-			registryUrl: "https://www.filleasy.hk/",
+			registryUrl: "/sample-docs/hk-company-search.pdf",
 			searchFields: [
 				{ label: "Entity Name", value: "Meridian Capital Partners Pte. Ltd." },
 				{ label: "UEN", value: "200012345D" },
@@ -1520,11 +1550,11 @@ const SRC_CHEN: Record<string, SourceCitation> = {
 		},
 	},
 	acraFamilyOffice: {
-		id: "cw3", label: "Fill Easy API: Singapore ACRA — Chen Wei Family Office Pte. Ltd.", url: "https://www.filleasy.hk/", type: "registry",
+		id: "cw3", label: "Fill Easy API: Singapore ACRA — Chen Wei Family Office Pte. Ltd.", url: "/sample-docs/hk-company-search.pdf", type: "registry",
 		...srcMeta("filleasy.hk", "Fill Easy | CorpVerify — Singapore ACRA BizFile+ — Chen Wei Family Office", "Fill Easy CorpVerify API query result for Singapore ACRA BizFile+. Entity: Chen Wei Family Office Pte. Ltd. UEN: 201012345G. Incorporated 2010-03-15. Sole director: CHEN Wei. Registered at 8 Marina View. Filing status current.", "#0066aa"),
 		companySearchTemplate: {
 			registryName: "Singapore ACRA — BizFile+ (via Fill Easy CorpVerify)",
-			registryUrl: "https://www.filleasy.hk/",
+			registryUrl: "/sample-docs/hk-company-search.pdf",
 			searchFields: [
 				{ label: "Entity Name", value: "Chen Wei Family Office Pte. Ltd." },
 				{ label: "UEN", value: "201012345G" },
@@ -1547,11 +1577,11 @@ const SRC_CHEN: Record<string, SourceCitation> = {
 		...srcMeta("goldmansachs.com", "Goldman Sachs | Human Resources — Employment Verification", "Goldman Sachs Singapore employment verification letter for CHEN Wei. Dates of employment: July 1990 to June 2000. Final title: Managing Director, Investment Banking Division. Compensation details referenced in confidential HR records.", "#003087"),
 	},
 	sgLandAuthority: {
-		id: "cw7", label: "Fill Easy API: SLA — Sentosa Cove Property Record", url: "https://www.filleasy.hk/", type: "registry",
+		id: "cw7", label: "Fill Easy API: SLA — Sentosa Cove Property Record", url: "/sample-docs/hk-land-registry.pdf", type: "registry",
 		...srcMeta("filleasy.hk", "Fill Easy | Singapore Land Authority — Property Search — Sentosa Cove", "Fill Easy API property search result for Singapore Land Authority. Sentosa Cove waterfront bungalow. Lot area 15,000 sq ft. Owner: CHEN Wei. Purchase date: 2012. Current valuation per URA market data.", "#0066aa"),
 		companySearchTemplate: {
 			registryName: "Singapore Land Authority (via Fill Easy API)",
-			registryUrl: "https://www.filleasy.hk/",
+			registryUrl: "/sample-docs/hk-land-registry.pdf",
 			searchFields: [
 				{ label: "Owner Name", value: "CHEN Wei" },
 				{ label: "Property Address", value: "Sentosa Cove, Singapore" },
@@ -1562,11 +1592,11 @@ const SRC_CHEN: Record<string, SourceCitation> = {
 		},
 	},
 	sgLandOrchard: {
-		id: "cw8", label: "Fill Easy API: SLA — Nassim Road Good Class Bungalow", url: "https://www.filleasy.hk/", type: "registry",
+		id: "cw8", label: "Fill Easy API: SLA — Nassim Road Good Class Bungalow", url: "/sample-docs/hk-land-registry.pdf", type: "registry",
 		...srcMeta("filleasy.hk", "Fill Easy | Singapore Land Authority — Property Search — Nassim Road", "Fill Easy API property search result for Singapore Land Authority. Nassim Road Good Class Bungalow. Land area 20,000 sq ft. Owner: CHEN Wei. Purchase date: 2015. URA transaction records confirmed.", "#0066aa"),
 		companySearchTemplate: {
 			registryName: "Singapore Land Authority (via Fill Easy API)",
-			registryUrl: "https://www.filleasy.hk/",
+			registryUrl: "/sample-docs/hk-land-registry.pdf",
 			searchFields: [
 				{ label: "Owner Name", value: "CHEN Wei" },
 				{ label: "Property Address", value: "Nassim Road, Singapore" },
@@ -1581,7 +1611,7 @@ const SRC_CHEN: Record<string, SourceCitation> = {
 		...srcMeta("mas.gov.sg", "MAS | Notice 626 — AML/CFT Compliance for Family Offices", "MAS regulatory compliance filing for Chen Wei Family Office Pte. Ltd. under Notice 626. Enhanced CDD documentation submitted. SOW declaration accepted. Compliance status: Satisfactory.", "#003366"),
 	},
 	dbsWealth: {
-		id: "cw10", label: "DBS Private Banking — Portfolio Statement (Q1 2026)", url: "https://www.dbs.com.sg/private-banking/", type: "public-record",
+		id: "cw10", label: "DBS Private Banking — Portfolio Statement (Q1 2026)", url: "https://www.dbs.com.sg/private-banking/default.page", type: "public-record",
 		...srcMeta("dbs.com.sg", "DBS Private Banking | Quarterly Portfolio Statement — Chen Wei", "DBS Private Banking quarterly portfolio statement for Chen Wei. Period: Jan-Mar 2026. Blue-chip equity holdings (DBS, OCBC, SGX, Singtel), fixed income positions, PE fund distributions, and dividend income.", "#e60012"),
 	},
 	sgxBlueChip: {
@@ -1597,7 +1627,7 @@ const SRC_CHEN: Record<string, SourceCitation> = {
 		...srcMeta("businesstimes.com.sg", "Meridian Capital Exits Meritis Healthcare at 4.2x Return | Business Times", "Business Times Singapore reporting on Meridian Capital Partners' exit from Meritis Healthcare Holdings at 4.2x multiple on invested capital. Entry at $12M (2002), exit at $50.4M via trade sale to IHH Healthcare.", "#003d7a"),
 	},
 	uraPropertyData: {
-		id: "cw14", label: "URA Property Transaction Data — Districts 9, 10, Sentosa", url: "https://www.ura.gov.sg/realEstateIIWeb/", type: "public-record",
+		id: "cw14", label: "URA Property Transaction Data — Districts 9, 10, Sentosa", url: "https://www.ura.gov.sg/Corporate/Property/Property-Data", type: "public-record",
 		...srcMeta("ura.gov.sg", "URA | Real Estate Information System — Private Property Transactions", "Urban Redevelopment Authority property transaction database showing private residential transactions in prime districts (9, 10, Sentosa). Used to verify Chen Wei property valuations against market benchmarks.", "#003366"),
 	},
 };
@@ -1664,20 +1694,25 @@ const CHEN_WEI_CAREER: CareerPhase[] = [
 			{ category: "investments", claims: [
 				{ id: "cw4-1", description: "Blue-chip equity portfolio — SGX-listed banks, REITs, and Straits Times Index components (DBS custody confirmed)", estimatedValueUSD: 110_000_000, confidence: 92, sources: [SRC_CHEN.sgxBlueChip, SRC_CHEN.dbsWealth] },
 				{ id: "cw4-2", description: "PE fund-of-funds and co-investment stakes (legacy Meridian + new commitments, MAS-regulated)", estimatedValueUSD: 55_000_000, confidence: 82, sources: [SRC_CHEN.acraFamilyOffice, SRC_CHEN.masNotice, SRC_CHEN.masLicensing] },
-				{ id: "cw4-3", description: "Fixed income — SG government bonds, investment-grade corporate (DBS custody + MAS)", estimatedValueUSD: 65_000_000, confidence: 95, sources: [SRC_CHEN.dbsWealth, SRC_CHEN.masNotice] },
-			], subtotalUSD: 230_000_000, avgConfidence: 90 },
+				{ id: "cw4-3", description: "Fixed income — SG government bonds, investment-grade corporate (DBS custody + MAS), net of retirement-account carve-out", estimatedValueUSD: 57_000_000, confidence: 95, sources: [SRC_CHEN.dbsWealth, SRC_CHEN.masNotice] },
+			], subtotalUSD: 222_000_000, avgConfidence: 90 },
 			{ category: "alternatives", claims: [
 				{ id: "cw4-4", description: "Sentosa Cove waterfront bungalow (current valuation S$28M, appreciated from S$18M — URA data + Fill Easy SLA)", estimatedValueUSD: 21_000_000, confidence: 92, sources: [SRC_CHEN.sgLandAuthority, SRC_CHEN.uraPropertyData] },
 				{ id: "cw4-5", description: "Nassim Road Good Class Bungalow (current valuation S$55M, appreciated from S$38M — URA data + Fill Easy SLA)", estimatedValueUSD: 41_000_000, confidence: 92, sources: [SRC_CHEN.sgLandOrchard, SRC_CHEN.uraPropertyData] },
 			], subtotalUSD: 62_000_000, avgConfidence: 92 },
 			{ category: "income", claims: [
 				{ id: "cw4-6", description: "Annual dividend and interest income (~$6-8M/year, IRAS filed)", estimatedValueUSD: 28_000_000, confidence: 90, savingRate: 90, sources: [SRC_CHEN.irasFilings, SRC_CHEN.dbsWealth] },
-				{ id: "cw4-re1", description: "Rental income from Sentosa Cove bungalow (partially leased, URA transaction data)", estimatedValueUSD: 1_200_000, confidence: 85, savingRate: 90, sources: [SRC_CHEN.sgLandAuthority, SRC_CHEN.uraPropertyData] },
-			], subtotalUSD: 29_200_000, avgConfidence: 88 },
+			], subtotalUSD: 28_000_000, avgConfidence: 90 },
+			{ category: "realEstate", claims: [
+				{ id: "cw4-re1", description: "Rental income from Sentosa Cove bungalow (partially leased, URA transaction data)", estimatedValueUSD: 1_200_000, confidence: 85, savingRate: REAL_ESTATE_SAVING_RATE, sources: [SRC_CHEN.sgLandAuthority, SRC_CHEN.uraPropertyData] },
+			], subtotalUSD: 1_200_000, avgConfidence: 85 },
 			{ category: "companies", claims: [
 				{ id: "cw4-7", description: "Residual GP interest in Meridian Capital (legacy carried interest distributions, ACRA verified)", estimatedValueUSD: 15_000_000, confidence: 85, sources: [SRC_CHEN.acraRegistry, SRC_CHEN.masLicensing] },
 				{ id: "cw4-8", description: "Chen Wei Family Office entity value (operating entity + cash reserves)", estimatedValueUSD: 45_000_000, confidence: 88, sources: [SRC_CHEN.acraFamilyOffice, SRC_CHEN.dbsWealth] },
 			], subtotalUSD: 60_000_000, avgConfidence: 87 },
+			{ category: "other", claims: [
+				{ id: "cw4-oth1", description: "Goldman Sachs deferred-compensation and pension entitlements vested 2000 — accumulated distributions and surviving retirement-account balance (IRAS-filed)", estimatedValueUSD: 8_000_000, confidence: 80, sources: [SRC_CHEN.goldmanSachsSG, SRC_CHEN.irasFilings] },
+			], subtotalUSD: 8_000_000, avgConfidence: 80 },
 		],
 		phaseWealthUSD: 380_000_000, cumulativeWealthUSD: 380_000_000,
 		keyEvents: ["2020: Conservative positioning protects portfolio during COVID-19 downturn", "2022: Increased fixed income allocation during rate hiking cycle", "2024: Net worth reaches $380M per Forbes Singapore Rich List", "2025: MAS compliance review — satisfactory rating", "2026: Full SOW assessment completed — Grade A corroboration"],
@@ -2058,7 +2093,7 @@ const SRC_TRUMP: Record<string, SourceCitation> = {
 		...srcMeta("fec.gov", "FEC | Candidate Summary — Donald J. Trump", "Federal Election Commission filing summary for Donald J. Trump presidential campaign. Receipts, disbursements, and personal financial contributions disclosed.", "#003399"),
 	},
 	nyAGFraud: {
-		id: "dt6", label: "NY AG: Trump Organization Civil Fraud Judgment ($454M)", url: "https://ag.ny.gov/press-release/2024/attorney-general-james-wins-landmark-victory", date: "2024-02-16", type: "public-record",
+		id: "dt6", label: "NY AG: Trump Organization Civil Fraud Judgment ($454M)", url: "https://www.nycourts.gov/courts/comdiv/NY/PDFs/People-v.-Trump-Decision-and-Order-on-Liability.pdf", date: "2024-02-16", type: "public-record",
 		...srcMeta("ag.ny.gov", "AG James Wins Landmark Victory in Civil Fraud Case | NY AG", "New York Attorney General press release on civil fraud judgment against Trump Organization. Judge Engoron ordered $454 million in disgorgement and penalties. Asset inflation findings for loan applications.", "#003399"),
 	},
 	bloombergTrump: {
@@ -2066,11 +2101,11 @@ const SRC_TRUMP: Record<string, SourceCitation> = {
 		...srcMeta("bloomberg.com", "Bloomberg Billionaires Index | Donald J. Trump", "Bloomberg Billionaires Index profile showing Trump net worth breakdown. Real estate, licensing income, DJT stock, and golf club valuations itemized.", "#1e1e1e"),
 	},
 	palmBeachCounty: {
-		id: "dt8", label: "Palm Beach County — Mar-a-Lago Property Assessment", url: "https://www.pbcgov.org/papa/", type: "registry",
+		id: "dt8", label: "Palm Beach County — Mar-a-Lago Property Assessment", url: "https://pbcpao.gov/", type: "registry",
 		...srcMeta("pbcgov.org", "Palm Beach County Property Appraiser | Mar-a-Lago", "Palm Beach County property appraiser record for Mar-a-Lago Club, 1100 S Ocean Blvd, Palm Beach. Tax assessment, land value, and improvement value. Special use classification as private club.", "#336633"),
 		companySearchTemplate: {
 			registryName: "Palm Beach County Property Appraiser",
-			registryUrl: "https://www.pbcgov.org/papa/",
+			registryUrl: "https://pbcpao.gov/",
 			searchFields: [
 				{ label: "Property Address", value: "1100 S Ocean Blvd, Palm Beach, FL 33480" },
 				{ label: "Owner Name", value: "Trump, Donald J" },
@@ -2081,11 +2116,11 @@ const SRC_TRUMP: Record<string, SourceCitation> = {
 		},
 	},
 	nySOS: {
-		id: "dt9", label: "NY Secretary of State — Trump Organization LLC filings", url: "https://www.dos.ny.gov/corps/", type: "registry",
+		id: "dt9", label: "NY Secretary of State — Trump Organization LLC filings", url: "https://dos.ny.gov/existing-corporations-and-businesses", type: "registry",
 		...srcMeta("dos.ny.gov", "NY DOS | Entity Search — The Trump Organization", "New York Secretary of State entity search results for Trump-related LLCs and corporations. Over 500 entities registered in New York. Filing dates, status, and registered agent information.", "#003399"),
 	},
 	djtStock: {
-		id: "dt10", label: "Nasdaq: DJT Historical Share Price", url: "https://finance.yahoo.com/quote/DJT/history/", type: "market-data",
+		id: "dt10", label: "Nasdaq: DJT Historical Share Price", url: "https://finance.yahoo.com/quote/DJT/", type: "market-data",
 		...srcMeta("finance.yahoo.com", "DJT Historical Data | Yahoo Finance", "Yahoo Finance historical price chart for Trump Media & Technology Group (DJT). IPO via SPAC merger March 2024. Extreme volatility — range from $15 to $80.", "#410093"),
 	},
 	trumpMemeCoin: {
@@ -2101,7 +2136,7 @@ const SRC_TRUMP: Record<string, SourceCitation> = {
 		...srcMeta("variety.com", "Trump's 'Apprentice' Deal Worth $427M Over Run | Variety", "Variety reporting on Trump's Apprentice compensation estimated at $427M total.", "#000000"),
 	},
 	doralFinancials: {
-		id: "dt14", label: "Miami-Dade County — Trump National Doral Property Records", url: "https://www.miamidade.gov/pa/", type: "registry",
+		id: "dt14", label: "Miami-Dade County — Trump National Doral Property Records", url: "https://www.miamidadepa.gov/pa/home.page", type: "registry",
 		...srcMeta("miamidade.gov", "Miami-Dade Property Appraiser | Trump National Doral", "Miami-Dade County records for Trump National Doral golf resort. 800+ acres, four courses.", "#004488"),
 	},
 	wallStProperty: {
@@ -2109,7 +2144,7 @@ const SRC_TRUMP: Record<string, SourceCitation> = {
 		...srcMeta("nyc.gov", "NYC ACRIS | 40 Wall Street — Trump Building", "NYC ACRIS records for 40 Wall Street (Trump Building). 71-story office tower, ground lease.", "#003399"),
 	},
 	brandLicensing: {
-		id: "dt16", label: "Forbes: Trump Brand Licensing Revenue Analysis", url: "https://www.forbes.com/sites/danalexander/", date: "2023-06-01", type: "estimate",
+		id: "dt16", label: "Forbes: Trump Brand Licensing Revenue Analysis", url: "https://www.forbes.com/sites/danalexander", date: "2023-06-01", type: "estimate",
 		...srcMeta("forbes.com", "Forbes | Inside Trump's Brand Licensing Empire", "Forbes analysis of Trump brand licensing — $400M+ cumulative fees from global hotel/residential projects.", "#c4112f"),
 	},
 	chicagoTower: {
@@ -2210,23 +2245,28 @@ const TRUMP_CAREER: CareerPhase[] = [
 		categories: [
 			{ category: "companies", claims: [
 				{ id: "dt6-1", description: "~59% stake in Trump Media & Technology Group (DJT) — extremely volatile ($15-80/share, ~188M shares)", estimatedValueUSD: 3_500_000_000, confidence: 40, sources: [SRC_TRUMP.secDJT, SRC_TRUMP.djtStock, SRC_TRUMP.secSpac] },
-				{ id: "dt6-2", description: "Trump Organization real estate portfolio (Trump Tower, 40 Wall St, Doral, Chicago, licensing — 500+ LLCs)", estimatedValueUSD: 2_000_000_000, confidence: 55, sources: [SRC_TRUMP.forbesTrump, SRC_TRUMP.nycPropertyRecords, SRC_TRUMP.wallStProperty, SRC_TRUMP.chicagoTower, SRC_TRUMP.nySOS, SRC_TRUMP.ogeDisclosure] },
-			], subtotalUSD: 5_500_000_000, avgConfidence: 48 },
+				{ id: "dt6-2", description: "Trump Organization real estate portfolio net of inherited-asset carve-out (Trump Tower, 40 Wall St, Doral, Chicago, licensing — 500+ LLCs)", estimatedValueUSD: 1_587_000_000, confidence: 55, sources: [SRC_TRUMP.forbesTrump, SRC_TRUMP.nycPropertyRecords, SRC_TRUMP.wallStProperty, SRC_TRUMP.chicagoTower, SRC_TRUMP.nySOS, SRC_TRUMP.ogeDisclosure] },
+			], subtotalUSD: 5_087_000_000, avgConfidence: 48 },
 			{ category: "alternatives", claims: [
 				{ id: "dt6-3", description: "Golf courses worldwide (Trump National Doral, Turnberry, Bedminster, Aberdeen — 15+ courses)", estimatedValueUSD: 600_000_000, confidence: 60, sources: [SRC_TRUMP.forbesTrump, SRC_TRUMP.doralFinancials, SRC_TRUMP.ogeDisclosure] },
 				{ id: "dt6-4", description: "Mar-a-Lago estate and club (Palm Beach — assessed vs. market value highly disputed)", estimatedValueUSD: 500_000_000, confidence: 45, sources: [SRC_TRUMP.palmBeachCounty, SRC_TRUMP.nyAGFraud, SRC_TRUMP.forbesTrump] },
 			], subtotalUSD: 1_100_000_000, avgConfidence: 53 },
 			{ category: "income", claims: [
 				{ id: "dt6-5", description: "Trump Organization management fees, licensing, and golf course revenue (per OGE disclosure)", estimatedValueUSD: 300_000_000, confidence: 55, savingRate: 55, sources: [SRC_TRUMP.ogeDisclosure, SRC_TRUMP.brandLicensing] },
-				{ id: "dt6-re1", description: "Mar-a-Lago club membership fees and event income (~$200K initiation + annual dues, ~500 members)", estimatedValueUSD: 50_000_000, confidence: 55, savingRate: 40, sources: [SRC_TRUMP.palmBeachCounty, SRC_TRUMP.ogeDisclosure] },
-				{ id: "dt6-re2", description: "Trump Tower commercial rental income (retail + office floors, 725 Fifth Ave)", estimatedValueUSD: 30_000_000, confidence: 50, savingRate: 60, sources: [SRC_TRUMP.nycPropertyRecords, SRC_TRUMP.ogeDisclosure] },
-			], subtotalUSD: 380_000_000, avgConfidence: 53 },
+			], subtotalUSD: 300_000_000, avgConfidence: 55 },
+			{ category: "realEstate", claims: [
+				{ id: "dt6-re1", description: "Mar-a-Lago club membership fees and event income (~$200K initiation + annual dues, ~500 members)", estimatedValueUSD: 50_000_000, confidence: 55, savingRate: REAL_ESTATE_SAVING_RATE, sources: [SRC_TRUMP.palmBeachCounty, SRC_TRUMP.ogeDisclosure] },
+				{ id: "dt6-re2", description: "Trump Tower commercial rental income (retail + office floors, 725 Fifth Ave)", estimatedValueUSD: 30_000_000, confidence: 50, savingRate: REAL_ESTATE_SAVING_RATE, sources: [SRC_TRUMP.nycPropertyRecords, SRC_TRUMP.ogeDisclosure] },
+			], subtotalUSD: 80_000_000, avgConfidence: 53 },
+			{ category: "inheritance", claims: [
+				{ id: "dt6-inh", description: "Cumulative Fred Trump lifetime transfers — loans, gifts, and inherited real-estate portfolio (NYT investigation: ~$413M nominal, present-value carry estimated)", estimatedValueUSD: 413_000_000, confidence: 70, sources: [SRC_TRUMP.forbesTrump, SRC_TRUMP.nySOS] },
+			], subtotalUSD: 413_000_000, avgConfidence: 70 },
 			{ category: "crypto", claims: [
 				{ id: "dt6-6", description: "$TRUMP meme coin — 80% supply held by CIC Digital LLC / Fight Fight Fight LLC (Trump-affiliated entities)", estimatedValueUSD: 1_500_000_000, confidence: 25, sources: [SRC_TRUMP.trumpMemeCoin, SRC_TRUMP.forbesTrump] },
 				{ id: "dt6-7", description: "World Liberty Financial DeFi venture and other crypto-related interests", estimatedValueUSD: 200_000_000, confidence: 20, sources: [SRC_TRUMP.trumpMemeCoin, SRC_TRUMP.bloombergTrump] },
 			], subtotalUSD: 1_700_000_000, avgConfidence: 24 },
 		],
-		phaseWealthUSD: 8_600_000_000, cumulativeWealthUSD: 8_600_000_000,
+		phaseWealthUSD: 8_680_000_000, cumulativeWealthUSD: 8_680_000_000,
 		keyEvents: ["2021-01: Founded Trump Media & Technology Group", "2023: Multiple criminal indictments (NY, GA, Federal)", "2024-02: NY civil fraud judgment — $454M", "2024-03: TMTG/DJT goes public via SPAC merger", "2024-09: DJT lock-up expires, shares volatile", "2024-11: Elected 47th President", "2025-01-18: $TRUMP meme coin launched on Solana, peaks ~$75"],
 	},
 ];

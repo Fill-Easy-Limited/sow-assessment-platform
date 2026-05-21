@@ -310,94 +310,108 @@ const API_SERVICES = SERVICES.filter((s) => s.id !== "sow");
 type TopTab = "sow" | "integrations" | "api";
 
 function DataIntegrationsPanel() {
-	const categories = [
+	// Fill Easy — owned platform, hero treatment
+	const fillEasyModules = [
 		{
-			icon: (
-				<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-					<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/><path d="M3 9h6"/><path d="M3 15h6"/>
-				</svg>
-			),
-			title: "CorpVerify — Corporate Registry",
-			description: "Search and verify corporate entities across 80+ jurisdictions with real-time registry access.",
-			badge: "Core Product",
-			badgeColor: "bg-sky-500/15 text-sky-300 border-sky-400/20",
-			features: [
-				"Hong Kong CR (Companies Registry)",
-				"Singapore ACRA (BizFile+)",
-				"China SAMR (National Enterprise Credit)",
-				"UK Companies House",
-				"Australia ASIC",
-				"Cayman Islands CIMA",
-				"BVI Financial Services Commission",
-				"US SEC EDGAR",
+			title: "CorpVerify",
+			description: "Real-time corporate registry search & verification across 80+ jurisdictions.",
+			items: [
+				"Hong Kong CR · Singapore ACRA",
+				"UK Companies House · US SEC EDGAR",
+				"Australia ASIC · Cayman CIMA · BVI FSC",
 			],
-			status: "Live · 80+ registries connected",
 		},
 		{
-			icon: (
-				<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-					<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-				</svg>
-			),
-			title: "GovVerify — Government Records",
-			description: "Access government authority records for identity, tax, and regulatory verification.",
-			badge: "Core Product",
-			badgeColor: "bg-sky-500/15 text-sky-300 border-sky-400/20",
-			features: [
-				"Hong Kong IRD (Tax Filing)",
-				"Singapore IRAS (Tax Records)",
-				"China IIT (Individual Income Tax)",
-				"Hong Kong Land Registry",
-				"Singapore SLA (Land Authority)",
-				"US OGE (Ethics Disclosures)",
-				"MAS Financial Institutions Directory",
-				"PEP / Sanctions / Watchlist Screening",
+			title: "GovVerify",
+			description: "Government authority records for identity, tax, land and regulatory checks.",
+			items: [
+				"Tax filings (SG IRAS · PRC IIT)",
+				"Land registries (HK · CN · SG)",
+				"Ethics & FI directories (OGE · MAS)",
 			],
-			status: "Live · Multi-jurisdictional",
 		},
 		{
-			icon: (
-				<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-					<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-				</svg>
-			),
 			title: "China Cross-Border",
-			description: "Specialized access to mainland China corporate, judicial, and credit intelligence systems.",
-			badge: "Specialty",
-			badgeColor: "bg-amber-500/15 text-amber-300 border-amber-400/20",
-			features: [
-				"SAMR Enterprise Registration",
-				"SAMR UBO Verification",
-				"SAMR Credit & Judicial Records",
-				"Supreme People's Court (Judicial)",
-				"China Individual Income Tax",
-				"NBS Statistical Yearbook",
-				"PRC Wage & Employment Data",
-				"State Tax Administration",
+			description: "Deep mainland China corporate, judicial, and credit intelligence.",
+			items: [
+				"SAMR registration, UBO & credit standing",
+				"Supreme People's Court judicial records",
+				"State Taxation Administration · NBS data",
 			],
-			status: "Live · Deep China Coverage",
+		},
+	];
+
+	// Third-party partner integrations — the classic SoW stack
+	const partners = [
+		{
+			title: "Opoint",
+			vendor: "Adverse Media · News Intelligence",
+			description: "Real-time adverse media monitoring across 200,000+ global news sources in 200+ languages with AI-driven entity matching.",
+			features: [
+				"200K+ news sources",
+				"200+ languages",
+				"Real-time alerting",
+				"AI entity matching",
+			],
+			category: "Adverse Media",
+			badgeColor: "bg-amber-500/15 text-amber-700 border-amber-500/30",
+			accent: "text-amber-600",
 		},
 		{
-			icon: (
-				<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-					<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>
-				</svg>
-			),
-			title: "Market & Wealth Data",
-			description: "Real-time and historical market data, wealth estimates, and alternative asset intelligence.",
-			badge: "Intelligence",
-			badgeColor: "bg-emerald-500/15 text-emerald-300 border-emerald-400/20",
+			title: "LSEG World-Check",
+			vendor: "London Stock Exchange Group",
+			description: "Industry-standard PEP, sanctions, watchlist and heightened-risk screening (formerly Thomson Reuters Refinitiv).",
+			features: [
+				"PEP & RCA coverage",
+				"Global sanctions & watchlists",
+				"Adverse media records",
+				"Daily list refreshes",
+			],
+			category: "PEP / Sanctions",
+			badgeColor: "bg-red-500/15 text-red-700 border-red-500/30",
+			accent: "text-red-600",
+		},
+		{
+			title: "Dow Jones Risk & Compliance",
+			vendor: "Dow Jones · Factiva",
+			description: "PEP, sanctions, and state-owned enterprise screening paired with Factiva-powered global news intelligence.",
+			features: [
+				"PEP & SIE lists",
+				"Sanctions & SOE coverage",
+				"Factiva adverse media",
+				"30+ years archive",
+			],
+			category: "PEP / Sanctions",
+			badgeColor: "bg-red-500/15 text-red-700 border-red-500/30",
+			accent: "text-red-600",
+		},
+		{
+			title: "Sayari Graph",
+			vendor: "Public Records · Network Analysis",
+			description: "Corporate network graphs across global public records — surface hidden UBOs, supply-chain risk and sanctions exposure.",
+			features: [
+				"Corporate network graphs",
+				"Hidden UBO discovery",
+				"Sanctions nexus mapping",
+				"Cross-jurisdiction linking",
+			],
+			category: "Corporate / UBO",
+			badgeColor: "bg-violet-500/15 text-violet-700 border-violet-500/30",
+			accent: "text-violet-600",
+		},
+		{
+			title: "LSEG Eikon · Bloomberg · Forbes",
+			vendor: "Market & Wealth Intelligence",
+			description: "Public-market pricing, executive compensation, and real-time wealth estimates underpinning net-worth analysis.",
 			features: [
 				"Forbes Real-Time Billionaires",
 				"Bloomberg Billionaires Index",
-				"CoinGecko (Crypto & Tokens)",
-				"DappRadar (NFT / Web3)",
-				"SGX / NYSE / Nasdaq Market Data",
-				"PitchBook / Crunchbase",
-				"Equilar (Executive Compensation)",
-				"Wealth-X UHNW Reports",
+				"LSEG Eikon market data",
+				"PitchBook private markets",
 			],
-			status: "Live · Real-time feeds",
+			category: "Market & Wealth",
+			badgeColor: "bg-emerald-500/15 text-emerald-700 border-emerald-500/30",
+			accent: "text-emerald-600",
 		},
 	];
 
@@ -406,76 +420,124 @@ function DataIntegrationsPanel() {
 			{/* Header */}
 			<div>
 				<h2 className="text-2xl font-heading font-semibold tracking-tight">
-					Fill Easy Data Integrations
+					Data Integrations
 				</h2>
 				<p className="text-sm text-muted-foreground mt-1">
-					Connected registries, APIs and data sources powering wealth intelligence across 80+ jurisdictions
+					Powered by <span className="text-primary font-semibold">Fill Easy</span> and integrated with the leading third-party Source of Wealth providers
 				</p>
 			</div>
 
 			{/* Stat cards */}
-			<div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+			<div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
 				{[
 					{ value: "80+", label: "Jurisdictions" },
 					{ value: "200+", label: "Registries" },
+					{ value: "5", label: "Third-party providers" },
 					{ value: "Real-Time", label: "Access" },
 				].map((stat) => (
 					<div
 						key={stat.label}
-						className="rounded-2xl border border-border bg-card p-6 shadow-sm text-center"
+						className="rounded-2xl border border-border bg-card p-5 shadow-sm text-center"
 					>
-						<p className="text-3xl font-heading font-bold tracking-tight text-foreground">
+						<p className="text-2xl sm:text-3xl font-heading font-bold tracking-tight text-foreground">
 							{stat.value}
 						</p>
-						<p className="text-sm text-muted-foreground mt-1">{stat.label}</p>
+						<p className="text-xs sm:text-sm text-muted-foreground mt-1">{stat.label}</p>
 					</div>
 				))}
 			</div>
 
-			{/* Integration category cards */}
-			<div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-				{categories.map((cat) => (
-					<div
-						key={cat.title}
-						className="rounded-2xl border border-border bg-card p-6 shadow-sm flex flex-col"
-					>
-						{/* Card header */}
-						<div className="flex items-start gap-3 mb-4">
-							<div className="h-10 w-10 rounded-xl bg-gradient-to-br from-sky-400/15 to-cyan-400/10 border border-border flex items-center justify-center text-sky-400 shrink-0">
-								{cat.icon}
+			{/* Fill Easy — hero */}
+			<div className="relative rounded-2xl overflow-hidden border border-[#231815]/15 shadow-lg shadow-[#FED200]/30">
+				<div className="absolute inset-0 bg-[#FED200]" />
+				<div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(26,82,193,0.18)_0%,_transparent_60%)]" />
+				<div className="relative p-6 sm:p-8 text-[#231815]">
+					<div className="flex items-start gap-4 mb-5">
+						{/* eslint-disable-next-line @next/next/no-img-element */}
+						<img
+							src="/favicon.ico"
+							alt="Fill Easy"
+							className="h-12 w-12 shrink-0"
+						/>
+						<div className="flex-1 min-w-0">
+							<div className="flex items-center gap-2 flex-wrap">
+								<h3 className="text-xl font-heading font-semibold tracking-tight">Fill Easy</h3>
+								<span className="text-[10px] font-bold tracking-[0.15em] uppercase px-2 py-0.5 rounded-full bg-[#1A52C1] text-white">
+									Core Platform
+								</span>
 							</div>
-							<div className="flex-1 min-w-0">
-								<div className="flex items-center gap-2 flex-wrap">
-									<h3 className="text-sm font-heading font-semibold tracking-tight">
-										{cat.title}
-									</h3>
-									<span className={`text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full border ${cat.badgeColor}`}>
-										{cat.badge}
-									</span>
-								</div>
-								<p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-									{cat.description}
-								</p>
-							</div>
-						</div>
-
-						{/* Feature list */}
-						<div className="grid grid-cols-2 gap-x-4 gap-y-1.5 mb-4 flex-1">
-							{cat.features.map((feat) => (
-								<div key={feat} className="flex items-start gap-1.5 text-xs text-muted-foreground">
-									<span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-teal-400 shrink-0" />
-									<span>{feat}</span>
-								</div>
-							))}
-						</div>
-
-						{/* Status */}
-						<div className="flex items-center gap-1.5 text-xs text-muted-foreground pt-3 border-t border-border/60">
-							<span className="h-2 w-2 rounded-full bg-emerald-500" />
-							<span>{cat.status}</span>
+							<p className="text-sm text-[#231815]/75 mt-1.5 max-w-2xl leading-relaxed">
+								Unified API access to corporate registries, government records, and China cross-border intelligence across 80+ jurisdictions — the primary data spine for every Source of Wealth assessment.
+							</p>
 						</div>
 					</div>
-				))}
+
+					<div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+						{fillEasyModules.map((m) => (
+							<div
+								key={m.title}
+								className="rounded-xl bg-white p-4 shadow-sm border border-[#231815]/10"
+							>
+								<p className="text-sm font-heading font-semibold text-[#231815]">{m.title}</p>
+								<p className="text-xs text-[#231815]/75 mt-1.5 leading-relaxed">{m.description}</p>
+								<div className="mt-3 space-y-1">
+									{m.items.map((item) => (
+										<div key={item} className="flex items-start gap-1.5 text-[11px] text-[#231815]/70">
+											<span className="mt-1.5 h-1 w-1 rounded-full bg-[#1A52C1] shrink-0" />
+											<span>{item}</span>
+										</div>
+									))}
+								</div>
+							</div>
+						))}
+					</div>
+
+					<div className="flex items-center gap-1.5 text-xs text-[#231815]/65 pt-4 mt-5 border-t border-[#231815]/15">
+						<span className="h-2 w-2 rounded-full bg-[#1A52C1] shadow-[0_0_8px_rgba(26,82,193,0.6)]" />
+						<span>Live · Primary integration · 200+ registries connected</span>
+					</div>
+				</div>
+			</div>
+
+			{/* Third-party partners */}
+			<div>
+				<div className="flex items-end justify-between mb-4">
+					<div>
+						<h3 className="text-base font-heading font-semibold tracking-tight">Third-party SoW data partners</h3>
+						<p className="text-xs text-muted-foreground mt-0.5">Integrated alongside Fill Easy for adverse media, sanctions, UBO and market intelligence</p>
+					</div>
+				</div>
+				<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+					{partners.map((p) => (
+						<div
+							key={p.title}
+							className="rounded-2xl border border-border bg-card p-5 shadow-sm flex flex-col hover:shadow-md transition-shadow"
+						>
+							<div className="flex items-start justify-between gap-3 mb-3">
+								<div className="min-w-0 flex-1">
+									<h4 className={`text-sm font-heading font-semibold tracking-tight ${p.accent}`}>{p.title}</h4>
+									<p className="text-[11px] text-muted-foreground/80 mt-0.5">{p.vendor}</p>
+								</div>
+								<span className={`text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full border whitespace-nowrap ${p.badgeColor}`}>
+									{p.category}
+								</span>
+							</div>
+							<p className="text-xs text-muted-foreground leading-relaxed mb-3">{p.description}</p>
+							<div className="grid grid-cols-2 gap-x-3 gap-y-1.5 mb-3 flex-1">
+								{p.features.map((feat) => (
+									<div key={feat} className="flex items-start gap-1.5 text-[11px] text-muted-foreground">
+										<span className="mt-1.5 h-1 w-1 rounded-full bg-teal-400 shrink-0" />
+										<span>{feat}</span>
+									</div>
+								))}
+							</div>
+							<div className="flex items-center gap-1.5 text-[11px] text-muted-foreground pt-2.5 border-t border-border/60">
+								<span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+								<span>Live integration</span>
+							</div>
+						</div>
+					))}
+				</div>
 			</div>
 		</div>
 	);
@@ -628,14 +690,14 @@ export default function ApiDemo() {
 				</button>
 				<button
 					onClick={() => setTopTab("integrations")}
-					className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+					className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
 						topTab === "integrations"
-							? "bg-muted/80 text-foreground shadow-sm ring-1 ring-border"
+							? "bg-[#FED200] text-[#231815] shadow-sm ring-1 ring-[#FED200]/60"
 							: "bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50"
 					}`}
 				>
 					<span className="flex items-center gap-2">
-						<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+						<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={topTab === "integrations" ? "text-[#1A52C1]" : "text-muted-foreground"}><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
 						Data Integrations
 					</span>
 				</button>
